@@ -6,11 +6,11 @@ import json
 import re
 import html
 
-with open("../../key.txt", "r") as key:
-    MW_KEY = key.read()
-      
-# with open("/etc/secrets/key.txt", "r") as key:
+# with open("../../key.txt", "r") as key:
 #     MW_KEY = key.read()
+      
+with open("/etc/secrets/key.txt", "r") as key:
+    MW_KEY = key.read()
 
 query_string = "?"
 base  = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/"
