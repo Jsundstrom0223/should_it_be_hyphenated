@@ -5,7 +5,7 @@ import json
 import re
 import html
 
-# with open(".../key.txt", "r") as key:
+# with open("../../key.txt", "r") as key:
 #     MW_KEY = key.read()
       
 with open("/etc/secrets/key.txt", "r") as key:
@@ -35,7 +35,9 @@ def get_an_answer():
             return render_template('_compounds.html', first_page=True)
       
         if request.form.get("user_compound") is not None:        
-            user_input = html.escape(request.form['user_compound'])
+            user_input = html.escape(request.form['user_compound']).lower()
+            print(user_input, "!!!")
+        
         
             #using a regex instead of "if '-' in user_input" to catch any stray characters/extra input
             hyphenated_compound = re.search("[\w\d]+-[\w\d]+", user_input)
@@ -181,6 +183,7 @@ def part_of_speech_finder(jresponse, item):
                         continue
 
                 if this_id != item:
+                    print(f"\n\n\n________{item} {this_id}")
                     inflections = jitem.get("ins")
                     stems = jitem['meta'].get('stems')
 
