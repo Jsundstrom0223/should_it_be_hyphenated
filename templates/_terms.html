@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+    <link rel="stylesheet" href='/static/in.css' />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<section class="section_1" style="flex-direction: column">
+<h1>Brush Up on Your Grammar</h1>
+
+<body>
+    <p id="large_p">Select the term(s) that you'd like defined; then, click "Submit."</p>
+        
+    <form action="/_terms" method="post" id="get_some_defs" style="border: 10px solid transparent; border-top-color:  rgb(109, 40, 99); box-sizing: border-box;">
+
+        <input type="checkbox"  id="compound" name="compound"  unchecked/>
+        <label for="compound" class="check_container">Compound</label>
+        <p style="font-size: 2em"></p>
+
+        <div>
+        <input type="checkbox" id="noun" name="noun" unchecked />
+        <label for="noun" class="check_container">Noun</label>
+        <p style="font-size: 2em"></p>
+
+        <div>
+        <input type="checkbox" id="adjective" name="adjective"unchecked />
+        <label for="adjective" class="check_container">Adjective</label>
+        <p style="font-size: 2em"></p>
+
+        <div>
+        <input type="checkbox" id="verb" name="verb" unchecked />
+        <label for="verb" class="check_container">Verb</label>
+        <p style="font-size: 2em"></p>
+
+        <div>
+        <input type="checkbox" id="adverb" name="adverb" unchecked />
+        <label for="adverb" class="check_container">Adverb</label>
+         
+        <p>
+        <div>
+        <input type="submit" class="standard_submit"/>
+    
+        {% if answer %}
+      
+                {% for k, v in answer.items() %}
+                <p style="font-size: 1.5em; font-family: sans serif; 
+                box-sizing: border-box; color: rgb(11, 64, 85);">The definition of {{k}} is {{v | pprint | trim("()")}}.</p>
+                {% endfor %}
+      
+        {% endif %}
+        <div></div>  
+    </div>
+    </form>
+
+</div>
+</body>
+</section>

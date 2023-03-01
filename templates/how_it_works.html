@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    
+    <head>
+        <link rel="stylesheet" href='/static/in.css' />
+        <meta name="viewport" content="width=device-width">
+    </head>
+
+    <body>
+           
+        <div id="new_con">
+            <h1>How It Works</h1>
+        </div>
+   
+        <div id="newcon">
+            <div class="newb">
+                <br>
+                <h2>Usage</h2>
+               
+                <p>Say you're unsure of whether "high-quality" should be hyphenated. Should It Be Hyphenated? can help! Once you've entered that compound term (on the "Main Event") page, the app will run a few checks. First, it will check whether the compound is in the Merriam-Webster (M-W) Collegiate Dictionary as a hyphenated compound ("high-quality"), an open compound ("high quality"), or a closed compound ("highquality"). Because the term is not in M-W, the app will then check each part of the compound ("high" and "quality") against a series of Chicago Manual of Style (CMoS) hyphenation standards. [TODO: MAKE THAT MORE SPECIIFC]. Lastly, it'll look up each part of the compound in the M-W dictionary, retrieving the definition and part of speech.</p>
+             
+                <p>When those checks are complete, the app will display all of the definitions it retrieved for each term in the compound. They'll be grouped by part of speech, and you'll pick the group that most closely resembles your use of the term. In "high-quality", for example, high is an adjective meaning "situated or passing above the normal level", so you'd select "adjective." Once you've made your selections, you'll receive an answer to your hyphenation question based on part of speech and CMoS standards!</p>
+                <br>
+            </div>
+
+            <div class="newb">
+                <h2>The Underlying Tech</h2>
+                
+                <p>Should It Be Hyphenated? is a simple Flask app with a Python back end. The app relies on the Merriam-Webster Collegiate Dictionary API; specifically, it takes user input submitted through forms and then builds a request URL that includes that input. It then parses the JSON returned by the API.</p> 
+               
+                <p>TODO: COMPLETE!</p>
+                <br>
+            </div>
+        </div>
+       
+    </body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+    
+<head>
+    <link rel="stylesheet" href='/static/in.css' />
+    <meta name="viewport" content="width=device-width">
+</head>
+
+<body>
+           
+    <div id="new_con">
+        <div class="newb">
+            <h1>Should it be hyphenated?
+            Let's find out.</h1>
+        </div>
+    </div>
+  
+    {% if first_page %}
+    <div id="new_con">
+        <div class="newb">
+        <h2>Enter a Compound Term</h2>
+    
+        {% if mistake %}
+            <p>The input you provided did not include a hyphen ("-"). Please try again and ensure that your input includes one.</p>
+        {% else %}
+            <p>In other words, enter two terms separated by a hyphen (e.g., "well-being," "hard-working," "brightly-lit," etc.); one of those terms can be a number, but please use the numeral version (10) instead of the spelled-out version (ten).</p>
+        {% endif %}
+        </div>
+    </div>
+
+    
+    <form action="/_compounds.html" method="post">
+        <label for="name" style="color: rgb(36, 101, 49)"></label> <input type="text" id="name" name="user_compound"/>
+        <input type="submit" class="standard_submit" name="form_1"/>
+        <p>
+    </form>
+    {% endif %}
+
+    {% macro new(name, value='') -%}
+   
+        <div id="newcon">
+            <div class="newb">
+                <p style="font-size: 1.25em">M-W lists the following definitions and senses for the words in your search term. For each part of your search term, review the definitions and associated senses; then select the part of speech that most closely matches your use from the drop-down menu.</p>
+            </div>
+            <div class="newb">
+                <p style="font-size: 1.25em">Note that if either of the terms is a participle (a word formed from a verb, like "running" or "been") one of its "definitions" will simply be the verb from which it is formed. This also applies to terms that are both the past tense and past participle of a verb, like "lit" (the past tense and past participle of "light").</p>
+                <br>
+            </div>
+        </div>
+
+        <form action="/_compounds.html" method="post" id="gill">
+  
+        <fieldset style="border: solid transparent">
+        {% for i in value %}
+            {% if loop.first %}
+                {% set which = "first" %}
+                {% set sn = "first_part_of_speech" %}
+            {% else %}
+                {% set which = "second" %}
+                {% set sn = "second_part_of_speech" %}
+            {% endif %}
+         
+            <div class="newcon">
+                <div class="newb">
+                <br>
+                <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;">
+                <br>
+                <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The {{which}} term in your compound is "{{i[0]|e}}." How is it being used?</label>
+                </div>
+            
+                {% for k,v in i[1].items() %}
+                    {% if k == 'past tense and past participle of' or k == 'participle of' or k == "variation / form of "%}
+                        {% set intro = "" %}
+                    {% else %}
+                        {% set intro = "Definition:" %}
+                    {% endif %}
+     
+                    <div class="newb">
+                    <p style="font-weight: bold; font-size: 1.5em">{{k |capitalize}}</p>
+                    </div>
+                
+                    <div class="newb">
+                    <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
+                    margin-left: 3em;">{{intro}} {{v |join('; ') |trim("[]'—") |capitalize}}</dd>
+                    </div>
+            </div>
+                
+            {% endfor %}
+            <br>
+   
+            <select name = "{{sn}}" class="select">    
+            {% for k,v in i[1].items() %}
+                <option value="{{k}}" class="option_value">{{k |capitalize}}</option>
+            {% endfor %}
+            </select>
+            
+        {% endfor %}
+
+        <p>
+        <input type="submit" class="standard_submit" style="font-size: 1em" name="part_of_speech_selections"/>
+        
+        </form>
+        </fieldset>
+    {%- endmacro %}
+         
+    {% if answer3 %}
+        <p>{{new(answer3, value=answer3) }}</p>
+    {%- endif %}
+        
+    {% if final -%}
+        <section>
+        <p>{{final}}</p>
+        </section>
+    {%- endif %}
+        
+</body>    
+</html>
