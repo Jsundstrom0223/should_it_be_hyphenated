@@ -59,7 +59,7 @@ def get_an_answer():
                 is_a_compound = True
                 results = request_url_builder(compound_from_input, is_a_compound, split_compound_from_input)
                 
-                print(f"\n\n NAMED TUPLE {results.r_answer_ready}, {results.r_outcome}, {results.r_parts} !!!!!!")
+                # print(f"\n\n NAMED TUPLE {results.r_answer_ready}, {results.r_outcome}, {results.r_parts} !!!!!!")
              
                 if results.r_answer_ready is False:
                     first = [split_compound_from_input[0], results.r_parts[0]]
@@ -93,7 +93,7 @@ def grammar_defs():
     terms_page = render_template('_terms.html')
     return terms_page
 
-def request_url_builder(compound_from_input, is_a_compound, split_compound_from_input, just_get_def=None):
+def request_url_builder(compound_from_input, is_a_compound, split_compound_from_input=None, just_get_def=None):
     print("\n\n\n IN REQUEST BUILDER", compound_from_input)
 
     constructed = base + compound_from_input + query_string + "key=" + MW_KEY
@@ -120,7 +120,6 @@ def compound_checker(mw_response, compound_from_input, split_compound_from_input
         Results = namedtuple('Results', ['r_answer_ready', 'r_outcome', 'r_parts'])
         
         if len(mw_response) == 0 or "hwi" not in mw_response[0]:
-            ##TODO: Confirm whether this is necessary
             done = False 
 
         elif mw_response[0]['meta']['id'] != compound_from_input:
@@ -154,18 +153,15 @@ def handle_separately(is_a_compound, split_compound_from_input):
     mw_responses = [request_url_builder(i, is_a_compound, split_compound_from_input) for i in split_compound_from_input]
     
     #Checks for empty responses and responses that consist entirely of strings. Note that when a word isn't in M-W but there are other similar words in the dic, M-W returns a list of those words (a list of strings). If the word isn't in M-W and there are no similar words, M-W returns an empty list. 
-
     invalid = [i for i in mw_responses if len(i) == 0]
     if len(invalid) != 0:
         outcome = f"At least one part of the compound you entered, {'-'.join(split_compound_from_input)}, is not in the dictionary, and the dictionary did not return any alternative spellings. Please confirm the correct spelling and try again."
-        print(outcome)
         answer_ready = True
         all_defs_and_parts = None
         
     else:
-        not_an_entry = [all(isinstance(jitem, str) for jitem in item) for item in mw_responses]
-        print(f"\n\n IN HANDLE SEPARATELY, NOT AN ENTRY!!! {not_an_entry}")
- 
+        not_an_entry = [all(isinstance(entry, str) for entry in item) for item in mw_responses]
+    
         if all(not_an_entry):
             print(mw_responses)
             #TODO: Figure out how to pretty print this with line breaks.
@@ -192,52 +188,50 @@ def part_of_speech_finder(mw_response, item):
     print("\n\n\n\nin part of speech!!!!!")
     
     parts = []
-    for jitem in mw_response:
-        id = jitem['meta']['id']
-        # print("\n\n", jitem)
+    for entry in mw_response:
+        id = entry['meta']['id']
         if ":" in id:
-            this_id = id.split(":")[0]
+            the_id = id.split(":")[0]
         else:
-            this_id = id
-        if this_id == item:
-            part = jitem.get("fl")
-            print(f"PART ON 161 {part} ________________")
-            if part is None:
-                cross_reference = jitem.get("cxs")[0]["cxl"]
-                reference = jitem.get("cxs")[0]["cxtis"][0]["cxt"]
-                part = cross_reference 
-                print("PART IS NONE!", part, reference, jitem.get("cxs")[0]["cxtis"])
-                parts.append({part: reference})
-                continue
+            the_id = id
 
-        if this_id != item:
-            print(f"\n\n\n________{item} {this_id}")
-            inflections = jitem.get("ins")
-            stems = jitem['meta'].get('stems')
+        if the_id == item:
+            part = entry.get("fl")
+            if part is None:
+                part = entry.get("cxs")[0]["cxl"]
+                reference = entry.get("cxs")[0]["cxtis"][0]["cxt"]
+                print("PART IS NONE!", part, reference, entry.get("cxs")[0]["cxtis"])
+                parts.append({part: reference})
+                
+        #The "stems" of a word list all variants of the word; an "inflection" is essentially a conjugated verb. All inflections are stems, but all stems are not inflections.
+        if the_id != item:
+            print(f"\n\n\n________{item} {the_id}")
+            inflections = entry.get("ins")
+            stems = entry['meta'].get('stems')
 
             if inflections is not None:
-                fixed_inf = [inf['if'] for inf in inflections]
-                new_fixed_inf = [j if "*" not in j else j.replace("*", "") for j in fixed_inf]
-
-                if item in new_fixed_inf:
+                infs = [inf['if'] for inf in inflections]
+                formatted_infs = [i if "*" not in i else i.replace("*", "") for i in infs]
+                if item in formatted_infs:
                     part = f"participle of"
-                    parts.append({part: this_id})
-                    continue       
-                else:
-                    continue
+                    parts.append({part: the_id})
+                continue
+
             elif stems is not None:
                 if item in stems:
-                    print(stems, "STEMS!")
-                    part = f"variation / form of"
-                    parts.append({part: this_id})
-                    continue
-            else:
+                    part = f"variation / form / stem of"
+                    parts.append({part: the_id})
                 continue
-                
-        if jitem.get('shortdef') is not None:
-            def_of_term = jitem['shortdef'] 
+
+            else:
+                #TODO Confirm whether this is necessary; unclear whether all entries have stems/inflections.
+                print(f"{entry} has neither stems nor inflections")
+                continue
+          
+        if entry.get('shortdef') is not None:
+            def_of_term = entry['shortdef'] 
         else:
-            def_of_term = jitem['def']
+            def_of_term = entry['def']
         parts.append({part: def_of_term})
 
     return parts
@@ -303,9 +297,12 @@ def combiner(parts):
     return all_defs_and_parts
 
 def check_by_word(split_compound_from_input):
+    # print(num2words(5, to='ordinal'), "___________________")
     outcome = None
     adverbs = ["more", "most", "less", "least", "very"]
     if split_compound_from_input[0].isnumeric():
+        if split_compound_from_input[1].isnumeric():
+            outcome = f"The input you entered, {'-'.join(split_compound_from_input)} appears to be a simple fraction. CMoS recommends spelling out simple fractions and states that they should generally be hyphenated unless the second number is hyphenated (e.g., 'one twenty-fifth')."
         outcome = "NUMMMM"
         
         if split_compound_from_input[1] == "percent" or split_compound_from_input[1] == "percentage":
@@ -314,6 +311,7 @@ def check_by_word(split_compound_from_input):
 
     if split_compound_from_input[0] in adverbs:
         outcome = "Compounds consisting of 'more,' 'most,' 'less,' 'least,' or 'very' and an adjective or participle (e.g., 'a more perfect nation,' 'the least traveled path' ) do not need to be hyphenated unless there is a risk of misinterpretation."
+
     if split_compound_from_input[0].endswith("ly") and split_compound_from_input[0] != "only" and split_compound_from_input[0] != "family":
         outcome = "NO NO SEEMS LIKE AN ADVERB ENDING IN LY!" 
     
