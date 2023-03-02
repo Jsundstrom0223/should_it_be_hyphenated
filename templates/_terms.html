@@ -6,53 +6,119 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 
-<section class="section_1" style="flex-direction: column">
-<h1>Brush Up on Your Grammar</h1>
+<div id="new_con">
+    <div class="newb">
+        <h1>Brush Up on Your Grammar</h1>
+    </div>
+</div>
 
 <body>
-    <p id="large_p">Select the term(s) that you'd like defined; then, click "Submit."</p>
-        
-    <form action="/_terms" method="post" id="get_some_defs" style="border: 10px solid transparent; border-top-color:  rgb(109, 40, 99); box-sizing: border-box;">
-
-        <input type="checkbox"  id="compound" name="compound"  unchecked/>
-        <label for="compound" class="check_container">Compound</label>
-        <p style="font-size: 2em"></p>
-
-        <div>
-        <input type="checkbox" id="noun" name="noun" unchecked />
-        <label for="noun" class="check_container">Noun</label>
-        <p style="font-size: 2em"></p>
-
-        <div>
-        <input type="checkbox" id="adjective" name="adjective"unchecked />
-        <label for="adjective" class="check_container">Adjective</label>
-        <p style="font-size: 2em"></p>
-
-        <div>
-        <input type="checkbox" id="verb" name="verb" unchecked />
-        <label for="verb" class="check_container">Verb</label>
-        <p style="font-size: 2em"></p>
-
-        <div>
-        <input type="checkbox" id="adverb" name="adverb" unchecked />
-        <label for="adverb" class="check_container">Adverb</label>
-         
-        <p>
-        <div>
-        <input type="submit" class="standard_submit"/>
     
-        {% if answer %}
-      
-                {% for k, v in answer.items() %}
-                <p style="font-size: 1.5em; font-family: sans serif; 
-                box-sizing: border-box; color: rgb(11, 64, 85);">The definition of {{k}} is {{v | pprint | trim("()")}}.</p>
-                {% endfor %}
-      
-        {% endif %}
-        <div></div>  
+    {% if not answer %} 
+    <div id="new_con">
+
+        <div class="newb" style="margin: .25em 1em">
+            <a href="/">Back to the main page</a>
+        </div>
     </div>
+
+    <div id="newcon">
+        <div class="newb">
+            <h2>Select the term(s) that you'd like defined; then, click "Submit."</h2>
+        </div>
+    </div>
+
+    <form action="/_terms" method="post" id="get_some_defs" style="border: 10px solid transparent; border-top-color:  rgb(109, 40, 99); box-sizing: border-box;">
+        <br>
+        <div id="newcon">    
+            <div class="box">
+                <div class="smore">
+                    <input type="checkbox" id="adjective" name="adjective"unchecked />
+                </div>
+                <div class="smore">
+                    <label for="adjective" class="check_container">Adjective</label>
+                </div>
+            </div>
+            
+            <div class="box">
+                <div class="smore">
+                    <input type="checkbox" id="adverb" name="adverb" unchecked />
+                </div>
+                <div class="smore">
+                    <label for="adverb" class="check_container">Adverb</label>
+                </div>
+            </div>
+            
+            <div class="box">
+                <div class="smore">
+                    <input type="checkbox"  id="compound" name="compound"  unchecked/>
+                </div>
+                <div class="smore">
+                    <label for="compound" class="check_container">Compound</label>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="smore">
+                    <input type="checkbox" id="noun" name="noun" unchecked />
+                </div>
+                <div class="smore">
+                    <label for="noun" class="check_container">Noun</label>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="smore">
+                    <input type="checkbox" id="participle" name="participle" unchecked />
+                </div>
+                <div class="smore">
+                    <label for="participle" class="check_container">Participle</label>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="smore">
+                    <input type="checkbox" id="verb" name="verb" unchecked />
+                </div>
+                <div class="smore">
+                    <label for="verb" class="check_container">Verb</label>
+                </div>
+            </div>
+
+            <div class="box">
+                <div class="more">
+                    <input type="submit" class="standard_submit"/>
+                </div>
+            </div>
+        </div>
     </form>
 
-</div>
+    {% else %} 
+        <div id="new_con">
+            <div class="newb" style="margin: .25em 1em">
+                <a href="/">Back to the main page</a>
+            </div>
+            <div class="newb" style="margin: .25em 1em">
+                <a href="/_terms">Look up some more grammatical terms</a>
+            </div>  
+        </div>
+
+        <div id="newcon">
+            <div class="newb">
+                <h2>Definitions</h2>
+            </div>
+            
+            {% for k, v in answer.items() %} 
+            <div class="newb">
+                <p style="font-size: 1.5em; font-weight: 400; margin-left: .75em">{{k|capitalize}}</p>
+            </div>
+
+            <div class="newb">
+                <p style="font-size: 1.25em; margin-left: 1em; margin: 0em 0em 0em 1em;">The definition of {{k}} is {{v | pprint | trim("()")}}.</p>
+            </div>
+            {% endfor %}
+         </div>
+    {% endif %}
+
 </body>
-</section>
+</html>
