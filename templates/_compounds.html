@@ -17,6 +17,9 @@
   
     {% if first_page %}
     <div id="new_con">
+        <div class="newb" style="margin-left: 1em">
+            <a href="/">Back to the main page</a>
+        </div>
         <div class="newb">
         <h2>Enter a Compound Term</h2>
     
@@ -38,7 +41,7 @@
 
     {% macro new(name, value='') -%}
    
-        <div id="newcon">
+        <div id="column_container">
             <div class="newb">
                 <p style="font-size: 1.25em">M-W lists the following definitions and senses for the words in your search term. For each part of your search term, review the definitions and associated senses; then select the part of speech that most closely matches your use from the drop-down menu.</p>
             </div>
@@ -60,7 +63,7 @@
                 {% set sn = "second_part_of_speech" %}
             {% endif %}
          
-            <div class="newcon">
+            <div class="column_container">
                 <div class="newb">
                 <br>
                 <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;">
