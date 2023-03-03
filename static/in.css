@@ -1,43 +1,12 @@
-html {
-    font-size: 24px;
-}
-
-body {
-    background-color: rgb(152, 157, 153);
+* {
     margin: 0;
     padding: 0;
-    }
-
-.section_1 {
-    display: flex;
-    flex-wrap: wrap;
-    margin: 0;
-    }
-
-.b1 {
-    display: flex;
-    flex: 1;
+    font-size: 20px;
+    
 }
-
-.b1 * {
-    flex: 1;
-    flex-flow: row wrap;
-    align-items: normal;
-    flex-grow: 1;
-}
-
-#answer {
-    color:rgb(11, 64, 85);
-}
-
-p {
+body {
+    background-color: rgb(152, 157, 153);
     font-family: Georgia, serif;
-    color:rgb(11, 64, 85);
-    font-size: 1em;
-    font-weight: 400;
-    margin: 1em;
-    flex: 1; 
-    flex-flow: row wrap;
 }
 
 h1 {
@@ -56,18 +25,29 @@ h2 {
     margin: .66em;
 }
 
-h3 {
-    color: rgb(109, 40, 99);
-    margin-left: 1em;
-    margin-bottom: 1em;
-    text-align: left;
+p {
+    color:rgb(11, 64, 85);
+    font-size: 1em;
+    font-weight: 400;
+    margin: 1em;
+    flex: 1; 
+    flex-flow: row wrap;
+}
+
+li {
+    color:rgb(11, 64, 85);
+    font-size: 1em;
+    font-weight: 400;
+    margin-left: 2.5em;
 }
 
 .here_submit {
     font-family: Georgia, serif;
-    color: rgb(36, 101, 49);
+    font-weight: bold;
+    font-size: 1em;
+    color: rgb(152, 157, 153);
     background-color: rgb(152, 157, 153);
-    border: transparent;
+    border: .02 solid transparent;
     cursor: pointer;
 }
 
@@ -76,27 +56,10 @@ h3 {
     border: .01em solid transparent;
     color:  rgb(152, 157, 153);
     cursor: pointer;
-    padding: .5em;
+    padding: .1em;
     border-radius: .01em;
-    margin-left: 1em;
-    font-size: 1em;
-}
-
-.def_submit{
-    background-color:  rgb(36, 101, 49);
-    border: .01 emsolid transparent;
-    color:  rgb(152, 157, 153);
-    cursor: pointer;
-    padding: .5em;
-    margin-left: 1em;
-    
-}
-
-.option_value {
-    font-family: Georgia, serif;
-    color: rgb(11, 64, 85);
-    width: 1em;
-    font-size: 1.5em;
+    margin-left: .75em;
+    font-size: 1.25em;
 }
 
 .select{ 
@@ -108,50 +71,21 @@ h3 {
     font-size: 1.5em;
 }
 
-* {
-    margin: 0;
-    padding: 0;
-    font-size: 20px;
+input[type=checkbox] {  
+    width: 1.25em;
+    height: .75em;
+    margin-top: .33em;
+    margin-left: 1em;
+    margin-right: 1em;
+    cursor: pointer;
 }
 
-#comp_container {
-    display: flex;
-    align-items: left; 
-    background-color: #8c8c8c;
-
-    }
-
-#container {
-display: flex;
-align-items: center; 
-background-color: #8c8c8c;
-height: calc(70vh - 70px);
+.check_container {
+    font-family: Georgia, serif;
+    color:rgb(11, 64, 85);
+    margin-left: 1em;
+    font-size: 1.25em;
 }
-
-#newcon {
-    display: flex;
-    flex-direction: column;
-}
-
-.newb {
-    flex: 1;  
-    margin-top: 0;
-}
-
-.box {
-    flex: 1;
-    height: 100%;
-    display: flex;
-    color: rgb(152, 157, 153);
-    text-align: center;
-    font-size: 1.5em;
-    padding: .25em
-}
-
-.more { 
-    display: flex;
-    align-self: center;
-    }
 
 input[type=text] {
     background-color:  rgb(152, 157, 153);
@@ -160,29 +94,45 @@ input[type=text] {
     border-color:  rgb(36, 101, 49);
 }
 
-input[type=checkbox] {  
-     width: 4em;
-    height: 4em;
-    margin-left: 8em;
-    margin-right: 2em;
-    cursor: pointer;
+#container {
+display: flex;
+align-items: center; 
+background-color: #8c8c8c;
+height: calc(70vh - 70px);
 }
 
-.check_container {
-    font-family: Georgia, serif;
-    color:rgb(11, 64, 85);
-    margin-left: 1em;
+#column_container {
+    display: flex;
+    flex-direction: column; 
 }
 
-.n_column {    
-    width: 33.3%;
-    float: left;
-    height: 120em;
-    padding: 3em;
-    border: 2em solid rgb(109, 40, 99);
-    box-sizing: border-box;
+.newb {
+    flex: 1;  
+    margin-top: 0;
 }
 
-.new_column {
-    flex: 200px;
+.smore:nth-of-type(2) {
+    margin-bottom: .25em;
 }
+
+.box {
+    flex: 1;
+    height: 100%;
+    display: flex;
+    color: rgb(152, 157, 153);
+    text-align: center;
+    font-size: 1.25em;
+    padding: .25em
+}
+
+.more { 
+    display: flex;
+    align-self: center;
+    }
+
+.smore { 
+    display: flex;
+    align-self: left;
+    height: 1.25em;
+    }
+
