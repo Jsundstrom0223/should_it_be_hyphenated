@@ -11,27 +11,49 @@
         <div id="new_con">
             <h1>How It Works</h1>
         </div>
-   
-        <div id="newcon">
-            <div class="newb">
-                <br>
-                <h2>Usage</h2>
-               
-                <p>Say you're unsure of whether "high-quality" should be hyphenated. Should It Be Hyphenated? can help! Once you've entered that compound term (on the "Main Event") page, the app will run a few checks. First, it will check whether the compound is in the Merriam-Webster (M-W) Collegiate Dictionary as a hyphenated compound ("high-quality"), an open compound ("high quality"), or a closed compound ("highquality"). Because the term is not in M-W, the app will then check each part of the compound ("high" and "quality") against a series of Chicago Manual of Style (CMoS) hyphenation standards. [TODO: MAKE THAT MORE SPECIIFC]. Lastly, it'll look up each part of the compound in the M-W dictionary, retrieving the definition and part of speech.</p>
-             
-                <p>When those checks are complete, the app will display all of the definitions it retrieved for each term in the compound. They'll be grouped by part of speech, and you'll pick the group that most closely resembles your use of the term. In "high-quality", for example, high is an adjective meaning "situated or passing above the normal level", so you'd select "adjective." Once you've made your selections, you'll receive an answer to your hyphenation question based on part of speech and CMoS standards!</p>
-                <br>
-            </div>
-
-            <div class="newb">
-                <h2>The Underlying Tech</h2>
-                
-                <p>Should It Be Hyphenated? is a simple Flask app with a Python back end. The app relies on the Merriam-Webster Collegiate Dictionary API; specifically, it takes user input submitted through forms and then builds a request URL that includes that input. It then parses the JSON returned by the API.</p> 
-               
-                <p>TODO: COMPLETE!</p>
-                <br>
+       
+        <div id="column_container">
+            <div class="newb" style="margin-left: 1em">
+                <a href="/">Back to the main page</a>
             </div>
         </div>
-       
+                
+                <h2>The Basics</h2>
+
+                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">How does it work?</p>
+                
+              
+                    <p>Once you've entered a compound that you think may be hyphenated, one of two things will happen: 
+                    You'll either receive an answer to your hyphenation question, or you'll be asked a quick question about your use of the compound.</p>
+                    
+                         
+                        <p>You'll receive an answer right away in the following cases:
+                      
+                        
+                        </ul>
+                   
+                        <li>The Chicago Manual of Style includes a hyphenation rule that's directly applicable to your search term</li>
+                        <li>The compound is in the Merriam-Webster dictionary as a hyphenated compound (e.g., "well-being"), a closed compound (e.g., "hardworking"), or an open compound (e.g., "close call")</li>
+                       
+                 
+                        <p>Otherwise, the app will look up each part of your compound in the Merriam-Webster dictionary and ask you to pick the definition that most closely matches your use of the term. In that case, you’ll receive an answer after you’ve made your selections.</p>
+                    
+                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">What is it?</p>
+                <p>Should It Be Hyphenated? is a Flask app with a Python back end. The app relies on the Merriam-Webster Collegiate Dictionary API and is hosted on Render.</p>
+                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">What else should I know?</p>
+                
+                    <p>Should It Be Hyphenated? is a work in progress with a few minor limitations</p>
+                    <li>The app adheres to Chicago Manual of Style hyphenation standards and retrieves all definitions / spellings from the Merriam-Webster Collegiate Dictionary, one of the dictionaries recommended by the manual.</li>
+                    <li>Currently, the app does not support search terms with more than one hyphen; nor does it differentiate between compounds that use a hyohen and compounds that use an en dash.</li>
+                    <li>The Merriam-Webster Collegiate Dictionary API enforces a rate limit of 1,000 queries a day.</li>
+
+                </ul>
+            <br>
+            <br>
+                
+                
+      
+
+            
     </body>
 </html>
