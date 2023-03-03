@@ -8,8 +8,10 @@
 
     <body>
            
-        <div id="new_con">
+        <div id="column_container">
+            <div class="newb">
             <h1>How It Works</h1>
+            </div>
         </div>
        
         <div id="column_container">
@@ -17,14 +19,23 @@
                 <a href="/">Back to the main page</a>
             </div>
         </div>
-                
-                <h2>The Basics</h2>
 
+        <div id="column_container">
+     
+            <div class="newb">
+                <h2>The Basics</h2>
+            </div>
+            <div class="newb">
                 <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">How does it work?</p>
+            </div>
+
+            <div class="newb">
                 
               
                     <p>Once you've entered a compound that you think may be hyphenated, one of two things will happen: 
                     You'll either receive an answer to your hyphenation question, or you'll be asked a quick question about your use of the compound.</p>
+            </div>
+            <div class="newb">
                     
                          
                         <p>You'll receive an answer right away in the following cases:
@@ -33,25 +44,37 @@
                         </ul>
                    
                         <li>The Chicago Manual of Style includes a hyphenation rule that's directly applicable to your search term</li>
-                        <li>The compound is in the Merriam-Webster dictionary as a hyphenated compound (e.g., "well-being"), a closed compound (e.g., "hardworking"), or an open compound (e.g., "close call")</li>
+                        <li>The compound is in Merriam-Webster's Collegiate® Dictionary as a hyphenated compound (e.g., "well-being"), a closed compound (e.g., "hardworking"), or an open compound (e.g., "close call")</li>
                        
                  
-                        <p>Otherwise, the app will look up each part of your compound in the Merriam-Webster dictionary and ask you to pick the definition that most closely matches your use of the term. In that case, you’ll receive an answer after you’ve made your selections.</p>
+                        <p>Otherwise, the app will look up each part of your compound in Merriam-Webster's Collegiate Dictionary and ask you to pick the definition that most closely matches your use of the term. In that case, you’ll receive an answer after you’ve made your selections.</p>
                     
-                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">What is it?</p>
-                <p>Should It Be Hyphenated? is a Flask app with a Python back end. The app relies on the Merriam-Webster Collegiate Dictionary API and is hosted on Render.</p>
+                    </div>
+                    <div class="newb">
+                        <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">What is it?</p>
+                    </div>
+                    <div class="newb">
+                <p>Should It Be Hyphenated? is a Flask app with a Python back end. The app relies on Merriam-Webster's Collegiate® Dictionary with Audio API and is hosted on Render.</p>
+            </div>
+            <div class="newb">
                 <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">What else should I know?</p>
-                
+            </div>
+            <div class="newb">
                     <p>Should It Be Hyphenated? is a work in progress with a few minor limitations</p>
-                    <li>The app adheres to Chicago Manual of Style hyphenation standards and retrieves all definitions / spellings from the Merriam-Webster Collegiate Dictionary, one of the dictionaries recommended by the manual.</li>
+                    <li>The app adheres to Chicago Manual of Style hyphenation standards and retrieves all definitions / spellings from Merriam-Webster's Collegiate Dictionary, one of the dictionaries recommended by the manual.</li>
                     <li>Currently, the app does not support search terms with more than one hyphen; nor does it differentiate between compounds that use a hyohen and compounds that use an en dash.</li>
-                    <li>The Merriam-Webster Collegiate Dictionary API enforces a rate limit of 1,000 queries a day.</li>
+                    <li>Merriam-Webster's Collegiate® Dictionary with Audio API enforces a rate limit of 1,000 queries a day.</li>
 
                 </ul>
             <br>
             <br>
-                
-                
+        </div>
+    <div class="newb">
+        <svg width="50" height="50">
+            <img src="./static/mw_logo.png" height="50" width="50" />
+            </svg>
+        </div>
+        </div>        
       
 
             

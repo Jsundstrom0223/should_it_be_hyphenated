@@ -28,6 +28,20 @@ def how_it_works():
     if request.method == 'POST':
         return render_template('how_it_works.html')
 
+@app.route("/_terms", methods=['GET', 'POST'])
+def grammar_defs():
+    if request.method == 'POST':
+        defs_to_get = [k for k,v in request.form.items() if v == "on"]
+       
+        def_list = [request_url_builder(item, is_a_compound=False, just_get_def=True) for item in defs_to_get]
+        term_and_def_dict = dict(zip(defs_to_get, def_list))
+        
+        terms_page = render_template('_terms.html', answer=term_and_def_dict)
+        return terms_page
+
+    terms_page = render_template('_terms.html')
+    return terms_page
+
 @app.route('/_compounds.html', methods=['GET', 'POST'])
 def get_an_answer():
     if request.method == 'POST':
@@ -58,8 +72,6 @@ def get_an_answer():
                  
                 is_a_compound = True
                 results = request_url_builder(compound_from_input, is_a_compound, split_compound_from_input)
-                
-                # print(f"\n\n NAMED TUPLE {results.r_answer_ready}, {results.r_outcome}, {results.r_parts} !!!!!!")
              
                 if results.r_answer_ready is False:
                     first = [split_compound_from_input[0], results.r_parts[0]]
@@ -79,22 +91,9 @@ def get_an_answer():
 
     return render_template('_compounds.html', first_page=True)
 
-@app.route("/_terms", methods=['GET', 'POST'])
-def grammar_defs():
-    if request.method == 'POST':
-        defs_to_get = [k for k,v in request.form.items() if v == "on"]
-       
-        def_list = [request_url_builder(item, is_a_compound=False, just_get_def=True) for item in defs_to_get]
-        term_and_def_dict = dict(zip(defs_to_get, def_list))
-        
-        terms_page = render_template('_terms.html', answer=term_and_def_dict)
-        return terms_page
-
-    terms_page = render_template('_terms.html')
-    return terms_page
 
 def request_url_builder(compound_from_input, is_a_compound, split_compound_from_input=None, just_get_def=None):
-    print("\n\n\n IN REQUEST BUILDER", compound_from_input)
+    print("\n\n\n IN REQUEST BUILDER")
 
     constructed = base + compound_from_input + query_string + "key=" + MW_KEY
     response = urllib.request.urlopen(constructed)
@@ -110,27 +109,29 @@ def request_url_builder(compound_from_input, is_a_compound, split_compound_from_
     else:
         # if len(mw_response) == 0:
         #     invalid = True
-        #     print("000000000000000000000000")
         #     return invalid
-        # else:
         return mw_response
  
 def compound_checker(mw_response, compound_from_input, split_compound_from_input):
         done = True
         Results = namedtuple('Results', ['r_answer_ready', 'r_outcome', 'r_parts'])
-        
-        if len(mw_response) == 0 or "hwi" not in mw_response[0]:
-            done = False 
-
+        not_an_entry = all(isinstance(entry, str) for entry in mw_response)
+    
+        if len(mw_response) == 0 or not_an_entry:
+            done = False
+           
         elif mw_response[0]['meta']['id'] != compound_from_input:
             no_hyphen = split_compound_from_input[0] + split_compound_from_input[1]
+            # open_compound = split_compound_from_input[0] + " " + split_compound_from_input[1]
 
-            #Checks whether the term is in M-W as a closed compound
+            #Checks whether the term is in the dictionary as a closed compound
             if mw_response[0]['meta']['id'] == no_hyphen:
+                print(mw_response[0], "_______________________")
                 outcome =  f"Per the dictionary, the term is not hyphenated; use {mw_response[0]['meta']['id']} instead. (TL;DR: No!)"
                 answer_ready = True
             else:
                 done = False
+     
         else: 
             part = mw_response[0].get("fl")
 
@@ -152,7 +153,7 @@ def compound_checker(mw_response, compound_from_input, split_compound_from_input
 def handle_separately(is_a_compound, split_compound_from_input):
     mw_responses = [request_url_builder(i, is_a_compound, split_compound_from_input) for i in split_compound_from_input]
     
-    #Checks for empty responses and responses that consist entirely of strings. Note that when a word isn't in M-W but there are other similar words in the dic, M-W returns a list of those words (a list of strings). If the word isn't in M-W and there are no similar words, M-W returns an empty list. 
+    #Checks for empty responses and responses that consist entirely of strings. Note that when a word isn't Merriam-Webster's Collegiate® Dictionary but there are other similar words in the dictionary, it returns a list of those words (a list of strings). If there are no similar words, it returns an empty list. 
     invalid = [i for i in mw_responses if len(i) == 0]
     if len(invalid) != 0:
         outcome = f"At least one part of the compound you entered, {'-'.join(split_compound_from_input)}, is not in the dictionary, and the dictionary did not return any alternative spellings. Please confirm the correct spelling and try again."
@@ -171,7 +172,7 @@ def handle_separately(is_a_compound, split_compound_from_input):
      
         elif any(not_an_entry):
             which_term = [i for i,v in enumerate(not_an_entry) if v]
-            outcome = f"One of the words in the compound you entered, {split_compound_from_input[which_term[0]]}, is not in the dictionary. M-W returned the following alternatives: \n{mw_responses[which_term[0]]}."
+            outcome = f"One of the words in the compound you entered, {split_compound_from_input[which_term[0]]}, is not in the dictionary. Merriam-Webster's Collegiate® Dictionary returned the following alternatives: \n{mw_responses[which_term[0]]}."
             answer_ready = True
             all_defs_and_parts = None
 
@@ -185,7 +186,7 @@ def handle_separately(is_a_compound, split_compound_from_input):
     return answer_ready, outcome, all_defs_and_parts
 
 def part_of_speech_finder(mw_response, item):
-    print("\n\n\n\nin part of speech!!!!!")
+    print("\n\n\n\nin part of speech!!!!!", mw_response)
     
     parts = []
     for entry in mw_response:
@@ -236,6 +237,20 @@ def part_of_speech_finder(mw_response, item):
 
     return parts
 
+def combiner(parts):
+    print(f"_________________\n\n\n\n COMBINER {parts} \n\n ________________")
+    all_defs_and_parts = [{}, {}]
+
+    for i in range(len(all_defs_and_parts)):
+        for item in parts[i]:
+            for k,v in item.items():
+                if k not in all_defs_and_parts[i].keys():
+                    all_defs_and_parts[i][k] = [v]
+                else:
+                    all_defs_and_parts[i][k].append(v)
+
+    return all_defs_and_parts
+
 def cmos_rules(item):
     print(f" IN CMOS!")
     final_outcome = "COMING SOON"
@@ -258,9 +273,9 @@ def cmos_rules(item):
     if item[0] == "verb":
         if item[1] == "noun":
     
-            final_outcome = "When a verb-noun pair forms a compound, it is generally closed up (e.g., 'pick' + 'pocket' = 'pickpocket') and listed in M-W as such; because the verb-noun pair you entered is not in M-W, it should likely be left open."
+            final_outcome = "When a verb-noun pair forms a compound, it is generally closed up (e.g., 'pick' + 'pocket' = 'pickpocket') and listed in Merriam-Webster's Collegiate® Dictionary as such; because the verb-noun pair you entered is not in that dictionary, it should likely be left open."
         elif item[1] == "adverb" or item[1] == "preposition":
-            final_outcome = "Since M-W does not list the term you entered as a compound, it should likely be left open. There may be edge cases not included in M-W, though, so read on for a quick word on the treatement of verb-adverb and verb-preposition pairs.\n A verb followed by a preposition or adverb can be hyphenated, left open, or closed up; it all depends on how the pair of words is functioning. Since M-W does not list the pair of words you provided, you'll \n Pairs that are used as verbs (i.e., phrasal verbs) are not hyphenated, although their noun or adjectival equivalents can be hyphenated or closed up. For example, take 'break down.' As a phrasal verb--'I'm worried that my car will break down'--there's no hyphen. As a noun, the term is closed up ('There was a breakdown in negotiations.') \n Note tooIf the second word in the pair is a two-letter particle like 'by', 'in', or 'up', a hyphen is likely appropriate"
+            final_outcome = "Since Merriam-Webster's Collegiate® Dictionary does not list the term you entered as a compound, it should likely be left open. There may be edge cases not included in the dictionary, though, so read on for a quick word on the treatement of verb-adverb and verb-preposition pairs.\n A verb followed by a preposition or adverb can be hyphenated, left open, or closed up; it all depends on how the pair of words is functioning.Pairs that are used as verbs (i.e., phrasal verbs) are not hyphenated, although their noun or adjectival equivalents can be hyphenated or closed up. For example, take 'break down.' As a phrasal verb--'I'm worried that my car will break down'--there's no hyphen. As a noun, the term is closed up ('There was a breakdown in negotiations.') \n Note tooIf the second word in the pair is a two-letter particle like 'by', 'in', or 'up', a hyphen is likely appropriate."
         else:
             final_outcome = "PROB NO"
          
@@ -282,19 +297,7 @@ def cmos_rules(item):
 
     return final_outcome
 
-def combiner(parts):
-    print(f"_________________\n\n\n\n COMBINER {parts} \n\n ________________")
-    all_defs_and_parts = [{}, {}]
 
-    for i in range(len(all_defs_and_parts)):
-        for item in parts[i]:
-            for k,v in item.items():
-                if k not in all_defs_and_parts[i].keys():
-                    all_defs_and_parts[i][k] = [v]
-                else:
-                    all_defs_and_parts[i][k].append(v)
-
-    return all_defs_and_parts
 
 def check_by_word(split_compound_from_input):
     # print(num2words(5, to='ordinal'), "___________________")
