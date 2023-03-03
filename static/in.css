@@ -16,6 +16,7 @@ h1 {
     background: linear-gradient(#ebe7e7,  rgb(109, 40, 99)); 
     text-align: center;
     flex: 1;
+    padding: .5em 0em;
     }
 
 h2 {
@@ -122,12 +123,14 @@ height: calc(70vh - 70px);
     color: rgb(152, 157, 153);
     text-align: center;
     font-size: 1.25em;
-    padding: .25em
+    padding: .25em;
+    flex-flow: row wrap;
 }
 
 .more { 
     display: flex;
     align-self: center;
+
     }
 
 .smore { 
