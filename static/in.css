@@ -48,7 +48,6 @@ li {
     font-size: 1em;
     color: rgb(152, 157, 153);
     background-color: rgb(152, 157, 153);
-    border: .02 solid transparent;
     cursor: pointer;
 }
 
@@ -99,7 +98,8 @@ input[type=text] {
 display: flex;
 align-items: center; 
 background-color: #8c8c8c;
-height: calc(70vh - 70px);
+height: calc(80vh - 80px);
+flex-flow: wrap;
 }
 
 #column_container {
@@ -122,15 +122,15 @@ height: calc(70vh - 70px);
     display: flex;
     color: rgb(152, 157, 153);
     text-align: center;
-    font-size: 1.25em;
+    font-size: 1em;
     padding: .25em;
     flex-flow: row wrap;
 }
 
 .more { 
     display: flex;
-    align-self: center;
-
+    align-self: top;
+    flex-flow: row wrap;
     }
 
 .smore { 
@@ -138,4 +138,3 @@ height: calc(70vh - 70px);
     align-self: left;
     height: 1.25em;
     }
-

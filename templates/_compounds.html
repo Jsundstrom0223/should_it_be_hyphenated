@@ -36,7 +36,19 @@
         <input type="submit" class="standard_submit" name="form_1"/>
         <p>
     </form>
+    
     {% endif %}
+
+    {% macro closed_or_open(i) %} 
+    <br> 
+    <li>{{i[0]|capitalize}}: {{i[1]|capitalize}}
+        <ul>        
+            {% for k,v in i[2].items() %}
+                <li>{{k|capitalize}}: {{v|trim("[]")|capitalize}}</li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% endmacro %}
 
     {% macro pick_a_part(name, value='') -%}
    
@@ -61,33 +73,24 @@
                 {% set which = "second" %}
                 {% set sn = "second_part_of_speech" %}
             {% endif %}
-         
-            <div class="column_container">
-                <div class="newb">
+               
                 <br>
                 <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;">
                 <br>
                 <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The {{which}} term in your compound is "{{i[0]|e}}." How is it being used?</label>
-                </div>
-            
+               
                 {% for k,v in i[1].items() %}
                     {% if k == 'past tense and past participle of' or k == 'participle of' or k == "variation / form of "%}
                         {% set intro = "" %}
                     {% else %}
                         {% set intro = "Definition:" %}
                     {% endif %}
-     
-                    <div class="newb">
-                    <p style="font-weight: bold; font-size: 1.5em">{{k |capitalize}}</p>
-                    </div>
-                
-                    <div class="newb">
+                    
+                    <p style="font-weight: bold; font-size: 1.5em">{{k |capitalize}}</p>   
                     <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
-                    margin-left: 3em;">{{intro}} {{v |join('; ') |trim("[]—") |capitalize}}</dd>
-                    </div>
-            </div>
+                    margin-left: 3em;">{{intro}} {{v |join('; ') |trim("[]—") |capitalize}}</dd>   
                 
-            {% endfor %}
+                {% endfor %}
             <br>
    
             <select name = "{{sn}}" class="select">    
@@ -105,76 +108,64 @@
         </fieldset>
     {% endmacro %}
     
-    {% macro closed_or_open(i) %}  
-    <li style="font-weight: bolder">{{i[0]|capitalize}}: {{i[1]|capitalize}}
-        <ul>        
-            {% for k,v in i[2].items() %}
-                <li>{{k|capitalize}}: {{v|trim("[]")|capitalize}}</li>
-            {% endfor %}
-        </ul>
-    </li>
-    {% endmacro %}
-
-    {% if final %}
-        <section>
-        <p>{{final}}</p>
-        <p>To enter another compound, click <a href="/_compounds">here.</a></p>
-        </section>
-    {% endif %}
-
     {% if typo %}
         <h2>Oh no!</h2>
         <p>{{typo}}</p>
-        <p>To try again, click <a href="/_compounds">here.</a></p>
-    {% endif %}
+        <p>To try again, click <a href="/_compounds.html">here.</a></p>
     
-    {% if part_selection %}
-        <p>{{pick_a_part(part_selection, value=part_selection) }}</p>
-    {% endif %}
+    {% else %}
+        {% if final %}
+        <p>{{final}}</p>
+        {% endif %}
+
+        {% if part_selection %}
+            <p>{{pick_a_part(part_selection, value=part_selection) }}</p>
+        {% endif %}
         
-    {% if no_hyph %}
-        <p>The compound you entered is in Merriam-Webster's Collegiate Dictionary and is not hyphenated. The results returned by the dictionary are provided below.</p>
-        {% for i in no_hyph %}
-            <p>{{closed_or_open(i)}}</p>
-        {% endfor %}
-        <p>To enter another compound, click <a href="/_compounds">here.</a></p>
-    {% endif %}
-    
-    {% if only_hyph %}
-    <p>The compound you entered is in Merriam-Webster's Collegiate Dictionary as a hyphenated compound. Details are provided below.</p>
-    <ul>
-        <li>{{only_hyph[1]}}
-            <ul>
-                <li>{{only_hyph[2]}}</li>
-            </ul>
-        </li>
-    </ul>
-    <p>To enter another compound, click <a href="/_compounds">here.</a></p>
-    {% endif %}
+        {% if no_hyph %}
+            <p>The compound you entered is in Merriam-Webster's Collegiate Dictionary and is not hyphenated. The results returned by the dictionary are provided below.</p>
+            {% for i in no_hyph %}
+                <p>{{closed_or_open(i)}}</p>
+            {% endfor %}
+        {% endif %}
 
-    {% if both %}
-        <p>Merriam-Webster's Collegiate Dictionary includes multiple entries for the compound you entered, which should be hyphenated in at least one sense:</p>
-        {% for i in both %}
-            {% if i[0] == "hyphenated compound" %}
-            <ul>  
-                <li style="font-weight: bolder">Hyphenated
-                    <ul>
-                        <li>{{i[1]}}</li>
-                        <li style="margin-left: 3.5em">{{i[2]|capitalize}}</li>
+        {% if only_hyph %}
+        <p>The compound you entered is in Merriam-Webster's Collegiate Dictionary as a hyphenated compound. Details are provided below.</p>
+        <ul>
+            <li>{{only_hyph[1]}}
+                <ul>
+                    <li>{{only_hyph[2]}}</li>
+                </ul>
+            </li>
+        </ul>
+        {% endif %}
+
+        {% if both %}
+            <p>Merriam-Webster's Collegiate Dictionary includes multiple entries for the compound you entered, which should be hyphenated in at least one sense:</p>
+            {% for i in both %}
+                {% if i[0] == "hyphenated compound" %}
+                <ul>  
+                    <li style="font-weight: bolder">Hyphenated
+                        <ul>
+                            <li style="margin-left: 2.5em">{{i[1]}}</li>
+                            <p style="margin-left: 3.5em">{{i[2]|capitalize}}</p>
+                        </ul>
+                    </li>
                     </ul>
-                </li>
-            </ul>
-        <br>
-            {% else %}
-            <ul>
-                <li style="font-weight: bolder">Closed or Open Compound
-                    <ul>{{closed_or_open(i)}}</ul>
-                </li>
-            </ul>
-            {% endif %}
-        {% endfor %}
-    <p>To enter another compound, click <a href="/_compounds">here.</a></p>
-    {% endif %}
+            <br>
+                {% else %}
+                <ul>
+                    <li style="font-weight: bolder">Closed or Open Compound</li>
+                        <ul>{{closed_or_open(i)}}</ul>
+                    </li>
+                </ul>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
 
+        <p>To enter another compound, click <a href="/_compounds.html">here.</a></p>
+
+    {% endif %}
+  
 </body>    
 </html>
