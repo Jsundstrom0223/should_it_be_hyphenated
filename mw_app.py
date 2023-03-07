@@ -1,6 +1,6 @@
 from flask import Flask, request, render_template
 from num2words import num2words
-from collections import namedtuple
+from collections import namedtuple, defaultdict
 import urllib.request, urllib.parse, urllib.error
 import json
 import re
@@ -77,10 +77,21 @@ def get_an_answer():
                     first = [split_compound_from_input[0], results.r_parts[0]]
                     second = [split_compound_from_input[1], results.r_parts[1]]
                     all = [first, second]
-                    new_page = render_template('_compounds.html', answer3=all)
+                    new_page = render_template('_compounds.html', part_selection=all)
                 else:
-                    print({results.r_outcome})
-                    new_page = render_template('_compounds.html', final=results.r_outcome)
+                    if results.r_outcome_type=="no_hyph":
+                        print(f"{[r for r in results.r_outcome]}_________________")
+                        
+                        new_page = render_template('_compounds.html', no_hyph=results.r_outcome)
+                    elif results.r_outcome_type=="only_hyph":
+                        new_page = render_template('_compounds.html', only_hyph=results.r_outcome)
+
+                    elif results.r_outcome_type =="both":
+                        new_page = render_template('_compounds.html', both=results.r_outcome)
+
+                    elif results.r_outcome_type =="typo":
+                        new_page = render_template('_compounds.html', typo=results.r_outcome)
+
                 return new_page
             
         if request.form.get("part_of_speech_selections") is not None:
@@ -91,14 +102,12 @@ def get_an_answer():
 
     return render_template('_compounds.html', first_page=True)
 
-
 def request_url_builder(compound_from_input, is_a_compound, split_compound_from_input=None, just_get_def=None):
-    print("\n\n\n IN REQUEST BUILDER")
 
     constructed = base + compound_from_input + query_string + "key=" + MW_KEY
     response = urllib.request.urlopen(constructed)
     mw_response = json.load(response)
-        
+   
     if just_get_def is not None:
         shortdef = mw_response[0]["shortdef"]
         return shortdef[0]
@@ -107,51 +116,75 @@ def request_url_builder(compound_from_input, is_a_compound, split_compound_from_
         return compound_checker(mw_response, compound_from_input, split_compound_from_input)
             
     else:
-        # if len(mw_response) == 0:
-        #     invalid = True
-        #     return invalid
         return mw_response
  
 def compound_checker(mw_response, compound_from_input, split_compound_from_input):
         done = True
-        Results = namedtuple('Results', ['r_answer_ready', 'r_outcome', 'r_parts'])
+        Results = namedtuple('Results', ['r_answer_ready', 'r_outcome', 'r_outcome_type', 'r_parts'])
         not_an_entry = all(isinstance(entry, str) for entry in mw_response)
     
         if len(mw_response) == 0 or not_an_entry:
-            done = False
-           
-        elif mw_response[0]['meta']['id'] != compound_from_input:
+            done = False 
+        else:
             no_hyphen = split_compound_from_input[0] + split_compound_from_input[1]
-            # open_compound = split_compound_from_input[0] + " " + split_compound_from_input[1]
+            open_compound = split_compound_from_input[0] + " " + split_compound_from_input[1]
 
             #Checks whether the term is in the dictionary as a closed compound
-            if mw_response[0]['meta']['id'] == no_hyphen:
-                print(mw_response[0], "_______________________")
-                outcome =  f"Per the dictionary, the term is not hyphenated; use {mw_response[0]['meta']['id']} instead. (TL;DR: No!)"
-                answer_ready = True
-            else:
-                done = False
-     
-        else: 
-            part = mw_response[0].get("fl")
+            found_in_MW = []
+            
+            all_forms = {compound_from_input: "hyphenated compound", open_compound: "open compound", no_hyphen: "closed compound"}
+            compound_count = 0
+            for entry in mw_response:
+                the_id = get_entry_id(entry)
+                
+                if the_id in all_forms.keys(): 
+                    parts_and_defs = part_of_speech_finder([entry], the_id)
+                    if the_id == compound_from_input:
+                        compound_count += 1
+                        
+                        ###The length of parts_and_defs here will always be one because there is one part of speech per entry in M-W (i.e., different entries for different parts)
+                        for k,v in parts_and_defs[0].items():
+                            newv = str(v).strip("[]")
+                            definition = f"Definition: {newv}"
 
-            if part == "adjective":
-                outcome = f'The compound term you provided, {compound_from_input}, is in the dictionary and is an {part}; it should be hyphenated if it precedes a noun. (TL;DR: Maybe)'
-            else:
-                outcome =  f"The compound term you provided, {compound_from_input}, is in the dictionary and is a {part}; it should likely be hyphenated regardless of what it precedes. (TL;DR: Yes!)"
-            answer_ready = True
-        
+                            if k == "adjective":
+                                hyph_outcome = f"{compound_from_input.capitalize()} is in the dictionary as an adjective; it should be hyphenated if it precedes a noun."
+                            else:
+                                hyph_outcome = f"{compound_from_input.capitalize()} is in the dictionary as a / an {k}; it should likely be hyphenated regardless of what it precedes."
+
+                        found_in_MW.append((all_forms[the_id], hyph_outcome, definition))
+               
+                    else:
+                        found_in_MW.append((all_forms[the_id], the_id, *parts_and_defs))    
+                    
+                    answer_ready = True
+                    outcome = found_in_MW
+
+            #Differentiating between outcome types because they are rendered differently in the Jinja 'compounds' template
+            if compound_count == 0:
+                outcome_type = "no_hyph"
+    
+            if compound_count == 1 and len(found_in_MW) == 1:
+                outcome_type = "only_hyph"
+                outcome = found_in_MW[0]
+
+            if compound_count > 0 and len(found_in_MW) > 1:
+                outcome_type = "both"
+   
         #Handles each part of the compound separately
         if not done:
             is_a_compound = False
-            answer_ready, outcome, all_defs_and_parts = handle_separately(is_a_compound, split_compound_from_input)
-            results = Results(answer_ready, r_outcome=outcome, r_parts=all_defs_and_parts)
+            answer_ready, outcome, outcome_type, all_defs_and_parts = handle_separately(is_a_compound, split_compound_from_input)
+            results = Results(answer_ready, r_outcome=outcome, r_outcome_type=outcome_type, r_parts=all_defs_and_parts)
         else: 
-            results = Results(answer_ready, r_outcome=outcome, r_parts=None)   
+            results = Results(answer_ready, r_outcome=outcome, r_outcome_type=outcome_type, r_parts=None)   
+       
         return results
 
 def handle_separately(is_a_compound, split_compound_from_input):
     mw_responses = [request_url_builder(i, is_a_compound, split_compound_from_input) for i in split_compound_from_input]
+
+    #TODO: Support for one typo w/alternative spellings and one without
     
     #Checks for empty responses and responses that consist entirely of strings. Note that when a word isn't Merriam-Webster's Collegiate® Dictionary but there are other similar words in the dictionary, it returns a list of those words (a list of strings). If there are no similar words, it returns an empty list. 
     invalid = [i for i in mw_responses if len(i) == 0]
@@ -159,7 +192,8 @@ def handle_separately(is_a_compound, split_compound_from_input):
         outcome = f"At least one part of the compound you entered, {'-'.join(split_compound_from_input)}, is not in the dictionary, and the dictionary did not return any alternative spellings. Please confirm the correct spelling and try again."
         answer_ready = True
         all_defs_and_parts = None
-        
+        outcome_type = "typo"
+
     else:
         not_an_entry = [all(isinstance(entry, str) for entry in item) for item in mw_responses]
     
@@ -169,12 +203,14 @@ def handle_separately(is_a_compound, split_compound_from_input):
             outcome = f"Both parts of the compound you entered, {'-'.join(split_compound_from_input)}, appear to be misspelled. The dictionary returned the following alternatives. Did you mean to enter one of those instead? Alternatives to first term: {mw_responses[0]}. \n Alternatives to second term: {mw_responses[1]}."
             answer_ready = True
             all_defs_and_parts = None
+            outcome_type = "typo"
      
         elif any(not_an_entry):
             which_term = [i for i,v in enumerate(not_an_entry) if v]
             outcome = f"One of the words in the compound you entered, {split_compound_from_input[which_term[0]]}, is not in the dictionary. Merriam-Webster's Collegiate® Dictionary returned the following alternatives: \n{mw_responses[which_term[0]]}."
             answer_ready = True
             all_defs_and_parts = None
+            outcome_type = "typo"
 
         else:
             compound_and_responses = dict(zip(split_compound_from_input, mw_responses))
@@ -182,20 +218,26 @@ def handle_separately(is_a_compound, split_compound_from_input):
             all_defs_and_parts = combiner(parts)
             answer_ready = False
             outcome = None
+            outcome_type = None
+    
+    return answer_ready, outcome, outcome_type, all_defs_and_parts
 
-    return answer_ready, outcome, all_defs_and_parts
+def get_entry_id(entry):
+    id = entry['meta']['id']
+    if ":" in id:
+        the_id = id.split(":")[0]
+    else:
+        the_id = id
+    return the_id
 
 def part_of_speech_finder(mw_response, item):
-    print("\n\n\n\nin part of speech!!!!!", mw_response)
+    print("\n\n\n\nin part of speech!!!!!")
     
     parts = []
     for entry in mw_response:
-        id = entry['meta']['id']
-        if ":" in id:
-            the_id = id.split(":")[0]
-        else:
-            the_id = id
+        the_id = get_entry_id(entry)
 
+        print(f"ENTRY!!!!_______\n \n")
         if the_id == item:
             part = entry.get("fl")
             if part is None:
@@ -234,6 +276,7 @@ def part_of_speech_finder(mw_response, item):
         else:
             def_of_term = entry['def']
         parts.append({part: def_of_term})
+        print(f"____________________\n PARTS {parts}________________\n")
 
     return parts
 
@@ -296,8 +339,6 @@ def cmos_rules(item):
         final_outcome = ("The term should be hyphenated if it appears before a noun (e.g., 'well-lit room'). Otherwise, leave it open ('The room is well lit').")
 
     return final_outcome
-
-
 
 def check_by_word(split_compound_from_input):
     # print(num2words(5, to='ordinal'), "___________________")
