@@ -1,42 +1,63 @@
+import grammar_constants
+from collections import namedtuple
 
-def check_by_word(split_compound_from_input):
-    # print(num2words(5, to='ordinal'), "___________________")
-    outcome = None
-    adverbs = ["more", "most", "less", "least", "very"]
-    if split_compound_from_input[0].isnumeric():
-        if split_compound_from_input[1].isnumeric():
-            outcome = f"The input you entered, {'-'.join(split_compound_from_input)} appears to be a simple fraction. CMoS recommends spelling out simple fractions and states that they should generally be hyphenated unless the second number is hyphenated (e.g., 'one twenty-fifth')."
-        outcome = "NUMMMM"
-        
-        if split_compound_from_input[1] == "percent" or split_compound_from_input[1] == "percentage":
-            print(f"!!!!!!!!!!!!!, {split_compound_from_input[1]}")
-            outcome = "NOOOOO, PERCENT!!"  
+def check_first_element_lists(split_compound_from_input):
+    Ele_Results = namedtuple('Ele_Results', ['ele_answer_ready', 'ele_outcome'])
 
-    if split_compound_from_input[0] in adverbs:
-        outcome = "Compounds consisting of 'more,' 'most,' 'less,' 'least,' or 'very' and an adjective or participle (e.g., 'a more perfect nation,' 'the least traveled path' ) do not need to be hyphenated unless there is a risk of misinterpretation."
+    ele_answer_ready = False
+    ele_outcome = None
 
-    if split_compound_from_input[0].endswith("ly") and split_compound_from_input[0] != "only" and split_compound_from_input[0] != "family":
-        outcome = "NO NO SEEMS LIKE AN ADVERB ENDING IN LY!" 
+    in_first_element_lists = [k for k,v in grammar_constants.FIRST_ELEMENT_DICT.items() if split_compound_from_input[0] in v]
+
+    if in_first_element_lists:
+        the_list = in_first_element_lists[0]
+        ele_answer_ready = True
+        ele_outcome = check_first_element(split_compound_from_input, the_list)
     
-    if split_compound_from_input[0] == "self":
-        print("hyph unless followed by a suffix (selfless) or precede by 'un' ('unselfconscious')")
-        outcome = "hyph unless followed by a suffix (selfless) or precede by 'un' ('unselfconscious')"
-    if split_compound_from_input[0] == "ex":
-        print("yes")
-        outcome = "yes"
-    if split_compound_from_input[0] == "great":
-        print("yes, if the second word describes a family relationship (e.g., 'great-grandfather')")
-        outcome = "yes, if the second word describes a family relationship (e.g., 'great-grandfather')"
-    if split_compound_from_input[0] == "half":
-        print("yes if used as an adjective, whether before or after a noun (e.g., 'half-asleep'); open if used as a noun or verb (e.g., 'a half hour' or 'half listen')")
-        outcome = "yes if used as an adjective, whether before or after a noun (e.g., 'half-asleep'); open if used as a noun or verb (e.g., 'a half hour' or 'half listen')"
+    ele_results = Ele_Results(ele_answer_ready, ele_outcome)
+    return ele_results
 
-    if outcome is not None:
-        found_by_word = True
+def check_first_element(split_compound_from_input, the_list):
+
+    if the_list == "ADV":
+        ele_outcome = "Compounds consisting of 'more,' 'most,' 'less,' 'least,' or 'very' and an adjective or participle (e.g., 'a more perfect nation,' 'the least traveled path' ) do not need to be hyphenated unless there is a risk of misinterpretation."
+    
+    if the_list == "ALWAYS":
+        ele_outcome = f"With very few exceptions, compounds beginning with the prefixes 'self', 'ex', and 'great' should be hyphenated. (The few exceptions apply fo 'self', which should be hyphenated unless it is followed by a suffix (as in 'selfless') or preceded by 'un' (as in 'unselfconscious')."
+
+    if the_list == "ADJ":
+        ele_outcome = f"Certain compounds, such as those beginning with 'foster,' 'near,' and 'half,' are hyphenated when used as adjectives (e.g.,'a near-perfect game,''foster-family training,' 'a half-asleep student') but not as verbs ('half listened') or nouns ('a foster family')."
+    
+    return ele_outcome
+
+def number_in_compound(split_compound_from_input):
+    Num_Results = namedtuple('Num_Results', ['num_answer_ready', 'num_outcome'])
+    
+    num_answer_ready = False
+    num_outcome = None
+
+    if split_compound_from_input[0].isnumeric() and split_compound_from_input[1].isnumeric():
+        num_outcome = f"The input you entered, {'-'.join(split_compound_from_input)} appears to be a simple fraction. CMoS recommends spelling out simple fractions and states that they should generally be hyphenated unless the second number is hyphenated (e.g., 'one twenty-fifth')."
+    
     else:
-        found_by_word = False
-    return outcome, found_by_word
+        in_num_lists = [k for k,v in grammar_constants.NUM_DICT.items() if split_compound_from_input[1] in v]
 
+        if in_num_lists[0] == "UNITS":
+            num_outcome = f"Compounds consisting of a number and an abbreviated unit of measurement should never be hyphenated. Note too that the number should be written as a numeral."
+    
+        if in_num_lists[0] == "CURRENCY":
+            num_outcome = f"Spelled-out amounts of money (e.g., 'million dollar' rather than '$1 million') should be hyphenated before a noun ('a million-dollar home') and left open after a noun ('a home worth a million dollars'). Also recall that the Chicago Manual recommends spelling out numbers under 100 in most cases; in technical contexts, though, spelling out only single-digit numbers may be more appropriate."
+
+        if in_num_lists[0] == "PCT":
+            num_outcome = f"Compounds consisting of a number and 'percent' or 'percentage' should not be hyphenated. However, when used in a number range before a noun, percentages should be separated by a hyphen (e.g., 'a 10-20 percent raise.')"
+    
+    if num_outcome is not None:
+        num_answer_ready = True
+    
+    num_results = Num_Results(num_answer_ready, num_outcome)
+ 
+    return num_results
+     
 def cmos_rules(item):
     print(f" IN CMOS!")
     final_outcome = "COMING SOON"

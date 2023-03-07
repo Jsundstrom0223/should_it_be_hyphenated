@@ -47,7 +47,6 @@ def grammar_defs():
 def get_an_answer():
     if request.method == 'POST':
         if request.form.get('start_compounds') is not None:
-            print(request.form.get('start_compounds'), "COMP!!!!")
             return render_template('_compounds.html', first_page=True)
       
         if request.form.get("user_compound") is not None:        
@@ -60,39 +59,48 @@ def get_an_answer():
             else:
                 compound_from_input = user_input[hyphenated_compound.start() : hyphenated_compound.end()]
                 split_compound_from_input = compound_from_input.split("-")
-                by_word_1 = ["self", "ex", "great", "half", "more", "most", "less", "least", "very"]
+                # by_word_1 = ["self", "ex", "great", "half", "more", "most", "less", "least", "very"]
              
                 if split_compound_from_input[0].isnumeric():
-                    compound_from_input = num2words(split_compound_from_input[0]) + "-" + split_compound_from_input[1]
- 
-                if split_compound_from_input[0] in by_word_1 or split_compound_from_input[0].endswith("ly"):
-                    word_answer, found_by_word = grammar.check_by_word(split_compound_from_input)
-                    if found_by_word:
-                        new_page = render_template('_compounds.html', final=word_answer)
+                    num_results = grammar.number_in_compound(split_compound_from_input[0], split_compound_from_input[1])
+                    if num_results.num_answer_ready:
+                        new_page = render_template('_compounds.html', final=num_results.num_outcome)
                         return new_page
-                 
-                is_a_compound = True
-                results = request_url_builder(compound_from_input, is_a_compound, split_compound_from_input)
-             
-                if results.r_answer_ready is False:
-                    first = [split_compound_from_input[0], results.r_parts[0]]
-                    second = [split_compound_from_input[1], results.r_parts[1]]
-                    all = [first, second]
-                    new_page = render_template('_compounds.html', part_selection=all)
+
+                    else:
+                        compound_from_input = num2words(split_compound_from_input[0]) + "-" + split_compound_from_input[1]
+ 
                 else:
-                    if results.r_outcome_type=="no_hyph":
-                        new_page = render_template('_compounds.html', no_hyph=results.r_outcome)
+                    # ele_results = grammar.check_first_element_lists(split_compound_from_input)
+                    # if ele_results.ele_answer_ready:
+                    #     new_page = render_template('_compounds.html', final=ele_results.ele_outcome)
+                    #     return new_page
+             
+                    # else:
+                        is_a_compound = True
+                        results = request_url_builder(compound_from_input, is_a_compound, split_compound_from_input)
+             
+                        if results.r_answer_ready is False:
+                            first = [split_compound_from_input[0], results.r_parts[0]]
+                            second = [split_compound_from_input[1], results.r_parts[1]]
+                            all = [first, second]
+                            new_page = render_template('_compounds.html', part_selection=all)
+                        else:
+                            if results.r_outcome_type=="by_word": 
+                                new_page = render_template('_compounds.html', final=results.r_outcome)
+                            if results.r_outcome_type=="no_hyph":
+                                new_page = render_template('_compounds.html', no_hyph=results.r_outcome)
 
-                    elif results.r_outcome_type=="only_hyph":
-                        new_page = render_template('_compounds.html', only_hyph=results.r_outcome)
+                            elif results.r_outcome_type=="only_hyph":
+                                new_page = render_template('_compounds.html', only_hyph=results.r_outcome)
 
-                    elif results.r_outcome_type =="both":
-                        new_page = render_template('_compounds.html', both=results.r_outcome)
+                            elif results.r_outcome_type =="both":
+                                new_page = render_template('_compounds.html', both=results.r_outcome)
 
-                    elif results.r_outcome_type =="typo":
-                        new_page = render_template('_compounds.html', typo=results.r_outcome)
+                            elif results.r_outcome_type =="typo":
+                                new_page = render_template('_compounds.html', typo=results.r_outcome)
 
-                return new_page
+                        return new_page
             
         if request.form.get("part_of_speech_selections") is not None:
             selected = [request.form["first_part_of_speech"], request.form["second_part_of_speech"]]
@@ -119,13 +127,23 @@ def request_url_builder(compound_from_input, is_a_compound, split_compound_from_
         return mw_response
  
 def compound_checker(mw_response, compound_from_input, split_compound_from_input):
-        done = True
         Results = namedtuple('Results', ['r_answer_ready', 'r_outcome', 'r_outcome_type', 'r_parts'])
+        
+        r_answer_ready = False
+        r_outcome = None
+        r_outcome_type = None
+        r_parts = None
+
         not_an_entry = all(isinstance(entry, str) for entry in mw_response)
     
         if len(mw_response) == 0 or not_an_entry:
-            done = False 
-        else:
+            ele_results = grammar.check_first_element_lists(split_compound_from_input)
+            if ele_results.ele_answer_ready:
+                r_answer_ready = True
+                r_outcome = ele_results.outcome
+                r_outcome_type = "by_word"
+        
+        else:  
             no_hyphen = split_compound_from_input[0] + split_compound_from_input[1]
             open_compound = split_compound_from_input[0] + " " + split_compound_from_input[1]
 
@@ -157,27 +175,26 @@ def compound_checker(mw_response, compound_from_input, split_compound_from_input
                     else:
                         found_in_MW.append((all_forms[the_id], the_id, *parts_and_defs))    
                     
-                    answer_ready = True
-                    outcome = found_in_MW
+                    r_answer_ready = True
+                    r_outcome = found_in_MW
 
             #Differentiating between outcome types because they are rendered differently in the Jinja 'compounds' template
             if compound_count == 0:
-                outcome_type = "no_hyph"
+                r_outcome_type = "no_hyph"
     
             if compound_count == 1 and len(found_in_MW) == 1:
-                outcome_type = "only_hyph"
-                outcome = found_in_MW[0]
+                r_outcome_type = "only_hyph"
+                r_outcome = found_in_MW[0]
 
             if compound_count > 0 and len(found_in_MW) > 1:
-                outcome_type = "both"
+                r_outcome_type = "both"
    
         #Handles each part of the compound separately
-        if not done:
+        if not r_answer_ready:
             is_a_compound = False
-            answer_ready, outcome, outcome_type, all_defs_and_parts = handle_separately(is_a_compound, split_compound_from_input)
-            results = Results(answer_ready, r_outcome=outcome, r_outcome_type=outcome_type, r_parts=all_defs_and_parts)
-        else: 
-            results = Results(answer_ready, r_outcome=outcome, r_outcome_type=outcome_type, r_parts=None)   
+            r_answer_ready, r_outcome, r_outcome_type, r_parts = handle_separately(is_a_compound, split_compound_from_input)
+        
+        results = Results(r_answer_ready, r_outcome, r_outcome_type, r_parts)
        
         return results
 
