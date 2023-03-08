@@ -114,8 +114,12 @@
         <p>To try again, click <a href="/_compounds.html">here.</a></p>
     
     {% else %}
-        {% if final %}
-        <p>{{final}}</p>
+        {% if standard %}
+        <p>{{standard}}</p>
+        {% endif %}
+
+        {% if num %}
+        <p>{{num}}</p>
         {% endif %}
 
         {% if part_selection %}

@@ -1,5 +1,5 @@
-import grammar_constants
 from collections import namedtuple
+import grammar_constants
 
 def check_first_element_lists(split_compound_from_input):
     Ele_Results = namedtuple('Ele_Results', ['ele_answer_ready', 'ele_outcome'])
@@ -7,27 +7,28 @@ def check_first_element_lists(split_compound_from_input):
     ele_answer_ready = False
     ele_outcome = None
 
-    in_first_element_lists = [k for k,v in grammar_constants.FIRST_ELEMENT_DICT.items() if split_compound_from_input[0] in v]
+    in_first_element_lists = [k for k,v in grammar_constants.FIRST_ELEMENT_DICT.items() if
+        split_compound_from_input[0] in v]
 
     if in_first_element_lists:
         the_list = in_first_element_lists[0]
         ele_answer_ready = True
-        ele_outcome = check_first_element(split_compound_from_input, the_list)
-    
+        ele_outcome = check_first_element(the_list)
+
     ele_results = Ele_Results(ele_answer_ready, ele_outcome)
     return ele_results
 
-def check_first_element(split_compound_from_input, the_list):
+def check_first_element(the_list):
 
     if the_list == "ADV":
         ele_outcome = "Compounds consisting of 'more,' 'most,' 'less,' 'least,' or 'very' and an adjective or participle (e.g., 'a more perfect nation,' 'the least traveled path' ) do not need to be hyphenated unless there is a risk of misinterpretation."
     
     if the_list == "ALWAYS":
-        ele_outcome = f"With very few exceptions, compounds beginning with the prefixes 'self', 'ex', and 'great' should be hyphenated. (The few exceptions apply fo 'self', which should be hyphenated unless it is followed by a suffix (as in 'selfless') or preceded by 'un' (as in 'unselfconscious')."
+        ele_outcome = "With very few exceptions, compounds beginning with the prefixes 'self', 'ex', and 'great' should be hyphenated. (The few exceptions apply fo 'self', which should be hyphenated unless it is followed by a suffix (as in 'selfless') or preceded by 'un' (as in 'unselfconscious')."
 
     if the_list == "ADJ":
-        ele_outcome = f"Certain compounds, such as those beginning with 'foster,' 'near,' and 'half,' are hyphenated when used as adjectives (e.g.,'a near-perfect game,''foster-family training,' 'a half-asleep student') but not as verbs ('half listened') or nouns ('a foster family')."
-    
+        ele_outcome = "Certain compounds, such as those beginning with 'foster,' 'near,' and 'half,' are hyphenated when used as adjectives (e.g.,'a near-perfect game,''foster-family training,' 'a half-asleep student') but not as verbs ('half listened') or nouns ('a foster family')."
+
     return ele_outcome
 
 def number_in_compound(split_compound_from_input):
@@ -37,19 +38,19 @@ def number_in_compound(split_compound_from_input):
     num_outcome = None
 
     if split_compound_from_input[0].isnumeric() and split_compound_from_input[1].isnumeric():
-        num_outcome = f"The input you entered, {'-'.join(split_compound_from_input)} appears to be a simple fraction. CMoS recommends spelling out simple fractions and states that they should generally be hyphenated unless the second number is hyphenated (e.g., 'one twenty-fifth')."
+        num_outcome = "The input you entered, {'-'.join(split_compound_from_input)} appears to be a simple fraction. CMoS recommends spelling out simple fractions and states that they should generally be hyphenated unless the second number is hyphenated (e.g., 'one twenty-fifth')."
     
     else:
         in_num_lists = [k for k,v in grammar_constants.NUM_DICT.items() if split_compound_from_input[1] in v]
 
         if in_num_lists[0] == "UNITS":
-            num_outcome = f"Compounds consisting of a number and an abbreviated unit of measurement should never be hyphenated. Note too that the number should be written as a numeral."
+            num_outcome = "Compounds consisting of a number and an abbreviated unit of measurement should never be hyphenated. Note too that the number should be written as a numeral."
     
         if in_num_lists[0] == "CURRENCY":
-            num_outcome = f"Spelled-out amounts of money (e.g., 'million dollar' rather than '$1 million') should be hyphenated before a noun ('a million-dollar home') and left open after a noun ('a home worth a million dollars'). Also recall that the Chicago Manual recommends spelling out numbers under 100 in most cases; in technical contexts, though, spelling out only single-digit numbers may be more appropriate."
+            num_outcome = "Spelled-out amounts of money (e.g., 'million dollar' rather than '$1 million') should be hyphenated before a noun ('a million-dollar home') and left open after a noun ('a home worth a million dollars'). Also recall that the Chicago Manual recommends spelling out numbers under 100 in most cases; in technical contexts, though, spelling out only single-digit numbers may be more appropriate."
 
         if in_num_lists[0] == "PCT":
-            num_outcome = f"Compounds consisting of a number and 'percent' or 'percentage' should not be hyphenated. However, when used in a number range before a noun, percentages should be separated by a hyphen (e.g., 'a 10-20 percent raise.')"
+            num_outcome = "Compounds consisting of a number and 'percent' or 'percentage' should not be hyphenated. However, when used in a number range before a noun, percentages should be separated by a hyphen (e.g., 'a 10-20 percent raise.')"
     
     if num_outcome is not None:
         num_answer_ready = True
@@ -59,7 +60,7 @@ def number_in_compound(split_compound_from_input):
     return num_results
      
 def cmos_rules(item):
-    print(f" IN CMOS!")
+    print(" IN CMOS!")
     final_outcome = "COMING SOON"
     if item[0] == "noun":
         if item[1] == "noun":
@@ -100,6 +101,7 @@ def cmos_rules(item):
 
     if item[0] == "adverb" and item[1] == "past tense and past participle of" or item[1] == "adjective" or item[1] == "participle of":
         
-        final_outcome = ("The term should be hyphenated if it appears before a noun (e.g., 'well-lit room'). Otherwise, leave it open ('The room is well lit').")
+        final_outcome = "The term should be hyphenated if it appears before a noun (e.g., 'well-lit room'). Otherwise, leave it open ('The room is well lit')."
 
     return final_outcome
+
