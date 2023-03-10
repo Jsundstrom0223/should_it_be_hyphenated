@@ -8,11 +8,11 @@ from flask import Flask, request, render_template
 from num2words import num2words
 import grammar
 
-# with open("../../key.txt", "r") as key:
-#     MW_KEY = key.read()
-      
-with open("/etc/secrets/key.txt", "r") as key:
+with open("../../key.txt", "r") as key:
     MW_KEY = key.read()
+      
+# with open("/etc/secrets/key.txt", "r") as key:
+#     MW_KEY = key.read()
 
 QUERY_STRING = "?"
 BASE  = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/"
@@ -21,7 +21,7 @@ app = Flask(__name__)
 
 @app.route("/", methods=['GET'])
 def hello_world():
-   
+    print(f"\n\n\n\n______________________________________________________________________")
     landing_page = render_template('_base.html')
     return landing_page
 
@@ -213,8 +213,8 @@ def compound_checker(mw_response, compound_from_input, split_compound_from_input
 
 def confirm_entry_validity(mw_response):
     not_an_entry = all(isinstance(entry, str) for entry in mw_response)
-    return not_an_entry
 
+    return not_an_entry
 
 def handle_separately(is_a_compound, split_compound_from_input):
     mw_responses = [request_url_builder(i, is_a_compound, split_compound_from_input) for i in split_compound_from_input]
@@ -266,57 +266,179 @@ def get_entry_id(entry):
     return the_id
 
 def get_stems_and_inflections(entry, item):
-    part = None
-    retrieved = None 
-
+    def_of_term = None
+    npart = None
     inflections = entry.get("ins")
     stems = entry['meta'].get('stems')
+    vars = entry.get("vrs")
+    if vars is not None:
+        vars = vars[0]
+        if "*" in vars['va']:
+            va = vars['va'].replace("*", "")
+        else:
+            va = vars['va']
+        if va == item:
+            def_of_term = check_for_short_def(entry)
+            idd = get_entry_id(entry)
+            vl = vars.get('vl')
+            if vl == "or less commonly":
+                p = "less common spelling of"
+            if vl == "or":
+                p = "alternative spelling of"
+            if vl == None:
+                p = "variant of"
+            npart = f"{p} {idd}"
+        # print(f"VA {va} VL {vl} NPART {npart} DEF {def_of_term}")
+    else:
+        print("VARS IS NONE!!!!!!!!!!!!!!\n\n")
+        
+        if inflections is not None:
+            infs = [inf['if'] for inf in inflections]
+            formatted_infs = [i if "*" not in i else i.replace("*", "") for i in infs]
+            if item in formatted_infs:
+                def_of_term = check_for_short_def(entry)
+                print("DEF OF TERM!!!", def_of_term)
+                print("INF AND APRT")
+                part = entry.get('fl')
+                idd = get_entry_id(entry)
+                if part == 'verb':
+                    npart = f"participle of {idd}"
+                print(def_of_term)
+                print(npart)
+                # continue
+    print(f"NPART {npart}")
+    return npart, def_of_term
 
-    if inflections is not None:
-        infs = [inf['if'] for inf in inflections]
-        formatted_infs = [i if "*" not in i else i.replace("*", "") for i in infs]
-        if item in formatted_infs:
-            part = "participle of"
-            retrieved = formatted_infs
+def check_for_short_def(entry):
+    if entry.get('shortdef') is not None:
+        def_of_term = entry['shortdef'] 
+    else:
+        def_of_term = entry['def']
+    
+    return def_of_term
+
+def get_def_of_related_term(term, old_part):
+    print(f"\n\n IN GET RELATED TERM!")
+    is_a_compound = False
+    split_id = term.split(" ")
+
+    #Check whether the related term is two words; if it is, URL encode the space character.
+    if len(split_id) > 1:
+        search_term = split_id[0] + "%20" + split_id[1]
+    else:
+        search_term = term
+
+    related_mw_response = request_url_builder(search_term, is_a_compound)
+    related_defs = []
+    for i in related_mw_response:
+        part = i.get("fl")
+        #If the original search term is a conjugated verb, retrieve only verb definitions.
+        if "tense" in old_part or "participle" in old_part:
+            print("OLD PART IS A FOR MOF A VERB!!!!!!!!", old_part, part)
+            if part == "verb":
+                def_of_related_term = check_for_short_def(i)
+                related_defs.append(def_of_related_term)
+                break
+        else:
+            def_of_related_term = check_for_short_def(i)
+            if def_of_related_term:
+                related_defs.append(def_of_related_term)
+                ###IDK?!!!!! if part is is a cxs and 
+            continue
+        # print(f"DEF OF RELATED {def_of_related_term}")
+        # part = i.get("fl")
+        # print(f"\n\n\ I! {part}_____________")    
+        # if not def_of_related_term:
+        #     print("IIIiiiiii", i)  
+        #     part = i.get("cxs")[0]["cxl"]
+        #     reference = i.get("cxs")[0]["cxtis"][0]["cxt"]
+        #     print(f"PART REF {part} {reference}")
+        #     if part == old_part:
+        #         print(part, "_____________________")
+    
+        # else:
             
-    if retrieved is None and stems is not None:
-        if item in stems:
-            part = "variation / form / stem of"
-            retrieved = stems
 
-    return part, retrieved
+    print(related_defs)
+    return related_defs
+  
+    # ps = []
+    # print(d)
+    # for p in d:
+    #     print(f"______________P on 308 {p}\n")
+        # pr, retrieved = get_stems_and_inflections(p, term)
+        # print(f"ITEM {item} SI {retrieved}")
+        # if retrieved is not None:
+        #     if item in retrieved:
+                # print(f"P ON 311_____________________ {p}")
+            # csd = check_for_short_def(p)
+            # ps.append(csd)
+            # npart = csd.get("fl")
+            # print("_________NPART", {npart})
+
+    # ps = []
+    # if part == "past tense and past participle of":
+    #     ps = [check_for_short_def(p) for p in d if p.get("fl") == "verb"]
+    # else:
+    #     ps = [check_for_short_def(p) for p in d]
+
+    # print(f"\n\n____________PSPSPSPS {ps} ___________\n\n") 
+    # return ps
 
 def part_of_speech_finder(mw_response, item):
+    #when part is none and there is instead something like past tense and past participle of X, there should be a def for X after the defs for actual term. id numbers of defs for X refer to actual id numbers of defs for X, not search term
     print("\n\n\n\nin part of speech!!!!!")
-    
+   
     parts = []
     for entry in mw_response:
         the_id = get_entry_id(entry)
 
-        print("ENTRY!!!!_______\n \n")
         if the_id == item:
             part = entry.get("fl")
+            
+            #If an entry (X) has a cxs instead of a part of speech, the word is a variation or a conjugated form of another word (Y). X may not have its own definition 
+            #separate from Y's.
             if part is None:
                 part = entry.get("cxs")[0]["cxl"]
                 reference = entry.get("cxs")[0]["cxtis"][0]["cxt"]
-                print("PART IS NONE!", part, reference, entry.get("cxs")[0]["cxtis"])
-                parts.append({part: reference})
+                if part is not None:
+                    part_and_ref = f"{part} {reference}"
+                    def_of_term = check_for_short_def(entry)
+                    print(f"PART {part} REFERENCE {reference} THE ID {the_id} DEF {def_of_term}")
+                    if not def_of_term:
+                        print("NO DEF")
+                        def_of_related_term = get_def_of_related_term(reference, part)
+                        parts.append({part_and_ref: def_of_related_term})
+                    else:
+                        parts.append({part_and_ref: def_of_term})
+                continue    
+                            
+            else:
+                def_of_term = check_for_short_def(entry)  
+                parts.append({part: def_of_term})
                 
-        #The "stems" of a word list all variants of the word; an "inflection" is essentially a conjugated verb. All inflections are stems, but all stems are not inflections.
-        if the_id != item:
-            print(f"\n\n\n________{item} {the_id}")
-            part, retrieved = get_stems_and_inflections(entry, item)
-            if part is not None:
-                parts.append({part: the_id})
-            continue
-          
-        if entry.get('shortdef') is not None:
-            def_of_term = entry['shortdef'] 
         else:
-            def_of_term = entry['def']
-        parts.append({part: def_of_term})
-        print(f"____________________\n PARTS {parts}________________\n")
+            #ID of the entry != search term
 
+            #If the search term (X) is a less common spelling of another word (Y), X may not have its own #entry. In that case, M-W will return the entry for Y (with Y's ID), with X listed as a variant of #Y.
+            #Alternatively, X may have its own entry (with Y's ID and definition). In that case, the #definition should not be added to the list twice. 
+
+            print("NOT ID!!!!!", item, the_id)        
+            npart, def_of_term = get_stems_and_inflections(entry, item)
+            print(npart, def_of_term)
+            if npart is not None and def_of_term is not None:
+                if not parts:   
+                    parts.append({npart: def_of_term})
+                else:
+                    for j in parts:
+                        for k,v in j.items():
+                            if v == def_of_term:
+                                ind = parts.index(j)
+                                parts.pop(ind)
+                                parts.insert(ind, {npart: def_of_term})
+                                break
+                            else:
+                                parts.append({npart: def_of_term})
     return parts
 
 def combiner(parts):
