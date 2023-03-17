@@ -61,12 +61,16 @@ def number_in_compound(split_compound_from_input):
      
 def cmos_rules(item):
     print(" IN CMOS!")
+    print(item)
     final_outcome = "COMING SOON"
     if item[0] == "noun":
+        print(item[1])
+        if item[1] == "inflection (conjugated form) of":
+            final_outcome= "?????"
         if item[1] == "noun":
             final_outcome = "always if equal (city-state, philosopher-king); as adj if first modifies second e.g. 'a career-change seminar,' in which 'career' describes the change"
 
-        if item[1] == "past tense and past participle of" or item[1] == "participle":
+        if item[1] == "past tense and past participle of" or item[1] == "participle of":
             final_outcome = "yes if before a noun; e.g. a light-filled room or mouth-watering meal; otherwise open (the meal was mouth watering)"
         
         if item[1] == "adjective":
@@ -78,7 +82,7 @@ def cmos_rules(item):
         if item[1] == "adverb":
             final_outcome = "almost never"
 
-    if item[0] == "verb":
+    if item[0] == "verb" or item[0] == "inflection (conjugated form) of":
         if item[1] == "noun":
     
             final_outcome = "When a verb-noun pair forms a compound, it is generally closed up (e.g., 'pick' + 'pocket' = 'pickpocket') and listed in Merriam-Webster's Collegiate® Dictionary as such; because the verb-noun pair you entered is not in that dictionary, it should likely be left open."
@@ -88,15 +92,15 @@ def cmos_rules(item):
             final_outcome = "PROB NO"
          
     if item[0] == "adjective":
-        if item[1] == "noun" or item[1] == "past tense and past participle of" or item[1]== "participle":
+        if item[1] == "noun" or item[1] == "past tense and past participle of" or item[1]== "participle of":
             
             final_outcome= "If the term appears before a noun, it should be hypehanted. Otherwise, it should probably be left open. (For example, 'a tight-lipped witness' but 'a witness who remained tight lipped'; 'a short-term solution' but 'a solution in the short term.'"
-        if item[1] == "verb":
+        if item[1] == "verb" or item[1] == "inflection (conjugated form) of":
             
             final_outcome = "if it's an irregular verb like run, for which the infinitive and past participle are identical, may be hyphenated before a noun. otherwise nah"
 
-    if item[0] == "past tense and past participle of" or item[0] == "participle" and item[1] == "noun":
-        
+    if item[0] == "past tense and past participle of" or item[0] == "participle of" and item[1] == "noun":
+        ###DOES THIS COVER PRESENT PARTICIPES?
         final_outcome = "yes if before a noun"
 
     if item[0] == "adverb" and item[1] == "past tense and past participle of" or item[1] == "adjective" or item[1] == "participle of":
