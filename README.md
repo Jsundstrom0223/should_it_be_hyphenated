@@ -4,7 +4,7 @@ Should “ad hoc” be hyphenated?
 What about “well lit”?
 Is it “break-in” or “break in”?
 
-The question of whether a term should be hyphenated can be surprisingly tricky to answer. Hyphenation often depends on context and part of speech; some terms, for example, are hyphenated before but not after a noun. Others are hyphenated as adjectives but not as nouns or verbs. And Googling a hyphenation question may not be much help, because different style guides and sources have different standards.
+The question of whether a term should be hyphenated can be surprisingly tricky to answer. Hyphenation often depends on context and part of speech; some terms, for example, are hyphenated before but not after a noun. Others are hyphenated as adjectives but not as nouns or verbs. And Googling a hyphenation question may not be helpful, because different style guides and sources have different standards.
 
 Should It Be Hyphenated?, created by a technical editor, aims to help answer those questions.
 
