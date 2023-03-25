@@ -24,10 +24,18 @@
         <h2>Enter a Compound Term</h2>
     
         {% if mistake %}
-            <p>The input you provided did not include a hyphen ("-"). Please try again and ensure that your input includes one.</p>
-        {% else %}
-            <p>In other words, enter two terms separated by a hyphen (e.g., "well-being," "hard-working," "brightly-lit," etc.). One or both of those terms can be a number, but please use the numeral version (10) instead of the spelled-out version (ten).</p>
+            {% if no_hyphen %}
+                <p>The input you provided lacks a hyphen ("-") or includes a hyphen with
+                at least one space next to it. Please try again and ensure that your input
+                includes one hyphen with no spaces around it (e.g., "well-being").</p>
+           
+            {% else %}
+                <p>The input you provided includes multiple hyphens.
+                    Please enter a compound that has only one hyphen (e.g., "well-being").</p>
+            {% endif %}
+            
         {% endif %}
+    
         </div>
     </div>
     
@@ -36,7 +44,6 @@
         <input type="submit" class="standard_submit" name="form_1"/>
         <p>
     </form>
-    
     {% endif %}
 
     {% macro closed_or_open(i) %} 
@@ -50,66 +57,110 @@
     </li>
     {% endmacro %}
 
-    {% macro pick_a_part(name, value='') -%}
+    {% macro pick_a_part(name, value='', st='', type = '', show = '') -%}
    
         <div id="column_container">
             <div class="newb">
                 <p style="font-size: 1.25em"> Merriam-Webster's Collegiate® Dictionary lists the following definitions and senses for the words in your search term. For each part of your search term, review the definitions and associated senses; then select the part of speech that most closely matches your use from the drop-down menu.</p>
             </div>
-            <div class="newb">
-                <p style="font-size: 1.25em">Note that if either of the terms is a participle (a word formed from a verb, like "running" or "been") one of its "definitions" will simply be the verb from which it is formed. This also applies to terms that are both the past tense and past participle of a verb, like "lit" (the past tense and past participle of "light").</p>
-                <br>
-            </div>
+         
         </div>
 
         <form action="/_compounds.html" method="post" id="gill">
-  
-        <fieldset style="border: solid transparent">
-        {% for i in value %}
-            {% if loop.first %}
-                {% set which = "first" %}
-                {% set sn = "first_part_of_speech" %}
-            {% else %}
-                {% set which = "second" %}
-                {% set sn = "second_part_of_speech" %}
-            {% endif %}
-               
-                <br>
-                <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;">
-                <br>
-                <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The {{which}} term in your compound is "{{i[0]|e}}." How is it being used?</label>
-               
-                {% for k,v in i[1].items() %}
-                    {% if k == 'past tense and past participle of' or k == 'participle of' or k == "variation / form of "%}
-                        {% set intro = "" %}
-                    {% else %}
-                        {% set intro = "Definition:" %}
-                    {% endif %}
-                    
-                    <p style="font-weight: bold; font-size: 1.5em">{{k |capitalize}}</p>   
-                    <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
-                    margin-left: 3em;">{{intro}} {{v |join('; ') |trim("[]—") |capitalize}}</dd>   
-                
-                {% endfor %}
-            <br>
-   
-            <select name = "{{sn}}" class="select">    
-            {% for k,v in i[1].items() %}
-                <option value="{{k}}" class="option_value">{{k |capitalize}}</option>
-            {% endfor %}
-            </select>
-            
-        {% endfor %}
 
+        <fieldset style="border: solid transparent">
+          
+            <br>
+            <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;"></hr>
+            <br>
+            {% for i in value %}
+            {% if comp_with_number %}
+                {% if loop.first %}
+                    {% set which = "second" %}
+                    {% set term = st[1] %}
+                    {% set sn = "non_numeric_element" %}
+                    {% set g = show %}
+                {% endif %}
+            {% else %}
+                {% if loop.first %}
+                {% set which = "first" %}
+                {% set term = st[0] %}
+                {% set sn = "first_part_of_speech" %}
+                {% set g = "" %}
+                {% else %}
+                    {% set which = "second" %}
+                    {% set term = st[1] %}
+                    {% set sn = "second_part_of_speech" %}
+                    {% set g = "" %}
+                {% endif %}
+            {% endif %}
+              
+                <p style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">{{g}}</p>
+                
+               
+                <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The {{which}} term in your compound is "{{term}}". How is it being used?</label>
+                
+                {%for j in i%}
+                
+                    <p style="font-weight: bold; font-size: 1.5em">{{j.to_display|capitalize}}</p>
+                    
+                    {% if j.part_type == "number" %}
+                    <p>{{j.to_display}}</p>
+
+                    {% elif j.part_type != "variant_diff_crts" and j.part_type != "one_of_diff_parts" %}
+                        {% for k,v in j.definition.items() %}
+                        <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
+                        margin-left: 3em;">{{v}}</dd>
+                        {% endfor %}
+
+                    {% elif j.part_type == "one_of_diff_parts" %}
+                    {% for k, v in j.definition.items() %}
+                      
+                            <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
+                            margin-left: 3em;">{{v}}</dd>
+                       
+                    {% endfor %}
+
+                    {% else %}
+                        {% for d in j.definition %}
+                            {% for k,v in d.items() %}
+                                <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
+                                    margin-left: 3em;">{{k|capitalize}}
+                                    <p>{{v|trim("[]{}'—")|capitalize}}</p>
+                                </dd>
+                            {% endfor %}
+                        {% endfor %}
+
+                    {% endif %}
+
+                {% endfor %}
+                <br>  
+                    <select name = "{{sn}}" class="select">    
+                        {% for j in i %}
+                            {% set here = j.menu_option %}
+                            <option value="{{here}}" class="option_value">{{j.menu_option | capitalize}}</option>
+                        {% endfor %}
+                        </select>   
+                <br>
+        {% endfor %}            
         <p>
         <input type="submit" class="standard_submit" style="font-size: 1em" name="part_of_speech_selections"/>
         
         </form>
         </fieldset>
+        
+    
     {% endmacro %}
+    
+    {% if comp_with_number %}
+    
+    <p>{{pick_a_part(part_selection, value=comp_with_number[1], st=search_term, show=comp_with_number[0].to_display) }}</p>
+    {% endif %}
+    
     
     {% if typo %}
         <h2>Oh no!</h2>
+        <p>{{header}}</p>
         <p>{{typo}}</p>
         <p>To try again, click <a href="/_compounds.html">here.</a></p>
     
@@ -121,50 +172,36 @@
         {% if num %}
         <p>{{num}}</p>
         {% endif %}
+    
 
-        {% if part_selection %}
-            <p>{{pick_a_part(part_selection, value=part_selection) }}</p>
+        {% if defs_to_show and search_term %}
+            <p>{{pick_a_part(part_selection, value=defs_to_show, st=search_term) }}</p>
         {% endif %}
+       
+
+        {% if found_in_MW %}
         
-        {% if no_hyph %}
-            <p>The compound you entered is in Merriam-Webster's Collegiate Dictionary and is not hyphenated. The results returned by the dictionary are provided below.</p>
-            {% for i in no_hyph %}
-                <p>{{closed_or_open(i)}}</p>
-            {% endfor %}
-        {% endif %}
-
-        {% if only_hyph %}
-        <p>The compound you entered is in Merriam-Webster's Collegiate Dictionary as a hyphenated compound. Details are provided below.</p>
-        <ul>
-            <li>{{only_hyph[1]}}
-                <ul>
-                    <li>{{only_hyph[2]}}</li>
-                </ul>
-            </li>
-        </ul>
-        {% endif %}
-
-        {% if both %}
-            <p>Merriam-Webster's Collegiate Dictionary includes multiple entries for the compound you entered, which should be hyphenated in at least one sense:</p>
-            {% for i in both %}
-                {% if i[0] == "hyphenated compound" %}
-                <ul>  
-                    <li style="font-weight: bolder">Hyphenated
+                    <p style="font-weight: bolder; color: rgb(36, 101, 49);
+                    font-size: 1.5em;">{{header}}</p>
+                         
+                        {% for o in found_in_MW %}
+                        {% for k,v in o.items() %}
                         <ul>
-                            <li style="margin-left: 2.5em">{{i[1]}}</li>
-                            <p style="margin-left: 3.5em">{{i[2]|capitalize}}</p>
+                            <li style="margin-left: 2.5em; font-weight: bold">{{k.capitalize()}}
+                                
+                                <ul>
+                                <li style="margin-left: 2.5em; margin-bottom: 1em">{{v}}</li>
+                                </ul>
+                            </li>
                         </ul>
-                    </li>
-                    </ul>
+                        {% endfor %}
+                        {% endfor %}
+                            
+                        
+                    
+                  
             <br>
-                {% else %}
-                <ul>
-                    <li style="font-weight: bolder">Closed or Open Compound</li>
-                        <ul>{{closed_or_open(i)}}</ul>
-                    </li>
-                </ul>
-                {% endif %}
-            {% endfor %}
+               
         {% endif %}
 
         <p>To enter another compound, click <a href="/_compounds.html">here.</a></p>
