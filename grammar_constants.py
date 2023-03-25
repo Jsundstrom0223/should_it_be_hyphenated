@@ -1,5 +1,6 @@
 """Grammar constant lists"""
 
+ORDINAL_ENDINGS = ['nd', 'rd', 'st', 'th']
 PERCENTS = ["percent", "percentage"]
 CURRENCY_UNITS = ["dollar", "dollars", "cent", "cents"]
 UNITS_OF_MEASUREMENT = [
