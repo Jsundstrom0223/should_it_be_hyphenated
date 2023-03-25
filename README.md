@@ -10,4 +10,4 @@ Should It Be Hyphenated?, created by a technical editor, aims to help answer tho
 
 Should It Be Hyphenated? is a work-in-progress Flask app with a Python back end. The app relies on Merriam-Webster's Collegiate® Dictionary with Audio API and is hosted on Render [here](https://should-it-be-hyphenated-kmfc.onrender.com/).
 
-For more information on Merriam-Webster's APIs, see the Merriam-Webster Developer Center's [FAQ page](https://dictionaryapi.com/info/frequently-asked-questions) or [JSON documentation](https://dictionaryapi.com/products/json).
+For details on the JSON responses returned by the API and the app's handling of those responses, see ["A Note on Merriam-Webster's Collegiate® Dictionary with Audio API"](https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md). For more extensive and general information on the API, see Merriam-Webster Developer Center's [FAQ page](https://dictionaryapi.com/info/frequently-asked-questions) or [JSON documentation](https://dictionaryapi.com/products/json).
