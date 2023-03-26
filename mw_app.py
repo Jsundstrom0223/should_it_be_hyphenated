@@ -129,7 +129,7 @@ def comp_with_num_element(elements_of_compound, ordinal, ord_end):
         num_element = Number(elements_of_compound[0], spelled_out, ordinal)
         mw_response = request_url_builder(elements_of_compound[1], is_a_compound)
 
-        relevant_entries = parse_entries(mw_response, elements_of_compound[1])
+        relevant_entries = parse_response(mw_response, elements_of_compound[1])
         ne_outcome = [num_element, [relevant_entries]]
         ne_outcome_type = "comp_with_number"
   
@@ -195,7 +195,7 @@ def compound_checker(mw_response, compound_from_input, elements_of_compound):
         
         compound_entries = {}
         for k,v in all_forms.items():
-            relevant_entries = parse_entries(mw_response, k)
+            relevant_entries = parse_response(mw_response, k)
             if relevant_entries:
                 compound_entries[k] = relevant_entries
 
@@ -283,7 +283,7 @@ def handle_separately(is_a_compound, elements_of_compound):
     
     if validity[0] == "valid" and validity[1] == "valid":
         compound_and_responses = dict(zip(elements_of_compound, mw_responses))
-        relevant_entries = [parse_entries(v, k) for k, v in compound_and_responses.items()]
+        relevant_entries = [parse_response(v, k) for k, v in compound_and_responses.items()]
         answer_ready = False
         outcome = relevant_entries
         outcome_type = "need user input"
@@ -365,19 +365,22 @@ def check_for_multiple_parts(defs):
 def variant_inflection_or_stem(the_id, item, entry, relevant_entries, part_of_speech):
     """Handle entries in which the headword is an inflection, variant, or stem.
 
-    If the search term (X) is a less common spelling of another word (Y), X may not have its own #entry. In that case, M-W will return the entry for Y (with Y's ID), with X listed as a variant, inflection, or stem of #Y.
-    Alternatively, X may have its own entry (with Y's ID and definition). In that case, the 
-    definition should not be added to the list twice. 
+    If the search term (X) is a less common spelling of another word (Y), X may not
+    have its own entry. In that case, M-W will return the entry for Y (with Y's ID),
+    with X listed as a variant, inflection, or stem of Y.
+
+    All variants and inflections are stems, but all stems are not variants/inflections.
 
     An inflection is "the change of form that words undergo in different grammatical contexts,
     such as tense or number." 
     A variant is "a different spelling or styling" of a word. 
-    Stems include all variants and inflections but also include "undefined entry words," which are words "derived from or related to" the word being defined. All variants and inflections are stems, but all stems are not variants/inflections.
+    Stems include all variants and inflections but also include "undefined entry words," which are words "derived from or related to" the word being defined.
     
     """
     add = False
-    inflections = entry.get("ins")
+    
     vrs = entry.get("vrs")
+    inflections = entry.get("ins")
     stems = entry['meta'].get("stems")
                
     if vrs is None and inflections is None and stems is None:
@@ -386,22 +389,22 @@ def variant_inflection_or_stem(the_id, item, entry, relevant_entries, part_of_sp
     if vrs is not None:
         term_is_variant = is_variant(item, vrs)
         if term_is_variant: 
-            add, var_defs, relation_to_variant = get_variants(entry, vrs, relevant_entries, part_of_speech)
+            add, stem_defs, relation_to_variant = get_variants(entry, vrs, relevant_entries, part_of_speech)
         
     elif inflections is not None:
         term_is_inflection, inflection_label = is_inflection(inflections, item)
         if term_is_inflection:
-            add, var_defs, relation_to_variant = get_inflections(entry, inflection_label, relevant_entries, part_of_speech)
+            add, stem_defs, relation_to_variant = get_inflections(entry, inflection_label, relevant_entries, part_of_speech)
         
     else:
         term_is_stem=is_stem(stems, item)
         if term_is_stem:
-            add, var_defs, relation_to_variant = get_stems(entry, relevant_entries, part_of_speech)  
+            add, stem_defs, relation_to_variant = get_stems(entry, relevant_entries, part_of_speech)  
         
     if add:    
-        part_type = check_for_multiple_parts(var_defs)
+        part_type = check_for_multiple_parts(stem_defs)
 
-        for k, v in var_defs.items():
+        for k, v in stem_defs.items():
             ###ADD CHECKS OF BAD PARTS OF SPEECH HERE?
             if relation_to_variant in Nonstandard.grouped.keys():
                 here = Nonstandard.grouped[relation_to_variant]
@@ -409,9 +412,10 @@ def variant_inflection_or_stem(the_id, item, entry, relevant_entries, part_of_sp
                     new_crt = here.crt + " and " + the_id
                     here.crt = new_crt
                     here.part_type = "one_diff_crts"
-                    relevant_entries.append(Nonstandard(the_id, "one_diff_crts", k, var_defs, new_crt, relation_to_variant))  
+                    relevant_entries.append(Nonstandard(the_id, "one_diff_crts", k, stem_defs, new_crt, relation_to_variant))  
             else:
-                relevant_entries.append(Nonstandard(the_id, part_type, k, var_defs, the_id, relation_to_variant))  
+                print(the_id, "aDDING FROM VAR INF OR STEM!", stem_defs)
+                relevant_entries.append(Nonstandard(the_id, part_type, k, stem_defs, the_id, relation_to_variant))  
 
 def is_variant(item, vrs):
     vrs = vrs[0]
@@ -441,9 +445,9 @@ def get_variants(entry, vrs, relevant_entries, part_of_speech):
         if vl not in vl_options.keys() or vl is None:
             relation_to_variant = "variant of"
 
-    add, var_defs = get_var_defs(relevant_entries, entry, part_of_speech)
+    add, stem_defs = get_stem_defs(relevant_entries, entry, part_of_speech)
     
-    return add, var_defs, relation_to_variant
+    return add, stem_defs, relation_to_variant
 
 def is_inflection(inflections, item):
     term_is_inflection = False
@@ -471,9 +475,9 @@ def get_inflections(entry, inflection_label, relevant_entries, part_of_speech):
     else:
         relation_to_variant = "variant of"
     
-    add, var_defs = get_var_defs(relevant_entries, entry, part_of_speech)
+    add, stem_defs = get_stem_defs(relevant_entries, entry, part_of_speech)
   
-    return add, var_defs, relation_to_variant
+    return add, stem_defs, relation_to_variant
 
 def is_stem(stems, item):
     term_is_stem = False
@@ -493,68 +497,65 @@ def get_stems(entry, relevant_entries, part_of_speech):
     else:
         relation_to_variant = "variant of"
    
-    add, var_defs = get_var_defs(relevant_entries, entry, part_of_speech)
+    add, stem_defs = get_stem_defs(relevant_entries, entry, part_of_speech)
     
-    return add, var_defs, relation_to_variant
+    return add, stem_defs, relation_to_variant
 
-def get_var_defs(relevant_entries, entry, part_of_speech):
+def get_stem_defs(relevant_entries, entry, part_of_speech):
+    '''Retrieve definitions of variants, inflections, and stems.
+
+    Although the function's name is "get_stem_defs," it also retrieves the
+    definitions of headwords that are variants or inflections or another word,
+    since variants and inflections are also considered stems.
+    '''
+
     add = False
-    var_defs = None
+    stem_defs = None
     
     def_of_term = get_entry_definition(entry)  
     if def_of_term:   
         dupe_def = def_is_duplicate(relevant_entries, def_of_term)
         if not dupe_def:
-            var_defs = {part_of_speech: def_of_term}
+            stem_defs = {part_of_speech: def_of_term}
             add = True
 
-    return add, var_defs
+    return add, stem_defs
 
 def cognate_cross_reference(the_id, entry, relevant_entries, item):
+    print("\n\nCOGNATE CROSS REF")
     '''Handle entries that have a cognate cross-reference (cxs) field.
     
     If an entry for a word (X) has a cxs field instead of a part of speech,
     the word is a less common spelling or a conjugated form of another word.
-    This other word, Y, is the entry's cross-reference target (CRT). X may not have its
+    This other word, Y, is the entry's cross-reference target (CRT). X will not have its
     own definition separate from Y's.
-
-    For example, the entry for "flavour" has a cxs field indicating that "flavour" is
-    the "chiefly British spelling of" flavor (its CRT). The entry does not include
-    a definition.
     '''
 
     cxl_part = entry.get("cxs")[0]["cxl"]
     crt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
 
+    print(cxl_part, crt, "!!!!!!!!!! JJJ")
+    
     if cxl_part is None:
         return
     
+    is_a_compound = False
+    split_id = crt.split(" ")
+    if len(split_id) > 1:
+        search_term = split_id[0] + "%20" + split_id[1]
+    else:
+        search_term = crt
+    cxs_mw_response = request_url_builder(search_term, is_a_compound)
+
+    cxs_defs = {}
+    part_of_speech = None
+
     #Avoid long cxls like "present tense second-person singular and present tense plural of"
     if "participle of" in cxl_part:
         cxl_part = "participle of"
     elif "tense" in cxl_part:
         cxl_part = "inflection (conjugated form) of"
 
-    def_of_term = get_entry_definition(entry)
-
-    ###okay as is or will there be ones with their own ef?        
-    if not def_of_term:
-        get_cxs_target_def(the_id, crt, cxl_part, relevant_entries)
-
-def get_cxs_target_def(the_id, crt, cxl_part, relevant_entries):
-    is_a_compound = False
-    split_id = crt.split(" ")
-
-    #Check whether the cross-reference target is two words; if it is, URL encode the space character.
-    if len(split_id) > 1:
-        search_term = split_id[0] + "%20" + split_id[1]
-    else:
-        search_term = crt
-
-    cxs_mw_response = request_url_builder(search_term, is_a_compound)
-    cxs_defs = {}
-    part_of_speech = None
-    
     for i in cxs_mw_response:
         part_of_speech = i.get("fl")
         
@@ -562,7 +563,6 @@ def get_cxs_target_def(the_id, crt, cxl_part, relevant_entries):
         if "tense" in cxl_part or "participle" in cxl_part or "conjugated form" in cxl_part:
             if part_of_speech == "verb":
                 cxs_target_def = get_entry_definition(i)
-                #ADD CHeCK? # if cxs_target_def:
                 dupe_def = def_is_duplicate(relevant_entries, cxs_target_def)
                 if not dupe_def:
                     cxs_defs[part_of_speech] = cxs_target_def
@@ -586,6 +586,7 @@ def get_cxs_target_def(the_id, crt, cxl_part, relevant_entries):
     for k, v in cxs_defs.items():
         relevant_entries.append(Nonstandard(the_id, part_type, k, cxs_defs, crt, cxl_part))  
 
+
 ###is this a bad name
 def def_is_duplicate(relevant_entries, definition):
     dupe_def = False
@@ -598,6 +599,7 @@ def def_is_duplicate(relevant_entries, definition):
     return dupe_def
 
 def main_entry_with_cxs(the_id, entry, relevant_entries, part):
+    print("IN MAIN ENTRY CXS")
     cxl_part = entry.get("cxs")[0]["cxl"]
     crt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
     part_type = "cxs_entry"
@@ -630,7 +632,20 @@ def standard_main_entry(the_id, entry, relevant_entries, part):
             StandardEntry.stems_and_parts[part] = stems
             relevant_entries.append(StandardEntry(the_id, "main_entry", part, definition))
 
-def parse_entries(mw_response, item): 
+def standard_part_is_duplicate(relevant_entries, part, definition):
+    dupe_part = False
+    standards = [r for r in relevant_entries if r.part_type == "main_entry" and r.part == part]
+
+    ##test with multiples (multiple defs for same part)
+    for i in standards:
+        if i.part == part:
+            combined_defs = "; ".join([i.definition[part], definition[part]])
+            i.definition[part] = combined_defs
+            dupe_part = True
+
+    return dupe_part
+
+def parse_response(mw_response, item): 
     relevant_entries = []
 
     for entry in mw_response: 
@@ -648,9 +663,11 @@ def parse_entries(mw_response, item):
                 if cxl_part is None:
                     standard_main_entry(the_id, entry, relevant_entries, part)
                 else:
+                    print("\n\nHERE MAIN ENTRY cxs!", the_id)
                     main_entry_with_cxs(the_id, entry, relevant_entries, part)
                 
         else: 
+            print("\n\n\n NOT ID", entry)
             existing_entry = False
             ##this check excludes comparatives. EXPLAIN THIS.
             for k,v in StandardEntry.stems_and_parts.items():
@@ -660,9 +677,8 @@ def parse_entries(mw_response, item):
                 variant_inflection_or_stem(the_id, item, entry, relevant_entries, part)
 
     to_format = [entry for entry in relevant_entries if entry.part_type != "one_diff_crts"]
-    for entry in to_format:
-        for k, v in entry.definition.items():
-            entry.definition[k] = v.capitalize()
+    [format_entries(entry) for entry in to_format]
+    
 
     crt_entry_combiner(relevant_entries)
     for i in relevant_entries:
@@ -671,18 +687,15 @@ def parse_entries(mw_response, item):
 
     return relevant_entries
 
-def standard_part_is_duplicate(relevant_entries, part, definition):
-    dupe_part = False
-    standards = [r for r in relevant_entries if r.part_type == "main_entry" and r.part == part]
+def format_entries(entry):
+    for k, v in entry.definition.items():
+        if v.startswith("—"):
+            v_without_leading_dash = re.sub(r"^—", "", v)
+            entry.definition[k] = v_without_leading_dash.capitalize()
+        else:
+            entry.definition[k] = v.capitalize()
 
-    ##test with multiples (multiple defs for same part)
-    for i in standards:
-        if i.part == part:
-            combined_defs = "; ".join([i.definition[part], definition[part]])
-            i.definition[part] = combined_defs
-            dupe_part = True
 
-    return dupe_part
 
 def crt_entry_combiner(relevant_entries):
     entries = [(i.cr_type, i) for i in relevant_entries if i.part_type == "one_diff_crts"]
@@ -703,8 +716,11 @@ def crt_entry_combiner(relevant_entries):
                 discard.append(entry)
             all_defs.append(entry.definition[entry.part])
        
-        joined_defs = "; ".join(all_defs).capitalize()
+        joined_defs = "; ".join(all_defs)
         keep.definition[keep.part] = joined_defs
+        print("KEEP DEF!!!", keep.definition)
+        format_entries(keep)
+        print("NEW FORM", keep.definition)
         keep.to_display = Nonstandard.format_displayed_header(keep)
    
     for item in discard:
