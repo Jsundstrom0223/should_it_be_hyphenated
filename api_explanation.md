@@ -39,8 +39,8 @@ response for the search term "well" includes five entries for "well," along with
 "best" and "better" (the superlative and comparative forms of "well") and "well-adjusted,"  
 "well-advised," and "well-appointed" (compounds derived from "well").
 
-If the search term is itself a variant, inflection, or stem of another word, the headword may  
-be that other word rather than the search term. [LINK TO ADAPTOR TEXT]
+If the search term is itself a variant, inflection, or stem of another word, [the headword may  
+be that other word](https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md#:~:text=to%20resemble%20bologna-,variant_inflection_or_stem,-The%20variant_inflection_or_stem%20function) rather than the search term. 
 
 #### Cognate Cross-References  
 If the headword of an entry is "a less common spelling of another word with the same meaning,"  
