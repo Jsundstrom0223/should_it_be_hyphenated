@@ -7,14 +7,14 @@ import html
 from flask import Flask, request, render_template
 from num2words import num2words
 import grammar
-from grammar_constants import ORDINAL_ENDINGS
-from classes import StandardEntry, Nonstandard, Number
+from grammar_constants import ORDINALS
+from classes import StandardEntry, Nonstandard, Number, Compound, CmosAnswerReady, ExistingCompound
 
-with open("../../key.txt", "r") as key:
-    MW_KEY = key.read()
-      
-# with open("/etc/secrets/key.txt", "r") as key:
+# with open("../../key.txt", "r") as key:
 #     MW_KEY = key.read()
+      
+with open("/etc/secrets/key.txt", "r") as key:
+    MW_KEY = key.read()
 
 QUERY_STRING = "?"
 BASE  = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/"
@@ -36,8 +36,8 @@ def grammar_defs():
         defs_to_get = [k for k,v in request.form.items() if v == "on"]
         def_list = [request_url_builder(item, is_a_compound=False, just_get_def=True) for item in defs_to_get]
         term_and_def_dict = dict(zip(defs_to_get, def_list))
-        
         terms_page = render_template('_terms.html', answer=term_and_def_dict)
+
         return terms_page
 
     terms_page = render_template('_terms.html')
@@ -45,8 +45,6 @@ def grammar_defs():
 
 @app.route('/_compounds.html', methods=['GET', 'POST'])
 def hyphenation_answer():
-    global elements_of_compound 
-    
     if request.method == 'POST':
         if request.form.get('start_compounds') is not None:
             return render_template('_compounds.html', first_page=True)
@@ -54,42 +52,31 @@ def hyphenation_answer():
         if request.form.get("user_compound") is not None:        
             user_input = html.escape(request.form['user_compound']).lower()
             
-            #Using a regex instead of "if '-' in user_input" to catch any stray characters/extra input
+            #Using a regex instead of "if '-' in user_input" to catch/ignore any 
+            # stray characters/extra input
             hyphenated_compound = re.search(r"[\w\d]+-[\w\d]+", user_input)
             if hyphenated_compound is None:
                 return render_template('_compounds.html', first_page=True,
                     mistake=True, no_hyphen=True)
             
-            compound_from_input = user_input[hyphenated_compound.start():hyphenated_compound.end()]
-            elements_of_compound = compound_from_input.split("-") 
             remaining = user_input[hyphenated_compound.end(): ]
-            
             if "-" in remaining:
                 return render_template('_compounds.html', first_page=True,
                     mistake=True, multiple_hyphens=True)
             
-            includes_a_number = False
-            if elements_of_compound[0].isnumeric() or elements_of_compound[1].isnumeric():
-                includes_a_number = True
-                ordinal = False
-                ord_end = None
-            else:
-                for ending in ORDINAL_ENDINGS:
-                    if elements_of_compound[0].endswith(ending):
-                        split_num = elements_of_compound[0].split(ending)
-                        if split_num[0].isnumeric():
-                            includes_a_number = True
-                            ordinal = True
-                            ord_end = ending
+            compound_from_input = user_input[hyphenated_compound.start():hyphenated_compound.end()]
+            elements_of_compound = compound_from_input.split("-") 
+            compound = Compound(elements_of_compound, compound_from_input)
 
-            if includes_a_number:
-                new_page = comp_with_num_element(elements_of_compound, ordinal, ord_end)
+            has_numeral, idx_and_type = check_for_numerals(compound)
+            if has_numeral:
+                new_page = handle_num_elements(compound, idx_and_type)
                 return new_page
             
             is_a_compound = True
-            results, elements_of_compound = request_url_builder(compound_from_input, is_a_compound, elements_of_compound)
+            results = request_url_builder(compound, is_a_compound)
             if results.r_answer_ready is False:
-                new_page = render_template('_compounds.html', defs_to_show=results.r_outcome, search_term=elements_of_compound, outcome_header = results.r_outcome_header)
+                new_page = render_template('_compounds.html', defs_to_show=results.r_outcome, search_term=compound.elements, outcome_header = results.r_outcome_header)
             else:
                 new_page = render_by_type(results)
             
@@ -101,41 +88,64 @@ def hyphenation_answer():
             else:
                 selected = [request.form["first_part_of_speech"].lower(), 
                     request.form["second_part_of_speech"].lower()]
-            final_outcome = grammar.cmos_rules(selected, elements_of_compound)
+            final_outcome = grammar.cmos_rules(selected)
 
             newest_page = render_template('_compounds.html', standard=final_outcome)
             return newest_page
 
     return render_template('_compounds.html', first_page=True)
 
-def comp_with_num_element(elements_of_compound, ordinal, ord_end):
-    num_results = grammar.number_in_compound(elements_of_compound, ordinal)
+def check_for_numerals(compound):
+    has_numeral = False
+    idx_and_type = {}
+
+    for idx, element in enumerate(compound.elements):
+        if element.isnumeric():
+            has_numeral = True
+            idx_and_type[idx] = "cardinal"
+        else:
+            for ending in ORDINALS:
+                if element.endswith(ending):
+                    split_num = element.split(ending)
+                    if split_num[0].isnumeric():
+                        has_numeral = True
+                        idx_and_type[idx] = ending        
+
+    return has_numeral, idx_and_type
+
+def handle_num_elements(compound, idx_and_type):
+    num_results = grammar.check_cmos_num_rules(compound, idx_and_type)
     
     if num_results.num_answer_ready:             
-        new_page = render_template('_compounds.html', num=num_results.num_outcome)
-                        
+        new_page = render_template('_compounds.html', num=num_results.num_outcome)                    
+    
     else:
         NumericElementResults = namedtuple('Results', ['ne_answer_ready', 'ne_outcome', 'ne_outcome_type', 'ne_outcome_header'])
         ne_answer_ready = False
         is_a_compound = False
                         
-        if not ordinal:
-            spelled_out = num2words(elements_of_compound[0])
-        else:
-            ord_num = elements_of_compound[0].split(ord_end)
-            num_spelled_out = num2words(ord_num[0])
-            spelled_out = num_spelled_out + ord_end
+        for k,v in idx_and_type.items():
+            if v == "cardinal":
+                spelled_out = num2words(compound.elements[k])
+            else:
+                ord_num = compound.elements[k].split(v)
+                num_spelled_out = num2words(ord_num[0])
+                spelled_out = num_spelled_out + v
+        
+            num_element = Number(compound.elements[k], spelled_out, {k:v})
+          
+        #This will always have a length of 1, because if both elements of the compound are numbers,
+        #an answer will have been returned to the user.
+        which = [j for i,j in enumerate(compound.elements) if i not in idx_and_type.keys()] 
+        
+        mw_response = request_url_builder(*which, is_a_compound)
 
-        num_element = Number(elements_of_compound[0], spelled_out, ordinal)
-        mw_response = request_url_builder(elements_of_compound[1], is_a_compound)
-
-        relevant_entries = parse_response(mw_response, elements_of_compound[1])
+        relevant_entries = parse_response(mw_response, *which)
         ne_outcome = [num_element, [relevant_entries]]
         ne_outcome_type = "comp_with_number"
-  
         ne_outcome_header = "NUM"
         ne_results = NumericElementResults(ne_answer_ready, ne_outcome, ne_outcome_type, ne_outcome_header)
-        new_page = render_template('_compounds.html', comp_with_number = ne_results.ne_outcome, search_term = elements_of_compound, header=ne_results.ne_outcome_header, type=ne_results.ne_outcome_type)
+        new_page = render_template('_compounds.html', comp_with_number = ne_results.ne_outcome, search_term = compound.elements, header=ne_results.ne_outcome_header, type=ne_results.ne_outcome_type)
     
     return new_page
 
@@ -149,10 +159,14 @@ def render_by_type(results):
 
     return new_page
     
-def request_url_builder(compound_from_input, is_a_compound, elements_of_compound=None, just_get_def=None):
+def request_url_builder(term, is_a_compound, just_get_def=None):
     '''Build and send the request to Merriam-Webster's Collegiate® Dictionary with Audio API.'''
+    if is_a_compound:
+        search_term = term.full
+    else:
+        search_term = term
     
-    constructed = BASE + compound_from_input + QUERY_STRING + "key=" + MW_KEY
+    constructed = BASE + search_term + QUERY_STRING + "key=" + MW_KEY
     with urllib.request.urlopen(constructed) as response:
         mw_response = json.load(response)
    
@@ -161,11 +175,11 @@ def request_url_builder(compound_from_input, is_a_compound, elements_of_compound
         return shortdef[0]
     
     if is_a_compound:
-        return compound_checker(mw_response, compound_from_input, elements_of_compound)
+        return compound_checker(mw_response, term)
 
     return mw_response
 
-def compound_checker(mw_response, compound_from_input, elements_of_compound):
+def compound_checker(mw_response, compound):
     Results = namedtuple('Results', ['r_answer_ready', 'r_outcome', 'r_outcome_type', 'r_outcome_header'])
     
     outcomes_by_comp_type = defaultdict(list)
@@ -175,27 +189,24 @@ def compound_checker(mw_response, compound_from_input, elements_of_compound):
     r_outcome_header = None
 
     validity = confirm_entry_validity(mw_response)
-
+    answers = []
     #If there is no entry for the compound, check whether any CMoS standards apply to the compound. If none do,
     #the compound will be split up, and each element of the compound will be handled separately.
     if validity == "empty" or validity == "typo":
-        ele_results = grammar.check_first_element_lists(elements_of_compound)
-        if ele_results.ele_answer_ready:
+        ele_answer_ready, ele_outcome = grammar.check_first_element_lists(compound)
+        if ele_answer_ready:
             r_answer_ready = True
-            r_outcome = ele_results.ele_outcome
+            r_outcome = ele_outcome
             r_outcome_type = "standard"
-            r_outcome_header = "something"
-    
+            r_outcome_header = "According to Chicago Manual of Style hyphenation standards, your compound should be handled as follows."
+      
     else:  
-        no_hyphen = elements_of_compound[0] + elements_of_compound[1]
-        open_compound = elements_of_compound[0] + " " + elements_of_compound[1]
-
         #Checks whether the term is in the dictionary as a closed or open compound
-        all_forms = {compound_from_input: "hyphenated compound", open_compound: "open compound", no_hyphen: "closed compound"}
+        all_forms = {compound.full: "hyphenated compound", compound.open: "open compound", compound.closed: "closed compound"}
         
         compound_entries = {}
         for k,v in all_forms.items():
-            relevant_entries = parse_response(mw_response, k)
+            relevant_entries = parse_response(mw_response, k, comp_in_mw=True)
             if relevant_entries:
                 compound_entries[k] = relevant_entries
 
@@ -203,57 +214,40 @@ def compound_checker(mw_response, compound_from_input, elements_of_compound):
             r_answer_ready = False
         
         else:
-            outcomes = []
+            all_entries = []
             for compounds, entries in compound_entries.items(): 
                 for ce in entries:
                     if "-" in ce.the_id:
-                        compound_type = "a hyphenated compound"
+                        compound_type = "hyphenated compound"
                     else:
                         split_k = ce.the_id.split(" ")
                         if len(split_k) > 1:
-                            compound_type = "an open compound"
+                            compound_type = "open compound"
                         else:
-                            compound_type = "a closed compound"
+                            compound_type = "closed compound"
                    
                     if ce.part_type == "main_entry":
-                        outcome = grammar.in_mw_as_main_entry(compound_type, ce, compound_from_input)        
+                        entry_outcome = grammar.in_mw_as_main_entry(compound_type, ce, compound.full)        
                        
-                    ##what to do with diff crts?
+                    ##what to do with diff cxts?
                     if ce.part_type == "variant_or_cxs" or ce.part_type == "one_of_diff_parts":
-                        outcome = grammar.in_mw_as_variant(compound_type, ce, compound_from_input)
+                        entry_outcome = grammar.in_mw_as_variant(compound_type, ce, compound.full)
                     
-                    outcomes.append({compound_type: outcome})
-
-            if len(outcomes) > 1:
-                for o in outcomes:
-                    for k,v in o.items():
-                        outcomes_by_comp_type[k].append(v)
-                    
-                compound_types = [k for k in outcomes_by_comp_type.keys()]
-                if len(compound_types) == 2:
-                    form = " and ".join(compound_types)
-                else:
-                    compound_types.insert(-1, "and ")
-                    form = ", ".join(compound_types)
-
-            else:
-                for o in outcomes:
-                    for k, v in o.items():
-                        form = k
-                    
-            r_outcome_header = f"M-W lists '{compound_from_input}' as {form}. Details are provided below."
+                    all_entries.append(ExistingCompound({compound_type: entry_outcome}, "found_in_MW"))
+     
+            r_outcome = all_entries
+            r_outcome_header = ExistingCompound.format_compound_header(compound)
             r_answer_ready = True
-            r_outcome_type = "found_in_MW"
-            r_outcome = outcomes
+            r_outcome_type = "found_in_MW"   
         
     # #Handles each part of the compound separately
     if not r_answer_ready:
         is_a_compound = False
-        r_answer_ready, r_outcome, r_outcome_type, r_outcome_header = handle_separately(is_a_compound, elements_of_compound)
+        r_answer_ready, r_outcome, r_outcome_type, r_outcome_header = handle_separately(is_a_compound, compound)
         
     results = Results(r_answer_ready, r_outcome, r_outcome_type, r_outcome_header)
     
-    return results, elements_of_compound
+    return results
 
 def confirm_entry_validity(mw_response):
     '''Confirm that the search term is valid.
@@ -266,50 +260,47 @@ def confirm_entry_validity(mw_response):
 
     if len(mw_response) == 0:
         return "empty"
-
     else:
-        print(mw_response)
         typo_in_input = all(isinstance(entry, str) for entry in mw_response)
         if typo_in_input:
             return "typo"
-
         else:
             return "valid"
 
-def handle_separately(is_a_compound, elements_of_compound):
-    mw_responses = [request_url_builder(i, is_a_compound, elements_of_compound) for i in elements_of_compound]
+def handle_separately(is_a_compound, compound):
+    mw_responses = [request_url_builder(element, is_a_compound) for element in compound.elements]
 
     validity = [confirm_entry_validity(i) for i in mw_responses]
     
     if validity[0] == "valid" and validity[1] == "valid":
-        compound_and_responses = dict(zip(elements_of_compound, mw_responses))
+        compound_and_responses = dict(zip(compound.elements, mw_responses))
         relevant_entries = [parse_response(v, k) for k, v in compound_and_responses.items()]
+      
         answer_ready = False
         outcome = relevant_entries
         outcome_type = "need user input"
         outcome_header = "Please pick a part of speech."
-
     else:
         answer_ready, outcome, outcome_type, outcome_header =\
-            handle_invalid_entries(mw_responses, elements_of_compound, validity)
+            handle_invalid_entries(mw_responses, compound, validity)
     
     return answer_ready, outcome, outcome_type, outcome_header
 
-def handle_invalid_entries(mw_responses, elements_of_compound, validity):
+def handle_invalid_entries(mw_responses, compound, validity):
     answer_ready = True
     outcome_type = "typo"
     outcome_header = f'''At least one element of the compound you entered,
-        '{'-'.join(elements_of_compound)}', appears to be misspelled.'''
+        '{compound.full}', appears to be misspelled.'''
     
     if validity[0] == "typo" and validity[1] == "typo":
         outcome = (f"Both elements of the compound you entered are misspelled. "
         f"However, the dictionary returned spelling suggestions for both elements. "
         f"Please review the suggestions and enter another compound. "
-        f"Spelling suggestions for the first element, '{elements_of_compound[0]},' are as follows: "
+        f"Spelling suggestions for the first element, '{compound.elements[0]},' are as follows: "
         f"{mw_responses[0]}. "
-        f"Spelling suggestions for the second element, '{elements_of_compound[1]},' are as follows: "
+        f"Spelling suggestions for the second element, '{compound.elements[1]},' are as follows: "
         f"{mw_responses[1]}.")
-     
+      
     elif validity[0] == "empty" and validity[1] == "empty":
         outcome = (f"Both parts of the compound you entered are misspelled, "
         f" and the dictionary did not return any alternative spellings. "
@@ -321,15 +312,14 @@ def handle_invalid_entries(mw_responses, elements_of_compound, validity):
         for k,v in both.items():
             if v == "typo":
                 o = (f"The dictionary returned the following spelling suggestions "
-                f"for '{elements_of_compound[k]}', which is misspelled: "
+                f"for '{compound.elements[k]}', which is misspelled: "
                 f"{mw_responses[k]}.")
                 outcomes.append(o)
             if v == "empty":
                 o = (f"The dictionary did not return any spelling suggestions for "
-                f"'{elements_of_compound[k]}', which is misspelled.")
+                f"'{compound.elements[k]}', which is misspelled.")
                 outcomes.append(o)
         outcome = " ".join(outcomes).strip("'[]")
-
 
     return answer_ready, outcome, outcome_type, outcome_header
 
@@ -403,18 +393,16 @@ def variant_inflection_or_stem(the_id, item, entry, relevant_entries, part_of_sp
         
     if add:    
         part_type = check_for_multiple_parts(stem_defs)
-
         for k, v in stem_defs.items():
             ###ADD CHECKS OF BAD PARTS OF SPEECH HERE?
             if relation_to_variant in Nonstandard.grouped.keys():
                 here = Nonstandard.grouped[relation_to_variant]
                 if here.part == k:
-                    new_crt = here.crt + " and " + the_id
-                    here.crt = new_crt
-                    here.part_type = "one_diff_crts"
-                    relevant_entries.append(Nonstandard(the_id, "one_diff_crts", k, stem_defs, new_crt, relation_to_variant))  
+                    new_cxt = here.cxt + " and " + the_id
+                    here.cxt = new_cxt
+                    here.part_type = "one_diff_cxts"
+                    relevant_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs, new_cxt, relation_to_variant))  
             else:
-                print(the_id, "aDDING FROM VAR INF OR STEM!", stem_defs)
                 relevant_entries.append(Nonstandard(the_id, part_type, k, stem_defs, the_id, relation_to_variant))  
 
 def is_variant(item, vrs):
@@ -522,7 +510,6 @@ def get_stem_defs(relevant_entries, entry, part_of_speech):
     return add, stem_defs
 
 def cognate_cross_reference(the_id, entry, relevant_entries, item):
-    print("\n\nCOGNATE CROSS REF")
     '''Handle entries that have a cognate cross-reference (cxs) field.
     
     If an entry for a word (X) has a cxs field instead of a part of speech,
@@ -532,21 +519,18 @@ def cognate_cross_reference(the_id, entry, relevant_entries, item):
     '''
 
     cxl_part = entry.get("cxs")[0]["cxl"]
-    crt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
-
-    print(cxl_part, crt, "!!!!!!!!!! JJJ")
-    
+    cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
     if cxl_part is None:
         return
     
     is_a_compound = False
-    split_id = crt.split(" ")
+    split_id = cxt.split(" ")
     if len(split_id) > 1:
         search_term = split_id[0] + "%20" + split_id[1]
     else:
-        search_term = crt
-    cxs_mw_response = request_url_builder(search_term, is_a_compound)
+        search_term = cxt
 
+    cxs_mw_response = request_url_builder(search_term, is_a_compound)
     cxs_defs = {}
     part_of_speech = None
 
@@ -567,9 +551,8 @@ def cognate_cross_reference(the_id, entry, relevant_entries, item):
                 if not dupe_def:
                     cxs_defs[part_of_speech] = cxs_target_def
                 break
-            
         else:
-            if part_of_speech == "biographical name" or part_of_speech == "auxiliary verb" or part_of_speech == "abbreviation" or part_of_speech == "symbol":
+            if part_of_speech == "biographical name" or part_of_speech == "auxiliary verb" or part_of_speech == "abbreviation" or part_of_speech == "symbol" or part_of_speech == "trademark":
                 continue
             
             cxs_target_def = get_entry_definition(i)
@@ -584,10 +567,8 @@ def cognate_cross_reference(the_id, entry, relevant_entries, item):
     part_type = check_for_multiple_parts(cxs_defs)
           
     for k, v in cxs_defs.items():
-        relevant_entries.append(Nonstandard(the_id, part_type, k, cxs_defs, crt, cxl_part))  
+        relevant_entries.append(Nonstandard(the_id, part_type, k, cxs_defs, cxt, cxl_part))  
 
-
-###is this a bad name
 def def_is_duplicate(relevant_entries, definition):
     dupe_def = False
 
@@ -599,9 +580,8 @@ def def_is_duplicate(relevant_entries, definition):
     return dupe_def
 
 def main_entry_with_cxs(the_id, entry, relevant_entries, part):
-    print("IN MAIN ENTRY CXS")
     cxl_part = entry.get("cxs")[0]["cxl"]
-    crt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
+    cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
     part_type = "cxs_entry"
     
     if "participle of" in cxl_part:
@@ -615,8 +595,7 @@ def main_entry_with_cxs(the_id, entry, relevant_entries, part):
         if not dupe_def:             
             definition = {part: def_of_term}
             part_type = check_for_multiple_parts(definition)
-
-            relevant_entries.append(Nonstandard(the_id, part_type, part, definition, crt, cxl_part)) 
+            relevant_entries.append(Nonstandard(the_id, part_type, part, definition, cxt, cxl_part)) 
 
 def standard_main_entry(the_id, entry, relevant_entries, part):
     '''Handle standard complete entries.'''
@@ -645,7 +624,7 @@ def standard_part_is_duplicate(relevant_entries, part, definition):
 
     return dupe_part
 
-def parse_response(mw_response, item): 
+def parse_response(mw_response, item, comp_in_mw=False): 
     relevant_entries = []
 
     for entry in mw_response: 
@@ -663,28 +642,26 @@ def parse_response(mw_response, item):
                 if cxl_part is None:
                     standard_main_entry(the_id, entry, relevant_entries, part)
                 else:
-                    print("\n\nHERE MAIN ENTRY cxs!", the_id)
                     main_entry_with_cxs(the_id, entry, relevant_entries, part)
                 
         else: 
-            print("\n\n\n NOT ID", entry)
             existing_entry = False
-            ##this check excludes comparatives. EXPLAIN THIS.
+            ##This check excludes comparatives. TODO: EXPLAIN THIS.
             for k,v in StandardEntry.stems_and_parts.items():
                 if k == part and the_id in v:
                     existing_entry = True
             if not existing_entry:
                 variant_inflection_or_stem(the_id, item, entry, relevant_entries, part)
-
-    to_format = [entry for entry in relevant_entries if entry.part_type != "one_diff_crts"]
-    [format_entries(entry) for entry in to_format]
     
-
-    crt_entry_combiner(relevant_entries)
-    for i in relevant_entries:
-        if i.part_type != "main_entry":
-            i.to_display = Nonstandard.format_displayed_header(i)
-
+    if not comp_in_mw:
+        to_format = [entry for entry in relevant_entries if entry.part_type != "one_diff_cxts"]
+        [format_entries(entry) for entry in to_format]
+        
+        cxt_entry_combiner(relevant_entries)
+        for i in relevant_entries:
+            if i.part_type != "main_entry":
+                i.to_display = Nonstandard.format_displayed_header(i)
+   
     return relevant_entries
 
 def format_entries(entry):
@@ -695,10 +672,8 @@ def format_entries(entry):
         else:
             entry.definition[k] = v.capitalize()
 
-
-
-def crt_entry_combiner(relevant_entries):
-    entries = [(i.cr_type, i) for i in relevant_entries if i.part_type == "one_diff_crts"]
+def cxt_entry_combiner(relevant_entries):
+    entries = [(i.cr_type, i) for i in relevant_entries if i.part_type == "one_diff_cxts"]
     
     combined = defaultdict(list)
     for k,v in entries:
@@ -707,7 +682,6 @@ def crt_entry_combiner(relevant_entries):
     all_defs = []
     true_dict = dict(combined)
     discard = []
-    
     for k, v in true_dict.items():
         for entry in v:
             if v.index(entry) == 0:
@@ -718,9 +692,7 @@ def crt_entry_combiner(relevant_entries):
        
         joined_defs = "; ".join(all_defs)
         keep.definition[keep.part] = joined_defs
-        print("KEEP DEF!!!", keep.definition)
         format_entries(keep)
-        print("NEW FORM", keep.definition)
         keep.to_display = Nonstandard.format_displayed_header(keep)
    
     for item in discard:

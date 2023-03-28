@@ -22,6 +22,13 @@
         </div>
         <div class="newb">
         <h2>Enter a Compound Term</h2>
+        <p>Please enter a term that you think may be hyphenated. Your search term
+            should include only one hyphen with no spaces around it. 
+            
+            The term can include up to two cardinal or ordinal numbers. If there
+            are numbers in your compound, please use numerals instead of the 
+            spelled-out versions and omit any commas (e.g., "2nd-best," "1000-dollar," etc.);
+            for fractions, please use two cardinal numbers separated by a hyphen (e.g., "1-2").</p>
     
         {% if mistake %}
             {% if no_hyphen %}
@@ -98,7 +105,7 @@
                 <p style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">{{g}}</p>
                 
                
-                <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The {{which}} term in your compound is "{{term}}". How is it being used?</label>
+                <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The {{which}} term in your compound is "{{term}}." How is it being used?</label>
                 
                 {%for j in i%}
                 
@@ -107,7 +114,7 @@
                     {% if j.part_type == "number" %}
                     <p>{{j.to_display}}</p>
 
-                    {% elif j.part_type != "variant_diff_crts" and j.part_type != "one_of_diff_parts" %}
+                    {% elif j.part_type != "one_of_diff_parts" %}
                         {% for k,v in j.definition.items() %}
                         <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
                         margin-left: 3em;">{{v}}</dd>
@@ -177,31 +184,18 @@
         {% if defs_to_show and search_term %}
             <p>{{pick_a_part(part_selection, value=defs_to_show, st=search_term) }}</p>
         {% endif %}
-       
 
         {% if found_in_MW %}
         
-                    <p style="font-weight: bolder; color: rgb(36, 101, 49);
-                    font-size: 1.5em;">{{header}}</p>
-                         
-                        {% for o in found_in_MW %}
-                        {% for k,v in o.items() %}
-                        <ul>
-                            <li style="margin-left: 2.5em; font-weight: bold">{{k.capitalize()}}
-                                
-                                <ul>
-                                <li style="margin-left: 2.5em; margin-bottom: 1em">{{v}}</li>
-                                </ul>
-                            </li>
-                        </ul>
-                        {% endfor %}
-                        {% endfor %}
-                            
-                        
+            <p style="font-weight: bolder; color: rgb(36, 101, 49);
+            font-size: 1.5em;">{{header}}</p>
                     
-                  
-            <br>
-               
+                {% for o in found_in_MW %}
+                    <p style="margin-left: 2.5em; font-weight: bold">{{o.compound_type}}</p>
+                    <p style="margin-left: 2.5em;">{{o.displayed_outcome}}</p>  
+                    <br>
+                {% endfor %}
+                    
         {% endif %}
 
         <p>To enter another compound, click <a href="/_compounds.html">here.</a></p>
