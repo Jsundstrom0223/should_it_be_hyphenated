@@ -103,17 +103,19 @@
                 <h2>Definitions</h2>
             </div>
             
-            {% for k, v in answer.items() %} 
+            {% for d in answer %} 
             <div class="newb">
-                <p style="font-size: 1.5em; font-weight: 400; margin-left: .75em">{{k|capitalize}}</p>
-            </div>
-
-            <div class="newb">
-                <p style="font-size: 1.25em; margin-left: 1em; margin: 0em 0em 0em 1em;">The definition of {{k}} is {{v | pprint | trim("()")}}.</p>
+                <p style="font-size: 1.5em; font-weight: bold; margin-left: .75em">{{d.term | capitalize}}</p>
+                <p style="font-size: 1.25em; margin-left: 1em; color: rgb(36, 101, 49)">The official definition</h2>
+                <p style="font-size: 1.25em; margin: 0em 0em 0em 1em;">Merriam-Webster's Collegiate® Dictionary defines '{{d.term}}' as '{{d.official | trim("()")}}.'</p>
+                <p style="font-size: 1.25em; margin-left: 1em; color: rgb(36, 101, 49)">The plain English definition</h2>
+                <p style="font-size: 1.25em; margin: 0em 0em 0em 1em;">{{d.plain_english}}'</p>
             </div>
             {% endfor %}
+          
          </div>
     {% endif %}
-
+<br>
+<br>
 </body>
 </html>

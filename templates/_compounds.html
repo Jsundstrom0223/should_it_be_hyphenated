@@ -51,7 +51,7 @@
         <input type="submit" class="standard_submit" name="form_1"/>
         <p>
     </form>
-    {% endif %}
+    {% else %}
 
     {% macro closed_or_open(i) %} 
     <br> 
@@ -173,16 +173,20 @@
     
     {% else %}
         {% if standard %}
+        {% if header %}
+        <h2>{{header}}</h2>
+        <p>{{standard}}</p>
+        {% else %}
         <p>{{standard}}</p>
         {% endif %}
-
-        {% if num %}
-        <p>{{num}}</p>
         {% endif %}
+
+      
     
 
         {% if defs_to_show and search_term %}
-            <p>{{pick_a_part(part_selection, value=defs_to_show, st=search_term) }}</p>
+        <p>{{pick_a_part(part_selection, value=defs_to_show, st=search_term) }}</p>
+
         {% endif %}
 
         {% if found_in_MW %}
@@ -201,6 +205,6 @@
         <p>To enter another compound, click <a href="/_compounds.html">here.</a></p>
 
     {% endif %}
-  
+{% endif %}
 </body>    
 </html>
