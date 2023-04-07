@@ -13,7 +13,7 @@ passes it to one of two functions: `handle_comp_with_num` (which handles compoun
 contain at least one numeral) or `call_mw_api`. 
 
 The `handle_comp_with_num` function checks whether any of the number-related hyphenation standards  
-outlined in the Chicago Manual of Style (CMoS) are directly applicable to the compound. The
+outlined in the Chicago Manual of Style (CMoS) are directly applicable to the compound. The  
 `call_mw_api` function calls Merriam-Webster's Collegiate® Dictionary with Audio API and then  
 passes the response to the `compound_checker` function. This function performs a similar check  
 of CMoS standards. If none are directly applicable to the compound, the function checks whether  
