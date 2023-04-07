@@ -36,8 +36,8 @@ in Merriam-Webster's Collegiate® Dictionary), the API will return a JSON respon
 includes all entries for the word. The word being defined in an entry is known as the  
 "headword," and responses that include more than one entry are organized by  
 "homographs"--that is, "headwords with identical spellings but distinct meanings and  
-origins." Most entries include one functional label identifying the headword's part of  
-speech, though some entries lack such a label (more on that below).
+origins." Most entries include one functional label field identifying the headword's  
+part of speech, though some entries do not (more on that [below](https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md#cognate-cross-references)).
 
 #### Entry Metadata  
 Every entry begins with metadata. This metadata includes the entry's headword and any stems.  
