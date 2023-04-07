@@ -287,7 +287,7 @@ def compound_checker(mw_response, compound):
                             ce, compound.full)        
                        
                     ##what to do with diff cxts?
-                    if ce.part_type == "variant_or_cxs" or ce.part_type == "one_of_diff_parts":
+                    if ce.part_type == "variant_or_cxs":
                         entry_outcome = grammar.in_mw_as_variant(compound_type, ce, compound.full)
                     
                     all_entries.append(ExistingCompound({compound_type: entry_outcome}, "found_in_MW"))
@@ -301,7 +301,8 @@ def compound_checker(mw_response, compound):
         answer_ready, outcome, outcome_type, header = handle_separately(compound)
     
     results = Results(answer_ready, outcome, outcome_type, header)
-    
+    Nonstandard.grouped = {}
+
     return results
 
 def confirm_entry_validity(mw_response):
@@ -368,18 +369,18 @@ def handle_invalid_entries(mw_responses, compound, validity):
     header: a summary of that information or, in some cases, an empty string.
     """
     if validity[0] == "typo" and validity[1] == "typo":
-        header = (f"Both elements of the compound you entered, '{compound.full},' "
-        f"are misspelled. However, the dictionary returned spelling suggestions "
-        f"for both elements. Please review the suggestions and enter another compound.")
-        outcome = (f"Spelling suggestions for the first element, '{compound.elements[0]},' "
-        f"are as follows: {mw_responses[0]}. Spelling suggestions for the second element, "
-        f"'{compound.elements[1]},' are as follows: {mw_responses[1]}.")
+        header = f'''Both elements of the compound you entered, '{compound.full},' 
+        are misspelled. However, the dictionary returned spelling suggestions 
+        for both elements. Please review the suggestions and enter another compound.'''
+        outcome = f'''Spelling suggestions for the first element, '{compound.elements[0]},' 
+        are as follows: {mw_responses[0]}. Spelling suggestions for the second element, 
+        '{compound.elements[1]},' are as follows: {mw_responses[1]}.'''
       
     elif validity[0] == "empty" and validity[1] == "empty":
         header = " "
-        outcome = (f"Both parts of the compound you entered, '{compound.full},' " 
-        f"are misspelled, and the dictionary did not return any alternative spellings. "
-        f"Please check the spelling of your compound and enter it again.")
+        outcome = f'''Both parts of the compound you entered, '{compound.full},' 
+        are misspelled, and the dictionary did not return any alternative spellings.
+        Please check the spelling of your compound and enter it again.'''
     
     else:
         header = f'''At least one element of the compound you entered,
@@ -388,13 +389,12 @@ def handle_invalid_entries(mw_responses, compound, validity):
         both = {0: validity[0], 1: validity[1]}
         for k,v in both.items():
             if v == "typo":
-                o = (f"The dictionary returned the following spelling suggestions "
-                f"for '{compound.elements[k]}', which is misspelled: "
-                f"{mw_responses[k]}.")
+                o = f'''The dictionary returned the following spelling suggestions
+                for '{compound.elements[k]}', which is misspelled: {mw_responses[k]}.'''
                 outcomes.append(o)
             if v == "empty":
-                o = (f"The dictionary did not return any spelling suggestions for "
-                f"'{compound.elements[k]}', which is misspelled.")
+                o = f'''The dictionary did not return any spelling suggestions for 
+                '{compound.elements[k]}', which is misspelled.'''
                 outcomes.append(o)
         outcome = " ".join(outcomes).strip("'[]")
 
@@ -476,23 +476,39 @@ def variant_inflection_or_stem(the_id, search_term, entry, relevant_entries, par
             for k,v in stem_defs.items():
                 relevant_entries.append(Nonstandard(the_id, part_type, k, stem_defs, the_id, relation_to_variant))  
 
+def check_alt_forms(search_term_chars, alt_form):
+    match = False
+    splitters = [" ", "-"]
+    for splitter in splitters:
+        if not match:
+            for i, v in enumerate(search_term_chars):
+                first_ele = "".join(search_term_chars[: i+1])
+                second_ele = "".join(search_term_chars[i + 1:])
+                both = first_ele + splitter + second_ele
+                if both == alt_form:
+                    match = True
+    return match
+
 def is_variant(search_term, vrs):
     """Check whether a dictionary entry's vrs field contains the search term."""
+    
     vrs = vrs[0]
     term_is_variant = False
-
     if "*" in vrs['va']:
         va = vrs['va'].replace("*", "")
     else:
         va = vrs['va']
-
+    
     if va == search_term:
         term_is_variant = True
+    else:
+        to_check = [i for i in search_term]
+        term_is_variant = check_alt_forms(to_check, va)
+
     
     return term_is_variant
 
 def get_variants(entry, vrs, relevant_entries, part_of_speech):
-    add = False
     relation_to_variant = None
 
     vrs = vrs[0]
@@ -505,7 +521,7 @@ def get_variants(entry, vrs, relevant_entries, part_of_speech):
         if vl not in vl_options.keys() or vl is None:
             relation_to_variant = "variant of"
 
-    add, stem_defs = get_stem_defs(relevant_entries, entry, part_of_speech)
+    add, stem_defs = get_stem_defs(entry, relevant_entries, part_of_speech)
     
     return add, stem_defs, relation_to_variant
 
@@ -521,25 +537,31 @@ def is_inflection(inflections, search_term):
         if inf == search_term:
             inflection_label = i.get('il')
             term_is_inflection = True
+        else:
+            to_check = [i for i in search_term]
+            term_is_inflection = check_alt_forms(to_check, inf)
 
     return term_is_inflection, inflection_label
 
-# def shorten_long_verb_fields(field):
-
 def get_inflections(entry, inflection_label, relevant_entries, part_of_speech):
-
-    add = False
+    """Arguments:
+    entry: A dictionary entry returned by the API.
+    inflection_label: The inflection's relationship to the headword (e.g., 'present tense plural').
+    relevant_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
+    entry information that will be returned to the user.
+    part_of_speech: The part of speech of the headword.
+    """
     relation_to_variant = None
     
     if part_of_speech == "verb":
-        if inflection_label is not None and "participle" in inflection_label:
-            relation_to_variant = "participle of"
-        else:
+        if inflection_label is None:
             relation_to_variant = "inflection (conjugated form) of"   
+        else:
+            relation_to_variant = inflection_label
     else:
         relation_to_variant = "variant of"
     
-    add, stem_defs = get_stem_defs(relevant_entries, entry, part_of_speech)
+    add, stem_defs = get_stem_defs(entry, relevant_entries, part_of_speech)
   
     return add, stem_defs, relation_to_variant
 
@@ -548,6 +570,12 @@ def is_stem(stems, search_term):
     term_is_stem = False
     if search_term in stems:
         term_is_stem = True
+    else:
+        to_check = [i for i in search_term]
+        for stem in stems:
+            term_is_stem = check_alt_forms(to_check, stem)
+            if term_is_stem:
+                break
 
     return term_is_stem
 
@@ -558,25 +586,29 @@ def get_stems(entry, relevant_entries, part_of_speech):
     entry information that will be returned to the user.
     part_of_speech: The part of speech of the headword.
     """
-    add = False
     relation_to_variant = None
     
     if entry.get("cxs") is not None:
-        relation_to_variant = entry.get("cxs")[0]["cxl"]   
-        # if relation_to_variant == "plural of":     
+        relation_to_variant = entry.get("cxs")[0]["cxl"]      
     else:
         relation_to_variant = "variant of"
    
-    add, stem_defs = get_stem_defs(relevant_entries, entry, part_of_speech)
+    add, stem_defs = get_stem_defs(entry, relevant_entries, part_of_speech)
     
     return add, stem_defs, relation_to_variant
 
-def get_stem_defs(relevant_entries, entry, part_of_speech):
+def get_stem_defs(entry, relevant_entries, part_of_speech):
     """Retrieve definitions of variants, inflections, and stems.
 
     Although the function's name is get_stem_defs, it also retrieves the
     definitions of headwords that are variants or inflections or another word,
     since variants and inflections are also considered stems.
+
+    Arguments:
+    entry: A dictionary entry returned by the API.
+    relevant_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
+    entry information that will be returned to the user.
+    part_of_speech: The part of speech of the headword.
     """
     add = False
     stem_defs = None
@@ -590,39 +622,30 @@ def get_stem_defs(relevant_entries, entry, part_of_speech):
 
     return add, stem_defs
 
-def cognate_cross_reference(the_id, entry, relevant_entries, search_term):
+def split_two_word_cxt(cxt):
+    split_id = cxt.split(" ")
+    if len(split_id) > 1:
+        search_term = split_id[0] + "%20" + split_id[1]
+    else:
+        search_term = cxt
+   
+    return search_term
+
+def cognate_cross_reference(the_id, cxs_mw_response, relevant_entries, cxt, cxl_part):
     """Handle incomplete entries that have a cognate cross-reference (cxs) field.
     
     If an entry for a word (X) has a cxs field, the word is a less common spelling or
     a conjugated form of another word, Y. In some cases, X will not have its own definition
     or part of speech separate from Y's.
     """
-    cxl_part = entry.get("cxs")[0]["cxl"]
-    cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
-    if cxl_part is None:
-        return
-    
-    split_id = cxt.split(" ")
-    if len(split_id) > 1:
-        search_term = split_id[0] + "%20" + split_id[1]
-    else:
-        search_term = cxt
-
-    cxs_mw_response = call_mw_api(search_term)
     cxs_defs = {}
     part_of_speech = None
-
-    #Avoid long cxls like "present tense second-person singular and present tense plural of"
-    if "participle of" in cxl_part:
-        cxl_part = "participle of"
-    elif "tense" in cxl_part:
-        cxl_part = "inflection (conjugated form) of"
+    part_type = "variant_or_cxs"
 
     for i in cxs_mw_response:
         part_of_speech = i.get("fl")
-        
         #If the original search term is a verbal inflection, retrieve only verb definitions.
-        if "tense" in cxl_part or "participle" in cxl_part or "conjugated form" in cxl_part:
+        if "tense" in cxl_part or "participle" in cxl_part:
             if part_of_speech == "verb":
                 cxs_target_def = get_entry_definition(i)
                 dupe_def = def_is_duplicate(relevant_entries, cxs_target_def)
@@ -641,8 +664,7 @@ def cognate_cross_reference(the_id, entry, relevant_entries, search_term):
                     cxs_defs[part_of_speech] = cxs_target_def
                 else:
                     continue
-        part_type = "variant_or_cxs"
-            
+         
     for k, v in cxs_defs.items():
         relevant_entries.append(Nonstandard(the_id, part_type, k, {k:v}, cxt, cxl_part))  
     
@@ -670,13 +692,8 @@ def main_entry_with_cxs(the_id, entry, relevant_entries, part_of_speech):
     """Handle entries that have their own part of speech and definition + a cxs field."""
     cxl_part = entry.get("cxs")[0]["cxl"]
     cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
-    
-    if "participle of" in cxl_part:
-        cxl_part = "participle of"
-    elif "tense" in cxl_part:
-        cxl_part = "inflection (conjugated form) of"
-
     def_of_term = get_entry_definition(entry)  
+
     if def_of_term:
         dupe_def = def_is_duplicate(relevant_entries, def_of_term)
         if not dupe_def:             
@@ -722,6 +739,7 @@ def parse_response(mw_response, search_term, comp_in_mw=False):
     that is in the dictionary) and that the information that will be displayed to the user
     does not need to be formatted.
     """
+    
     relevant_entries = []
     for entry in mw_response: 
         the_id = get_entry_id(entry)
@@ -729,7 +747,11 @@ def parse_response(mw_response, search_term, comp_in_mw=False):
 
         if the_id == search_term or the_id == search_term.capitalize():
             if part is None:
-                cognate_cross_reference(the_id, entry, relevant_entries, search_term)            
+                cxl_part = entry.get("cxs")[0]["cxl"]
+                cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
+                search_term = split_two_word_cxt(cxt)
+                cxs_mw_response = call_mw_api(search_term)
+                cognate_cross_reference(the_id, cxs_mw_response, relevant_entries, cxt, cxl_part)            
             else:
                 if part == "biographical name" or part == "auxiliary verb" or part == "abbreviation" or part == "symbol":
                     continue
@@ -755,6 +777,6 @@ def parse_response(mw_response, search_term, comp_in_mw=False):
         Nonstandard.cxt_entry_combiner(relevant_entries)
         for i in relevant_entries:
             if i.part_type != "main_entry":
-                i.to_display = Nonstandard.format_entry_header(i)
+                i.to_display = i.format_entry_header()
     
     return relevant_entries
