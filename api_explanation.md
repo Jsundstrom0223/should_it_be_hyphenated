@@ -6,19 +6,19 @@ responses. For more specific information on the app's handling of those response
 docstrings in the source code. 
 
 **Answering Hyphenation Questions: An Overview of the App**  
-When a user enters a compound (e.g., 'well-done'), the `hyphenation_answer` function) first  
+When a user enters a compound (e.g., "well-done"), the `hyphenation_answer` function first  
 verifies that it contains exactly one hyphen. If it does not, the app returns an error message  
-(rendered on the `_compounds.html` template). If the compound is valid, `hyphenation_answer`  
+(rendered in the `_compounds.html` template). If the compound is valid, `hyphenation_answer`  
 passes it to one of two functions: `handle_comp_with_num` (which handles compounds that  
 contain at least one numeral) or `call_mw_api`. 
 
-The former function checks whether any of the number-related hyphenation standards outlined in  
-the Chicago Manual of Style (CMoS) are directly applicable to the compound. The latter function  
-calls Merriam-Webster's Collegiate® Dictionary with Audio API and then passes the response to  
-the `compound_checker` function. This function performs a similar check of CMoS standards. If  
-none are directly applicable to the compound, the function checks whether the compound is in  
-the dictionary as an open, closed, or hyphenated compound (via calls to the `parse_response`  
-function). 
+The `handle_comp_with_num` function checks whether any of the number-related hyphenation standards  
+outlined in the Chicago Manual of Style (CMoS) are directly applicable to the compound. The
+`call_mw_api` function calls Merriam-Webster's Collegiate® Dictionary with Audio API and then  
+passes the response to the `compound_checker` function. This function performs a similar check  
+of CMoS standards. If none are directly applicable to the compound, the function checks whether  
+the compound is in the dictionary as an open, closed, or hyphenated compound (via calls to the  
+`start_parsing` function). 
 
 If there is a directly applicable CMoS standard or the compound is in the dictionary, the app  
 returns an explanation of whether the term should be hyphenated. Otherwise, the app splits the  
