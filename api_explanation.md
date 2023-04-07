@@ -1,16 +1,31 @@
+# The App and the API:
 # A Note on Merriam-Webster's Collegiate® Dictionary with Audio API
-Should It Be Hyphenated? relies on Merriam-Webster's Collegiate® Dictionary with Audio API.  
-When a user enters a compound, the app first attempts to retrieve the compound's definitions  
-from the dictionary, via a call to the API. If the dictionary does not include the compound  
-and there are no directly applicable Chicago Manual of Style standards, the app splits the  
+This documentation provides general information on Merriam-Webster's Collegiate® Dictionary   
+with Audio API, the JSON responses returned by the API, and the app's use and parsing of those  
+responses. For more specific information on the app's handling of those responses, see the  
+docstrings in the source code. 
+
+**Answering Hyphenation Questions: An Overview of the App**  
+When a user enters a compound (e.g., 'well-done'), the `hyphenation_answer` function) first  
+verifies that it contains exactly one hyphen. If it does not, the app returns an error message  
+(rendered on the `_compounds.html` template). If the compound is valid, `hyphenation_answer`  
+passes it to one of two functions: `handle_comp_with_num` (which handles compounds that  
+contain at least one numeral) or `call_mw_api`. 
+
+The former function checks whether any of the number-related hyphenation standards outlined in  
+the Chicago Manual of Style (CMoS) are directly applicable to the compound. The latter function  
+calls Merriam-Webster's Collegiate® Dictionary with Audio API and then passes the response to  
+the `compound_checker` function. This function performs a similar check of CMoS standards. If  
+none are directly applicable to the compound, the function checks whether the compound is in  
+the dictionary as an open, closed, or hyphenated compound (via calls to the `parse_response`  
+function). 
+
+If there is a directly applicable CMoS standard or the compound is in the dictionary, the app  
+returns an explanation of whether the term should be hyphenated. Otherwise, the app splits the  
 compound into two and sends two new requests to the API (one for each element of the  
 compound). It then provides each element's definitions to the user and asks the user to pick  
 the relevant definition (e.g., whether the user intends for "well" to be an adverb or a noun).  
 Finally, the app returns an answer to the user's hyphenation question.
-
-This documentation provides general information on the JSON responses returned by the API  
-as well as the app's use and parsing of those responses. For more specific information on  
-the app's handling of those responses, see the docstrings in the source code. 
 
 ## The API's JSON Responses  
 
@@ -78,9 +93,7 @@ the dictionary, the API will return a list of spelling suggestions or an empty l
 than a full JSON response. In those cases, the app will return an error message to the user;  
 if spelling suggestions are available, it will return those too. 
 
-## The Impact on Should It Be Hyphenated?  
-
-### Parsing the JSON  
+## Parsing the JSON  
 The `parse_response` function parses the JSON returned by the API and sorts all relevant  
 entries into four entry types, each of which has a corresponding function. Those functions,  
 described below, further parse the entries and prepare the entry information that will be  
