@@ -67,41 +67,49 @@ class StandardEntry():
 
 class Nonstandard(StandardEntry):
     grouped = {}
-    def __init__(self, the_id, part_type, part, definition, cxt, cr_type):
+    def __init__(self, the_id, part_type, part, definition, cxt, relation):
         self.cxt = cxt
-        self.cr_type = cr_type
-        Nonstandard.grouped[cr_type] = self
-      
-        if self.cr_type == "participle of":
-            self.menu_option = "participle" 
-        elif self.cr_type == "inflection (conjugated form) of":
-            self.menu_option = "inflection (conjugated form)"
-        elif self.cr_type == "superlative of":
-            self.menu_option = "superlative"
+        if part == "verb":
+            self.relation, self.menu_option = Nonstandard.shorten_verb_labels(relation, part)
         else:
-            self.menu_option = part
+            self.relation = relation
+            if self.relation == "superlative of":
+                self.menu_option = "superlative"
+            else:
+                self.menu_option = part
 
+        Nonstandard.grouped[relation] = self
         self.to_display = None
         
         super().__init__(the_id, part_type, part, definition)
 
+    def shorten_verb_labels(relation, part):
+        if "participle of" in relation:
+            relation = "participle of"
+            menu_option = "participle" 
+        else:
+            if "tense" in relation or "conjugated form" in relation:
+                relation = "inflection (conjugated form) of"
+                menu_option = "inflection (conjugated form)"
+            else:
+                menu_option = part
+        
+        return relation, menu_option
+
     def format_entry_header(self):    
         if self.part_type == "variant_or_cxs":
-            to_display = f"{self.part.capitalize()}: {self.cr_type.capitalize()} {self.cxt}"
-        
-        if self.part_type == "one_of_diff_parts":
-            to_display = f"{self.part.capitalize()}: {self.cr_type.capitalize()} {self.cxt}"
+            to_display = f"{self.part.capitalize()}: {self.relation.capitalize()} {self.cxt}"
         
         if self.part_type == "one_diff_cxts":
             header_components = [] 
-            header_components.append(self.cr_type)
+            header_components.append(self.relation)
             header_components.append(self.cxt) 
             to_display = f"{self.part.capitalize()}: {' '.join(header_components)}"
 
         return to_display
 
     def cxt_entry_combiner(relevant_entries):
-        entries = [(i.cr_type, i) for i in relevant_entries if i.part_type == "one_diff_cxts"]
+        entries = [(i.relation, i) for i in relevant_entries if i.part_type == "one_diff_cxts"]
     
         combined = defaultdict(list)
         for k,v in entries:
