@@ -21,7 +21,7 @@ def check_first_element_lists(compound):
     return ele_answer_ready, ele_outcome
 
 def check_cmos_num_rules(compound, idx_and_type):
-    Num_Results = namedtuple('Num_Results', ['answer_ready', 'outcome', 'header', 'outcome_type'])
+    Num_Results = namedtuple('Num_Results', ['answer_ready', 'outcome', 'outcome_type', 'header'])
     
     answer_ready = False
     outcome = None
@@ -55,7 +55,7 @@ def check_cmos_num_rules(compound, idx_and_type):
         header = '''According to Chicago Manual of Style hyphenation 
         standards, your compound should be handled as follows:'''
     
-    num_results = Num_Results(answer_ready, outcome, header, outcome_type)
+    num_results = Num_Results(answer_ready, outcome, outcome_type, header)
  
     return num_results
 
@@ -76,13 +76,13 @@ def in_mw_as_main_entry(compound_type, ce, compound_from_input):
 
 def in_mw_as_variant(compound_type, ce, compound_from_input):
     if compound_type == "closed compound":
-        outcome = f"According to M-W, the search term you entered, '{compound_from_input}', is a/an {ce.cr_type} '{ce.cxt}', which is a {compound_type}. The definition of {ce.cxt} is as follows: '{ce.definition[ce.part]}.'"
+        outcome = f"According to M-W, the search term you entered, '{compound_from_input}', is a/an {ce.relation} '{ce.cxt}', which is a {compound_type}. The definition of {ce.cxt} is as follows: '{ce.definition[ce.part]}.'"
                                 
     elif compound_type == "open compound":                
         if ce.part ==  "adjective" or ce.part == "adverb":
-            outcome = f"The search term you entered, '{compound_from_input}', is a/an {ce.cr_type} of {ce.cxt}, which is an {compound_type}. However, as CMoS 7.85 says, 'it is never incorrect to hyphenate adjectival compounds before a noun.' The definition of {ce.cxt} is as follows: '{ce.definition[ce.part]}.'"
+            outcome = f"The search term you entered, '{compound_from_input}', is a/an {ce.relation} of {ce.cxt}, which is an {compound_type}. However, as CMoS 7.85 says, 'it is never incorrect to hyphenate adjectival compounds before a noun.' The definition of {ce.cxt} is as follows: '{ce.definition[ce.part]}.'"
         else:
-            outcome = f"The search term you entered, '{compound_from_input}', is a/an {ce.cr_type} of {ce.cxt}, which is an {compound_type}. Because {ce.cxt} is a/an {ce.part}, it should likely be left open in all cases. The definition of {ce.cxt} is as follows: '{ce.definition[ce.part]}.'" 
+            outcome = f"The search term you entered, '{compound_from_input}', is a/an {ce.relation} of {ce.cxt}, which is an {compound_type}. Because {ce.cxt} is a/an {ce.part}, it should likely be left open in all cases. The definition of {ce.cxt} is as follows: '{ce.definition[ce.part]}.'" 
                             
     else:
         outcome = handle_hyphenated_variant(ce, compound_from_input)
@@ -90,19 +90,22 @@ def in_mw_as_variant(compound_type, ce, compound_from_input):
     return outcome
 
 def handle_hyphenated_variant(ce, compound_from_input):
-    adj_caveat = f"Although M-W lists the term as a hyphenated compound, it should likely be hyphenated before but not after a noun.\n" 
-    f"As CMoS 7.85 says, 'It is never incorrect to hyphenate adjectival compounds before a noun. When such compounds follow the noun they modify, hyphenation is usually unnecessary, even for adjectival compounds that are hyphenated in Webster's (such as well-read or ill-humored).'"
+    adj_caveat = (f'''Although M-W lists the term as a hyphenated compound, it should likely 
+    be hyphenated before but not after a noun. As CMoS 7.85 says, 'It is never incorrect to 
+    hyphenate adjectival compounds before a noun. When such compounds follow the noun they 
+    modify, hyphenation is usually unnecessary, even for adjectival compounds that are 
+    hyphenated in Webster's (such as well-read or ill-humored).''')
    
     if ce.part == "adjective" or ce.part == "adverb":
-        if ce.part_type == "variant" or ce.part_type == "cxs_entry" or ce.part_type == "one_of_diff_parts":
-            mw_result = f"According to M-W, the search term you entered, '{compound_from_input}', is a/an {ce.cr_type} of '{ce.cxt}' and is an {ce.part}. You should likely use '{ce.cxt}' instead of '{compound_from_input}. The definition of {ce.cxt} is as follows: '{ce.definition[ce.part]}.'" 
+        if ce.part_type == "variant_or_cxs":
+            mw_result = f"According to M-W, the search term you entered, '{compound_from_input}', is a/an {ce.relation} of '{ce.cxt}' and is an {ce.part}. You should likely use '{ce.cxt}' instead of '{compound_from_input}. The definition of {ce.cxt} is as follows: '{ce.definition[ce.part]}.'" 
         else:
-            mw_result = f"M-W lists the search term you entered, '{compound_from_input}', as a/an {ce.part} meaning {ce.definition[ce.part]}."
+            mw_result = f"M-W lists the term you entered, '{compound_from_input}', as a/an {ce.part} meaning {ce.definition[ce.part]}."
         outcome = mw_result + "\n" + adj_caveat           
                             
     else:
-        if ce.part_type == "variant" or ce.part_type == "cxs_entry" or ce.part_type == "one_of_diff_parts":
-            outcome = f"According to M-W, the search term you entered, '{compound_from_input}', is a/an {ce.cr_type} of '{ce.cxt}' and is an {ce.part}. You should likely use '{ce.cxt}' instead of '{compound_from_input}' and hyphenate it regardless of where it appears in a sentence. Its definition is as follows: '{ce.definition[ce.part]}'."
+        if ce.part_type == "variant_or_cxs":
+            outcome = f"According to M-W, the search term you entered, '{compound_from_input}', is a/an {ce.relation} of '{ce.cxt}' and is an {ce.part}. You should likely use '{ce.cxt}' instead of '{compound_from_input}' and hyphenate it regardless of where it appears in a sentence. Its definition is as follows: '{ce.definition[ce.part]}'."
         else:
             outcome = f"M-W lists the search term you entered, '{compound_from_input}', as a/an {ce.part} meaning\n '{ce.definition[ce.part]}.' It should likely be hyphenated regardless of its position in a sentence."
    
