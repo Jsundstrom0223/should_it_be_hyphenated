@@ -12,13 +12,13 @@ verifies that it contains exactly one hyphen. If it does not, the app returns an
 passes it to one of two functions: `handle_comp_with_num` (which handles compounds that  
 contain at least one numeral) or `call_mw_api`. 
 
-The `handle_comp_with_num` function checks whether any of the number-related hyphenation standards  
-outlined in the Chicago Manual of Style (CMoS) are directly applicable to the compound. The  
-`call_mw_api` function calls Merriam-Webster's Collegiate® Dictionary with Audio API and then  
-passes the response to the `compound_checker` function. This function performs a similar check  
-of CMoS standards. If none are directly applicable to the compound, the function checks whether  
-the compound is in the dictionary as an open, closed, or hyphenated compound (via calls to the  
-`start_parsing` function). 
+The `handle_comp_with_num` function checks whether any of the number-related hyphenation  
+standards outlined in the Chicago Manual of Style (CMoS) are directly applicable to the  
+compound. The `call_mw_api` function calls Merriam-Webster's Collegiate® Dictionary with  
+Audio API and then passes the response to the `compound_checker` function. This function  
+performs a similar check of CMoS standards. If none are directly applicable to the compound,  
+the function checks whether the compound is in the dictionary as an open, closed, or  
+hyphenated compound (via calls to the `start_parsing` function). 
 
 If there is a directly applicable CMoS standard or the compound is in the dictionary, the app  
 returns an explanation of whether the term should be hyphenated. Otherwise, the app splits the  
@@ -77,8 +77,8 @@ adverb form of "well" includes fifteen senses, several of which have subsenses. 
 entries returned by the API include an ["abridged version of the main definition section"](https://dictionaryapi.com/products/json#sec-2.shortdef)--the  
 definitions for only the first three senses--in a `shortdef` array.
 
-To avoid providing an overwhelming amount of information to the user, the app returns "shortdefs"   
-rather than full definition sections whenever possible.
+To avoid providing an overwhelming amount of information to the user, the app returns an entry's  
+"shortdefs" rather than its full definition section whenever a `shortdef` array is present.
 
 **Definitions in CXS Entries**  
 Some entries with a `cxs` field include both a functional label and a definition of the headword.  
@@ -94,18 +94,16 @@ than a full JSON response. In those cases, the app will return an error message 
 if spelling suggestions are available, it will return those too. 
 
 ## Parsing the JSON  
-The `parse_response` function parses the JSON returned by the API and sorts all relevant  
-entries into four entry types, each of which has a corresponding function. Those functions,  
-described below, further parse the entries and prepare the entry information that will be  
-shown to the user. 
+The `start_parsing` function sorts all relevant entries in an API response into four categories,  
+each of which has a corresponding function in the `parser` module. Those functions, described  
+below, further parse the entries and prepare the entry information that will be shown to the  
+user. 
 
 1. `cognate_cross_reference`  
     The `cognate_cross_reference` function handles entries that have a `cxs` field  
     (e.g., "chiefly British spelling of") instead of a functional label (part of speech)  
     field. It sends a new request to the API to retrieve the CXT's definition and part  
-    of speech. If the entry's `cxs` field indicates that the headword is a form of a verb  
-    (e.g., "past tense and past participle of"), the `cognate_cross_reference`  
-    function retrieves only the definition of the CXT as a verb.
+    of speech. 
 
     The user receives the following information about a "CXS entry":  
     -The CXT itself and the headword's relationship to the CXT (or an abbreviated  
