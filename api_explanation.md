@@ -1,4 +1,4 @@
-# The App and the API:
+# The App and the API
 # A Note on Merriam-Webster's Collegiate® Dictionary with Audio API
 This documentation provides general information on Merriam-Webster's Collegiate® Dictionary   
 with Audio API, the JSON responses returned by the API, and the app's use and parsing of those  
