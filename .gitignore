@@ -1,0 +1,4 @@
+.DS_Store
+pylinthelp.txt
+*.env
+__pycache__/
