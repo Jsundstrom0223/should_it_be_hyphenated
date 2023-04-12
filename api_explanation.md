@@ -17,7 +17,7 @@ the Chicago Manual of Style (CMoS) are directly applicable to the compound. The 
 calls Merriam-Webster's Collegiate® Dictionary with Audio API and then passes the response to  
 the `compound_checker` function. This function performs a similar check of CMoS standards. If  
 none are directly applicable to the compound, the function checks whether the compound is in  
-the dictionary as an open, closed, or hyphenated compound (via calls to the `parse_response`  
+the dictionary as an open, closed, or hyphenated compound (via calls to the `sort_entries`  
 function). 
 
 If there is a directly applicable CMoS standard or the compound is in the dictionary, the app  
@@ -55,7 +55,7 @@ response for the search term "well" includes five entries for "well," along with
 "well-advised," and "well-appointed" (compounds derived from "well").
 
 If the search term is itself a variant, inflection, or stem of another word, [the headword may  
-be that other word](https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md#:~:text=to%20resemble%20bologna-,variant_inflection_or_stem,-The%20variant_inflection_or_stem%20function) rather than the search term. 
+be that other word](https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md#:~:text=to%20resemble%20bologna-,var_inf_or_stem,-The%20var_inf_or_stem%20function) rather than the search term. 
 
 #### Cognate Cross-References  
 If the headword of an entry is "a less common spelling of another word with the same meaning,"  
@@ -94,7 +94,8 @@ than a full JSON response. In those cases, the app will return an error message 
 if spelling suggestions are available, it will return those too. 
 
 ## Parsing the JSON  
-The `parse_response` function parses the JSON returned by the API and sorts all relevant  
+{JS FIX!!!!!!}
+The `sort_entries` function parses the JSON returned by the API and sorts all relevant  
 entries into four entry types, each of which has a corresponding function. Those functions,  
 described below, further parse the entries and prepare the entry information that will be  
 shown to the user. 
@@ -144,13 +145,13 @@ shown to the user.
     A large smoked sausage of beef, veal, and pork; also : a sausage made (as of  
     turkey) to resemble bologna  
 
-4. `variant_inflection_or_stem`  
-    The `variant_inflection_or_stem` function begins the process of parsing entries  
+4. `var_inf_or_stem`  
+    The `var_inf_or_stem` function begins the process of parsing entries  
     in which the headword *is not the search term*--that is, cases in which the  
     search term is a variant, inflection, or stem of another word. It checks an entry  
     for variant (`vrs`), inflection (`ins`), and stem (`stems`) fields, in that order. 
 
-    If the entry includes one of those fields, `variant_inflection_or_stem` passes the  
+    If the entry includes one of those fields, `var_inf_or_stem` passes the  
     entry to the `is_variant`, `is_inflection`, or `is_stem` function, which returns a  
     boolean value indicating whether the field contains the search term. The search term  
     may not be present in the field, since some entries include definitions of terms   
