@@ -141,11 +141,12 @@ class NoEntries():
         self.search_term = search_term
         self.entry_type = "no_entries"
         self.to_display = f'''The app did not retrieve any definitions for one of the
-        elements in your compound, '{self.search_term}'. This may mean that the element is 
-        a biographical name, a symbol, a trademark, an abbreviation, or a term that should 
-        be written as more than two words. If you know the part of speech of the term, you
-        can select it from the drop-down menu below. If not, please enter another
-        compound.'''
+        elements in your compound, '{self.search_term}'. This may mean that the element
+        is a biographical name, a symbol, a trademark, an abbreviation, or a term that 
+        should be written as more than two words. Unfortunately, it may also mean that 
+        Should It Be Hyphenated? encountered an error. If you know the part of speech of
+        the term, you can select it from the drop-down menu below. If not, please enter 
+        another compound.'''
         self.menu_option = VALID_PARTS_OF_SPEECH
 
 class Number():

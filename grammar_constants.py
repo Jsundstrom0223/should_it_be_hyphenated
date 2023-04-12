@@ -206,7 +206,7 @@ PART_OF_SPEECH_DEFS = {
 #The final constants are lists of parts of speech that the app ignores and parts of speech
 #that it considers valid.
 
-IGNORED_PARTS_OF_SPEECH = ["biographical name", "auxiliary verb", "abbreviation", "symbol", "trademark"]
+IGNORED_PARTS_OF_SPEECH = ["biographical name", "auxiliary verb", "abbreviation", "symbol", "trademark", "pronunciation spelling"]
 
 VALID_PARTS_OF_SPEECH = [
     "adjective",

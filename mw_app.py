@@ -11,11 +11,11 @@ import entry_parser
 from grammar_constants import ORDINALS, PART_OF_SPEECH_DEFS, IGNORED_PARTS_OF_SPEECH
 from classes import (Compound, ExistingCompound, GrammarDef, NoEntries, Nonstandard, Number, StandardEntry)
 
-with open("../../key.txt", "r") as key:
-    MW_KEY = key.read()
-
-# with open("/etc/secrets/key.txt", "r") as key:
+# with open("../../key.txt", "r") as key:
 #     MW_KEY = key.read()
+
+with open("/etc/secrets/key.txt", "r") as key:
+    MW_KEY = key.read()
 
 QUERY_STRING = "?"
 BASE  = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/"
@@ -413,9 +413,9 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
     
     try:
         for entry in mw_response:
-            
             the_id = entry_parser.get_entry_id(entry)
             part = entry.get("fl")
+
             if the_id == search_term or the_id == search_term.capitalize():
                 if part is None:
                     cxl = entry.get("cxs")[0]["cxl"]
@@ -432,7 +432,6 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
                         entry_parser.standard_main_entry(the_id, entry, mw_entries, part)
                     else:
                         entry_parser.main_entry_with_cxs(the_id, entry, mw_entries, part)
-
             else: 
                 existing_entry = False
                 for k,v in StandardEntry.stems_and_parts.items():
