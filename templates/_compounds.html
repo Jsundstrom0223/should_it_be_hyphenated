@@ -22,35 +22,29 @@
         <div class="newb">
         <h2>Enter a Compound Term</h2>
         {% if not mistake %}
-        <p>Please enter a term that you think may be hyphenated. Your search term
-            should include only one hyphen with no spaces around it. 
+            <p>Please enter a term that you think may be hyphenated. Your search term
+            should include only one hyphen with no spaces around it.</p>
             
-            
-            The term can include up to two cardinal or ordinal numbers. If there
-            are numbers in your compound, please use numerals instead of the 
-            spelled-out versions and omit any commas (e.g., "2nd-best," "1000-dollar," etc.);
-            for fractions, please use two cardinal numbers separated by a hyphen (e.g., "1-2").</p>
-
+                <ul>Guidelines:
+                    <p>
+                    <li>If there are numbers in your compound, please use numerals instead of the 
+                    spelled-out versions and omit any commas (e.g., "2nd-best," "1000-dollar," etc.);
+                    for fractions, please use two cardinal numbers ("10," not "10th") separated by a hyphen (e.g., "1-2").</li>
+                    <p>
+                    <li>The compound should have two unique elements; currently, Should It Be Hyphenated? cannot handle compounds in which the first and second elements 
+                    are identical (e.g., "go-go").</li>
+                </ul>
+           
             <p>Once you've entered a compound, you may receive an explanation of whether the term 
             should be hyphenated, or you may be asked to provide a bit more information on the elements
             of the compound. In that case, you'll receive the definitions of each element, along with the 
             associated parts of speech, and will need to select the appropriate part of speech from a 
             drop-down menu.</p>
 
-            {% else %}
-            {% if no_hyphen %}
-            <p>The input you provided lacks a hyphen ("-") or includes a hyphen with
-            at least one space next to it. Please try again and ensure that your input
-            includes one hyphen with no spaces around it (e.g., "well-being").</p>
+        {% else %}   
+            <p>{{mistake}}</p>
         
-            {% else %}
-            <p>The input you provided includes multiple hyphens.
-                Please enter a compound that has only one hyphen (e.g., "well-being").</p>
         {% endif %}
-        {% endif %}
-            
-        
-    
         </div>
     </div>
     
