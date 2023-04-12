@@ -1,6 +1,7 @@
 
 import re
 from collections import defaultdict
+from grammar_constants import VALID_PARTS_OF_SPEECH
 
 class Compound():
     def __init__(self, elements, full):
@@ -15,64 +16,34 @@ class GrammarDef():
         self.official = official
         self.plain_english = plain_english
 
-class ExistingCompound():
-    c_types = []
-    def __init__(self, outcome, outcome_type):
-        self.outcome = outcome
-        self.outcome_type = outcome_type
-    
-        for k,v in self.outcome.items():
-            if k == "open compound":
-                article = "an"
-            else:
-                article = "a"
-            with_article = article + " " + k
-        
-            self.displayed_outcome = v
-            self.compound_type = k.capitalize()
-            if with_article not in ExistingCompound.c_types:
-                ExistingCompound.c_types.append(with_article)
-     
-    def format_compound_header(compound):
-        if len(ExistingCompound.c_types) == 2:
-            final_types = " and ".join(ExistingCompound.c_types)
-        elif len(ExistingCompound.c_types) > 2:
-            ExistingCompound.c_types.insert(-1, "and ")
-            final_types = ", ".join(ExistingCompound.c_types)
-        else:
-            final_types = ExistingCompound.c_types[0]
- 
-        header = f"M-W lists '{compound.full}' as {final_types}. Details are provided below."  
-        return header
-
 class StandardEntry():
     stems_and_parts = {}
-    def __init__(self, the_id, part_type, part, definition):
+    def __init__(self, the_id, entry_type, part, definition):
         self.the_id = the_id
-        self.part_type = part_type
+        self.entry_type = entry_type
         self.part = part
-        self.definition = definition 
-        
-        if self.part_type == "main_entry":
+        self.definition = definition
+
+        if self.entry_type == "main_entry":
             self.to_display = part.capitalize()
             self.menu_option = part
 
-    def format_entries(entry):
-        for k, v in entry.definition.items():
+    def format_entries(self):
+        for k, v in self.definition.items():
             if v.startswith("—"):
                 v_without_leading_dash = re.sub(r"^—", "", v)
-                entry.definition[k] = v_without_leading_dash.capitalize()
+                self.definition[k] = v_without_leading_dash.capitalize()
             else:
-                entry.definition[k] = v.capitalize()
+                self.definition[k] = v.capitalize()
 
 class Nonstandard(StandardEntry):
     grouped = {}
-    def __init__(self, the_id, part_type, part, definition, cxt, relation):
+    def __init__(self, the_id, entry_type, part, definition, cxt, relation):
         self.cxt = cxt
+        self.relation = relation
         if part == "verb":
-            self.relation, self.menu_option = Nonstandard.shorten_verb_labels(relation, part)
+            self.shorten_verb_labels()
         else:
-            self.relation = relation
             if self.relation == "superlative of":
                 self.menu_option = "superlative"
             else:
@@ -80,37 +51,36 @@ class Nonstandard(StandardEntry):
 
         Nonstandard.grouped[relation] = self
         self.to_display = None
-        
-        super().__init__(the_id, part_type, part, definition)
 
-    def shorten_verb_labels(relation, part):
-        if "participle of" in relation:
-            relation = "participle of"
-            menu_option = "participle" 
+        super().__init__(the_id, entry_type, part, definition)
+
+    def shorten_verb_labels(self):
+        if "participle of" in self.relation:
+            self.relation = "participle of"
+            self.menu_option = "participle"
         else:
-            if "tense" in relation or "conjugated form" in relation:
-                relation = "inflection (conjugated form) of"
-                menu_option = "inflection (conjugated form)"
+            if "tense" in self.relation or "conjugated form" in self.relation:
+                self.relation = "inflection (conjugated form) of"
+                self.menu_option = "inflection (conjugated form)"
             else:
-                menu_option = part
-        
-        return relation, menu_option
+                self.menu_option = self.part
 
-    def format_entry_header(self):    
-        if self.part_type == "variant_or_cxs":
+    def format_entry_header(self):
+        if self.entry_type == "variant_or_cxs":
             to_display = f"{self.part.capitalize()}: {self.relation.capitalize()} {self.cxt}"
-        
-        if self.part_type == "one_diff_cxts":
-            header_components = [] 
+
+        if self.entry_type == "one_diff_cxts":
+            header_components = []
             header_components.append(self.relation)
-            header_components.append(self.cxt) 
+            header_components.append(self.cxt)
             to_display = f"{self.part.capitalize()}: {' '.join(header_components)}"
 
         return to_display
 
-    def cxt_entry_combiner(relevant_entries):
-        entries = [(i.relation, i) for i in relevant_entries if i.part_type == "one_diff_cxts"]
-    
+    @staticmethod
+    def cxt_entry_combiner(mw_entries):
+        entries = [(i.relation, i) for i in mw_entries if i.entry_type == "one_diff_cxts"]
+
         combined = defaultdict(list)
         for k,v in entries:
             combined[k].append(v)
@@ -125,20 +95,63 @@ class Nonstandard(StandardEntry):
                 else:
                     discard.append(entry)
                 all_defs.append(entry.definition[entry.part])
-        
+
             joined_defs = "; ".join(all_defs)
             keep.definition[keep.part] = joined_defs
             StandardEntry.format_entries(keep)
             keep.to_display = Nonstandard.format_entry_header(keep)
-    
+
         for item in discard:
-            to_discard = relevant_entries.index(item)
-            relevant_entries.pop(to_discard)
-    
+            to_discard = mw_entries.index(item)
+            mw_entries.pop(to_discard)
+
+class ExistingCompound(StandardEntry):
+    def __init__(self, the_id, entry_type, part, definition, outcome, outcome_type):
+        self.outcome = outcome
+        self.outcome_type = outcome_type
+        for k,v in definition.items():
+            part = k.strip("'").capitalize()
+            definition = v.capitalize()
+
+        self.outcome = outcome
+        self.outcome_type = outcome_type
+
+        if entry_type == "open compound":
+            self.with_article = "an open compound"
+        else:
+            self.with_article = f"a {entry_type}"
+
+        super().__init__(the_id, entry_type, part, definition)
+
+    @staticmethod
+    def format_compound_header(compound_types, compound):
+        if len(compound_types) == 2:
+            final_types = " and ".join(compound_types)
+        elif len(compound_types) > 2:
+            compound_types.insert(-1, "and ")
+            final_types = ", ".join(compound_types)
+        else:
+            final_types = compound_types[0]
+
+        header = f"M-W lists '{compound.full}' as {final_types}. Details are provided below."
+        return header
+
+class NoEntries():
+    def __init__(self, search_term):
+        self.search_term = search_term
+        self.entry_type = "no_entries"
+        self.to_display = f'''The app did not retrieve any definitions for one of the
+        elements in your compound, '{self.search_term}'. This may mean that the element is 
+        a biographical name, a symbol, a trademark, an abbreviation, or a term that should 
+        be written as more than two words. If you know the part of speech of the term, you
+        can select it from the drop-down menu below. If not, please enter another
+        compound.'''
+        self.menu_option = VALID_PARTS_OF_SPEECH
+
 class Number():
     def __init__(self, numeral, idx_and_type):
         self.numeral = numeral
         self.idx_and_type = idx_and_type
-        self.part_type = "number"
-        self.to_display = f'''The first term in your compound is {self.numeral}. There's no need
-        to provide information on its use.'''
+        self.entry_type = "number"
+        self.to_display = f'''The first term in your compound is {self.numeral}. There's no 
+        need to provide information on its use.'''
