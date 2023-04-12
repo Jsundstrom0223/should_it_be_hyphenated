@@ -7,7 +7,6 @@
 </head>
 
 <body>
-           
     <div id="new_con">
         <div class="newb">
             <h1>Should it be hyphenated?
@@ -22,26 +21,35 @@
         </div>
         <div class="newb">
         <h2>Enter a Compound Term</h2>
+        {% if not mistake %}
         <p>Please enter a term that you think may be hyphenated. Your search term
             should include only one hyphen with no spaces around it. 
+            
             
             The term can include up to two cardinal or ordinal numbers. If there
             are numbers in your compound, please use numerals instead of the 
             spelled-out versions and omit any commas (e.g., "2nd-best," "1000-dollar," etc.);
             for fractions, please use two cardinal numbers separated by a hyphen (e.g., "1-2").</p>
-    
-        {% if mistake %}
-            {% if no_hyphen %}
-                <p>The input you provided lacks a hyphen ("-") or includes a hyphen with
-                at least one space next to it. Please try again and ensure that your input
-                includes one hyphen with no spaces around it (e.g., "well-being").</p>
-           
+
+            <p>Once you've entered a compound, you may receive an explanation of whether the term 
+            should be hyphenated, or you may be asked to provide a bit more information on the elements
+            of the compound. In that case, you'll receive the definitions of each element, along with the 
+            associated parts of speech, and will need to select the appropriate part of speech from a 
+            drop-down menu.</p>
+
             {% else %}
-                <p>The input you provided includes multiple hyphens.
-                    Please enter a compound that has only one hyphen (e.g., "well-being").</p>
-            {% endif %}
-            
+            {% if no_hyphen %}
+            <p>The input you provided lacks a hyphen ("-") or includes a hyphen with
+            at least one space next to it. Please try again and ensure that your input
+            includes one hyphen with no spaces around it (e.g., "well-being").</p>
+        
+            {% else %}
+            <p>The input you provided includes multiple hyphens.
+                Please enter a compound that has only one hyphen (e.g., "well-being").</p>
         {% endif %}
+        {% endif %}
+            
+        
     
         </div>
     </div>
@@ -51,20 +59,9 @@
         <input type="submit" class="standard_submit" name="form_1"/>
         <p>
     </form>
+    
     {% else %}
-
-    {% macro closed_or_open(i) %} 
-    <br> 
-    <li>{{i[0]|capitalize}}: {{i[1]|capitalize}}
-        <ul>        
-            {% for k,v in i[2].items() %}
-                <li>{{k|capitalize}}: {{v|trim("[]")|capitalize}}</li>
-            {% endfor %}
-        </ul>
-    </li>
-    {% endmacro %}
-
-    {% macro pick_a_part(name, value='', st='', type = '', show = '') -%}
+    {% macro pick_a_part(name, entries='', terms='', type = '', show = '') -%}
    
         <div id="column_container">
             <div class="newb">
@@ -80,90 +77,72 @@
             <br>
             <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;"></hr>
             <br>
-            {% for i in value %}
+            {% for i in entries %}
             {% if comp_with_number %}
                 {% if loop.first %}
                     {% set which = "second" %}
-                    {% set term = st[1] %}
+                    {% set term = terms[1] %}
                     {% set sn = "non_numeric_element" %}
                     {% set g = show %}
                 {% endif %}
             {% else %}
                 {% if loop.first %}
                 {% set which = "first" %}
-                {% set term = st[0] %}
+                {% set term = terms[0] %}
                 {% set sn = "first_part_of_speech" %}
-                {% set g = "" %}
+               
                 {% else %}
                     {% set which = "second" %}
-                    {% set term = st[1] %}
+                    {% set term = terms[1] %}
                     {% set sn = "second_part_of_speech" %}
                     {% set g = "" %}
                 {% endif %}
             {% endif %}
               
                 <p style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">{{g}}</p>
-                
-               
+                 
                 <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The {{which}} term in your compound is "{{term}}." How is it being used?</label>
                 
-                {%for j in i%}
-                
-                    <p style="font-weight: bold; font-size: 1.5em">{{j.to_display|capitalize}}</p>
-                    
-                    {% if j.part_type == "number" %}
-                    <p>{{j.to_display}}</p>
+                {% for j in i %}
+                    <p style="font-weight: bold; font-size: 1.5em">{{j.to_display}}</p>
 
-                    {% elif j.part_type != "one_of_diff_parts" %}
-                        {% for k,v in j.definition.items() %}
-                        <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
-                        margin-left: 3em;">{{v}}</dd>
-                        {% endfor %}
 
-                    {% elif j.part_type == "one_of_diff_parts" %}
+                    {% if j.entry_type != "number" and j.entry_type != "no_entries" %}
                     {% for k, v in j.definition.items() %}
-                      
                             <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
                             margin-left: 3em;">{{v}}</dd>
-                       
                     {% endfor %}
-
-                    {% else %}
-                        {% for d in j.definition %}
-                            {% for k,v in d.items() %}
-                                <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
-                                    margin-left: 3em;">{{k|capitalize}}
-                                    <p>{{v|trim("[]{}'—")|capitalize}}</p>
-                                </dd>
-                            {% endfor %}
-                        {% endfor %}
-
                     {% endif %}
-
                 {% endfor %}
+
                 <br>  
                     <select name = "{{sn}}" class="select">    
                         {% for j in i %}
+                            {% if j.entry_type != "no_entries" %}
                             {% set here = j.menu_option %}
                             <option value="{{here}}" class="option_value">{{j.menu_option | capitalize}}</option>
+                            {% else %}
+                            {% for jj in j.menu_option %}
+                            {% set here = jj %}
+                            <option value="{{here}}" class="option_value">{{jj | capitalize}}</option>
+                            {% endfor %}
+                            {% endif %}
+
                         {% endfor %}
                         </select>   
                 <br>
         {% endfor %}            
         <p>
-        <input type="submit" class="standard_submit" style="font-size: 1em" name="part_of_speech_selections"/>
-        
+        <input type="submit" class="standard_submit" style="font-size: 1em" name="part_of_speech_selections"/> 
         </form>
         </fieldset>
         
-    
     {% endmacro %}
     
     {% if comp_with_number %}
     
-    <p>{{pick_a_part(part_selection, value=comp_with_number[1], st=search_term, show=comp_with_number[0].to_display) }}</p>
+    <p>{{pick_a_part(part_selection, entries=comp_with_number[1], terms=search_term, show=comp_with_number[0].to_display) }}</p>
     {% endif %}
-    
     
     {% if typo %}
         <h2>Oh no!</h2>
@@ -175,17 +154,14 @@
         {% if standard %}
         {% if header %}
         <h2>{{header}}</h2>
-        <p>{{standard}}</p>
+        <p style="white-space: pre-wrap">{{standard}}</p>
         {% else %}
-        <p>{{standard}}</p>
+        <p style="white-space: pre-wrap">{{standard}}</p>
         {% endif %}
         {% endif %}
-
-      
-    
 
         {% if defs_to_show and search_term %}
-        <p>{{pick_a_part(part_selection, value=defs_to_show, st=search_term) }}</p>
+        <p>{{pick_a_part(part_selection, entries=defs_to_show, terms=search_term) }}</p>
 
         {% endif %}
 
@@ -195,8 +171,9 @@
             font-size: 1.5em;">{{header}}</p>
                     
                 {% for o in found_in_MW %}
-                    <p style="margin-left: 2.5em; font-weight: bold">{{o.compound_type}}</p>
-                    <p style="margin-left: 2.5em;">{{o.displayed_outcome}}</p>  
+                    <p style="margin-left: 2.5em; font-weight: bold">{{o.entry_type | capitalize}}</p>
+                    <p style="margin-left: 2.5em">{{o.outcome}}</p>  
+                    <p style="margin-left: 4.5em">{{o.part}}: {{o.definition}}</p>
                     <br>
                 {% endfor %}
                     
