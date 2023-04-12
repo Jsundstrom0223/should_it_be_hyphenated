@@ -1,28 +1,27 @@
 # The App and the API
 # A Note on Merriam-Webster's Collegiate® Dictionary with Audio API
-This documentation provides general information on Merriam-Webster's Collegiate® Dictionary   
-with Audio API, the JSON responses returned by the API, and the app's use and parsing of those  
-responses. For more specific information on the app's handling of those responses, see the  
-docstrings in the source code. 
-
+This documentation details the JSON responses returned by Merriam-Webster's  Collegiate®  
+Dictionary with Audio API and the ways in which Should It Be Hyphenated? parses those  
+responses. For more specific information on the app's handling of those  responses, see  
+the docstrings in the source code.
+ 
 **Answering Hyphenation Questions: An Overview of the App**  
-When a user enters a compound (e.g., "well-done"), the `hyphenation_answer` function first  
-verifies that it contains exactly one hyphen. If it does not, the app returns an error message  
-(rendered in the `_compounds.html` template). If the compound is valid, `hyphenation_answer`  
-passes it to one of two functions: `handle_comp_with_num` (which handles compounds that  
-contain at least one numeral) or `call_mw_api`. 
+When a user enters a compound (e.g., "well-done"), the `hyphenation_answer`  function  
+first verifies that it contains exactly one hyphen. If it does not, the app  returns an error  
+message (rendered in the `_compounds.html` template). If the compound is valid,  
+`hyphenation_answer` passes it to one of two functions: `handle_comp_with_num`,  
+which handles compounds that contain at least one numeral, or `call_mw_api`,  
+which calls the API and passes its response to the `compound_checker` function. 
 
-The `handle_comp_with_num` function checks whether any of the number-related hyphenation  
-standards outlined in the Chicago Manual of Style (CMoS) are directly applicable to the  
-compound. The `call_mw_api` function calls Merriam-Webster's Collegiate® Dictionary with  
-Audio API and then passes the response to the `compound_checker` function. This function  
-performs a similar check of CMoS standards. If none are directly applicable to the compound,  
-the function checks whether the compound is in the dictionary as an open, closed, or  
-hyphenated compound (via calls to the `start_parsing` function). 
+Both `handle_comp_with_num` and `compound_checker` check the compound against  
+Chicago Manual of Style (CMoS) hyphenation standards to determine whether any  are  
+directly applicable to the compound. If none are, the latter function also checks whether  
+the compound is in the dictionary as an open, closed, or hyphenated compound  (via calls  
+to the `start_parsing` function). 
 
 If there is a directly applicable CMoS standard or the compound is in the dictionary, the app  
-returns an explanation of whether the term should be hyphenated. Otherwise, the app splits the  
-compound into two and sends two new requests to the API (one for each element of the  
+returns an explanation of whether the term should be hyphenated. Otherwise, the app splits  
+the compound into two and sends two new requests to the API (one for each element of the  
 compound). It then provides each element's definitions to the user and asks the user to pick  
 the relevant definition (e.g., whether the user intends for "well" to be an adverb or a noun).  
 Finally, the app returns an answer to the user's hyphenation question.
@@ -31,13 +30,13 @@ Finally, the app returns an answer to the user's hyphenation question.
 
 ### Responses to Queries with Valid Search Terms  
 Every query sent by the app to Merriam-Webster's Collegiate® Dictionary with Audio API  
-includes a search term. If the search term is valid (i.e., is not misspelled and is defined    
-in Merriam-Webster's Collegiate® Dictionary), the API will return a JSON response that  
+includes a search term. If the search term is valid (i.e., is not misspelled and is defined in  
+Merriam-Webster's Collegiate® Dictionary), the API will return a JSON response that  
 includes all entries for the word. The word being defined in an entry is known as the  
 "headword," and responses that include more than one entry are organized by  
-"homographs"--that is, "headwords with identical spellings but distinct meanings and  
-origins." Most entries include one functional label field identifying the headword's  
-part of speech, though some entries do not (more on that [below](https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md#cognate-cross-references)).
+"homographs"--that is, ["headwords with identical spellings but distinct meanings and  
+origins."](https://dictionaryapi.com/products/json#term-ure:~:text=usage%2C%20etymology%2C%20etc.-,homograph,-Homographs%20are%20headwords) Most entries include one functional label field identifying the headword's part  
+of speech, though some entries do not (more on that [below](https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md#cognate-cross-references)).
 
 #### Entry Metadata  
 Every entry begins with metadata. This metadata includes the entry's headword and any stems.  
@@ -59,14 +58,14 @@ be that other word](https://github.com/Jsundstrom0223/should_it_be_hyphenated/bl
 
 #### Cognate Cross-References  
 If the headword of an entry is "a less common spelling of another word with the same meaning,"  
-the actual content of the entry will include a cognate cross-reference (`cxs`) field and, in  
-most cases, a cross-reference label (`cxl`) field. The `cxl` field indicates the headword's   
-relationship to that other word (the cross-reference target, or CXT), and the `cxt` field  
-identifies that other word. For example, the sole entry for "flavour" identifies the word as  
-a "chiefly British spelling of" the CXT "flavor."  
+the actual content of the entry will include a cognate cross-reference (`cxs`) field and, in most  
+cases, a cross-reference label (`cxl`) field. The `cxl` field indicates the headword's relationship  
+to that other word (the cross-reference target, or CXT), and the `cxt` field  identifies that other  
+word. For example, the sole entry for "flavour" identifies the word as a "chiefly British spelling  
+of" the CXT "flavor."  
 
-Many entries with a `cxs` field lack a functional label field. Note, though, that an entry's  
-`cxl` field may be indicative of the headword's part of speech. This is the case with one of the  
+Many entries with a `cxs` field lack a functional label field. Note, though, that an entry's `cxl`  
+field may be indicative of the headword's part of speech. This is the case with one of the  
 entries for the word "lit," the `cxl` field of which identifies "lit" as the "past tense and past  
 participle of" the CXT "light."
 
@@ -83,15 +82,15 @@ To avoid providing an overwhelming amount of information to the user, the app re
 **Definitions in CXS Entries**  
 Some entries with a `cxs` field include both a functional label and a definition of the headword.  
 For example, the entry for "baloney" (a less common spelling of "bologna") has a `cxs` field as  
-well as a definition and functional label. Others, like the entry for "flavour," do not include   
+well as a definition and a functional label. Others, like the entry for "flavour," do not include   
 a definition; instead, the headword is defined only in the entry for the CXT, which means that  
-the app must send another API request with the CXT as the search term. 
+the app must send another API request with the CXT as the search term to retrieve its definition. 
 
 ### Responses to Queries with Invalid Search Terms  
 If the search term sent to Merriam-Webster's Collegiate® Dictionary with Audio API is not in  
-the dictionary, the API will return a list of spelling suggestions or an empty list rather  
-than a full JSON response. In those cases, the app will return an error message to the user;  
-if spelling suggestions are available, it will return those too. 
+the dictionary, the API will return a list of spelling suggestions or an empty list rather than a  
+full JSON response. In those cases, the app will return an error message to the user; if  
+spelling suggestions are available, it will return those too. 
 
 ## Parsing the JSON  
 The `start_parsing` function sorts all relevant entries in an API response into four categories,  
@@ -101,9 +100,8 @@ user.
 
 1. `cognate_cross_reference`  
     The `cognate_cross_reference` function handles entries that have a `cxs` field  
-    (e.g., "chiefly British spelling of") instead of a functional label (part of speech)  
-    field. It sends a new request to the API to retrieve the CXT's definition and part  
-    of speech. 
+    (e.g., "chiefly British spelling of") but lack definition and functional label (part of  
+    speech) fields.
 
     The user receives the following information about a "CXS entry":  
     -The CXT itself and the headword's relationship to the CXT (or an abbreviated  
@@ -112,13 +110,13 @@ user.
     -The CXT's definition  
 
     **Example (search term: "lit")**  
-    Verb: participle of light  
+    Verb: Participle of light  
     To become light : brighten —usually used with up; to take fire; to ignite something  
     (such as a cigarette) —often used with up  
 
 2. `standard_main_entry`  
-    The `standard_main_entry` function handles standard entries that have their own  
-    functional label and definition and do not have a `cxs` field. 
+    The `standard_main_entry` function handles standard entries--that is, entries that  
+    have their own functional label and definition and do not have a `cxs` field. 
 
     The user receives the following information about a "standard main entry":  
     -The headword's definition and part of speech  
@@ -138,34 +136,35 @@ user.
     -The headword's part of speech and definition  
 
     **Example (search term: "baloney")**  
-    Noun: less common spelling of bologna  
+    Noun: Less common spelling of bologna  
     A large smoked sausage of beef, veal, and pork; also : a sausage made (as of  
     turkey) to resemble bologna  
 
 4. `var_inf_or_stem`  
-    The `var_inf_or_stem` function begins the process of parsing entries  
-    in which the headword *is not the search term*--that is, cases in which the  
-    search term is a variant, inflection, or stem of another word. It checks an entry  
-    for variant (`vrs`), inflection (`ins`), and stem (`stems`) fields, in that order. 
+    The `var_inf_or_stem` function begins the process of parsing entries in which the  
+    headword *is not the search term*--that is, cases in which the search term is a variant,  
+    inflection, or stem of another word. It checks an entry for variant (`vrs`),  inflection (`ins`),  
+    and stem (`stems`) fields, in that order. 
 
-    If the entry includes one of those fields, `var_inf_or_stem` passes the  
-    entry to the `is_variant`, `is_inflection`, or `is_stem` function, which returns a  
-    boolean value indicating whether the field contains the search term. The search term  
-    may not be present in the field, since some entries include definitions of terms   
-    related to the search term. If the search term is not included in an entry's `vrs`,  
-    `ins`, or `stems` field, the app will not return any information on that entry to   
-    the user. (Recall that the API returns entries for "well-adjusted," "well-advised,"  
-    and "well-appointed" alongside entries for "well." Because those entries do not list  
-    "well" as a variant, inflection, or stem, the app does not return information on  
-    those entries to the user.)
+    If the entry includes one of those fields, `var_inf_or_stem` passes the entry to the  
+    `is_variant`, `is_inflection`, or `is_stem` function, which returns a  boolean value  
+    indicating whether the field contains the search term. The search term may not be  
+    present in the field, since some entries include definitions of terms   related to the  
+    search term.  
 
-    Otherwise, the user receives the following information about a "variant, inflection,  
+    If the search term is not included in the entry's `vrs`, `ins`, or `stems` field, the app  
+    will not return any information on that entry to the user. (Recall that the  API returns  
+    entries for "well-adjusted," "well-advised," and "well-appointed" alongside  entries for  
+    "well." Because those entries do not list "well" as a variant, inflection, or stem, the  
+    app does not return information on those entries to the user.)
+
+    Otherwise, the user will receive the following information about a "variant, inflection,  
     or stem" entry:  
     -The headword itself and the search term's relationship to the headword (or an  
     abbreviated version of that relationship)  
     -The headword's part of speech and definition  
 
     **Example (search term: "adaptor")**  
-    Noun: less common spelling of adapter  
+    Noun: Less common spelling of adapter  
     One that adapts; a device for connecting two parts (as of different diameters) of an  
     apparatus; an attachment for adapting apparatus for uses not originally intended
