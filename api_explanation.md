@@ -1,4 +1,4 @@
-# The App and the API:
+# The App and the API
 # A Note on Merriam-Webster's Collegiate® Dictionary with Audio API
 This documentation provides general information on Merriam-Webster's Collegiate® Dictionary   
 with Audio API, the JSON responses returned by the API, and the app's use and parsing of those  
@@ -6,19 +6,19 @@ responses. For more specific information on the app's handling of those response
 docstrings in the source code. 
 
 **Answering Hyphenation Questions: An Overview of the App**  
-When a user enters a compound (e.g., 'well-done'), the `hyphenation_answer` function) first  
+When a user enters a compound (e.g., "well-done"), the `hyphenation_answer` function first  
 verifies that it contains exactly one hyphen. If it does not, the app returns an error message  
-(rendered on the `_compounds.html` template). If the compound is valid, `hyphenation_answer`  
+(rendered in the `_compounds.html` template). If the compound is valid, `hyphenation_answer`  
 passes it to one of two functions: `handle_comp_with_num` (which handles compounds that  
 contain at least one numeral) or `call_mw_api`. 
 
-The former function checks whether any of the number-related hyphenation standards outlined in  
-the Chicago Manual of Style (CMoS) are directly applicable to the compound. The latter function  
-calls Merriam-Webster's Collegiate® Dictionary with Audio API and then passes the response to  
-the `compound_checker` function. This function performs a similar check of CMoS standards. If  
-none are directly applicable to the compound, the function checks whether the compound is in  
-the dictionary as an open, closed, or hyphenated compound (via calls to the `sort_entries`  
-function). 
+The `handle_comp_with_num` function checks whether any of the number-related hyphenation  
+standards outlined in the Chicago Manual of Style (CMoS) are directly applicable to the  
+compound. The `call_mw_api` function calls Merriam-Webster's Collegiate® Dictionary with  
+Audio API and then passes the response to the `compound_checker` function. This function  
+performs a similar check of CMoS standards. If none are directly applicable to the compound,  
+the function checks whether the compound is in the dictionary as an open, closed, or  
+hyphenated compound (via calls to the `start_parsing` function). 
 
 If there is a directly applicable CMoS standard or the compound is in the dictionary, the app  
 returns an explanation of whether the term should be hyphenated. Otherwise, the app splits the  
@@ -36,8 +36,8 @@ in Merriam-Webster's Collegiate® Dictionary), the API will return a JSON respon
 includes all entries for the word. The word being defined in an entry is known as the  
 "headword," and responses that include more than one entry are organized by  
 "homographs"--that is, "headwords with identical spellings but distinct meanings and  
-origins." Most entries include one functional label identifying the headword's part of  
-speech, though some entries lack such a label (more on that below).
+origins." Most entries include one functional label field identifying the headword's  
+part of speech, though some entries do not (more on that [below](https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md#cognate-cross-references)).
 
 #### Entry Metadata  
 Every entry begins with metadata. This metadata includes the entry's headword and any stems.  
@@ -77,8 +77,8 @@ adverb form of "well" includes fifteen senses, several of which have subsenses. 
 entries returned by the API include an ["abridged version of the main definition section"](https://dictionaryapi.com/products/json#sec-2.shortdef)--the  
 definitions for only the first three senses--in a `shortdef` array.
 
-To avoid providing an overwhelming amount of information to the user, the app returns "shortdefs"   
-rather than full definition sections whenever possible.
+To avoid providing an overwhelming amount of information to the user, the app returns an entry's  
+"shortdefs" rather than its full definition section whenever a `shortdef` array is present.
 
 **Definitions in CXS Entries**  
 Some entries with a `cxs` field include both a functional label and a definition of the headword.  
@@ -94,19 +94,16 @@ than a full JSON response. In those cases, the app will return an error message 
 if spelling suggestions are available, it will return those too. 
 
 ## Parsing the JSON  
-{JS FIX!!!!!!}
-The `sort_entries` function parses the JSON returned by the API and sorts all relevant  
-entries into four entry types, each of which has a corresponding function. Those functions,  
-described below, further parse the entries and prepare the entry information that will be  
-shown to the user. 
+The `start_parsing` function sorts all relevant entries in an API response into four categories,  
+each of which has a corresponding function in the `parser` module. Those functions, described  
+below, further parse the entries and prepare the entry information that will be shown to the  
+user. 
 
 1. `cognate_cross_reference`  
     The `cognate_cross_reference` function handles entries that have a `cxs` field  
     (e.g., "chiefly British spelling of") instead of a functional label (part of speech)  
     field. It sends a new request to the API to retrieve the CXT's definition and part  
-    of speech. If the entry's `cxs` field indicates that the headword is a form of a verb  
-    (e.g., "past tense and past participle of"), the `cognate_cross_reference`  
-    function retrieves only the definition of the CXT as a verb.
+    of speech. 
 
     The user receives the following information about a "CXS entry":  
     -The CXT itself and the headword's relationship to the CXT (or an abbreviated  
