@@ -9,8 +9,7 @@ import existing_compound_handler
 import grammar
 import entry_parser
 from grammar_constants import ORDINALS, PART_OF_SPEECH_DEFS, IGNORED_PARTS_OF_SPEECH
-from classes import (Compound, ExistingCompound, GrammarDef, NoEntries, Nonstandard,
-Number, StandardEntry)
+from classes import (Compound, ExistingCompound, GrammarDef, NoEntries, Nonstandard, Number, StandardEntry)
 
 with open("../../key.txt", "r") as key:
     MW_KEY = key.read()
@@ -74,18 +73,27 @@ def hyphenation_answer():
             # stray characters/extra input
             hyphenated_compound = re.search(r"[\w\d]+-[\w\d]+", user_input)
             if hyphenated_compound is None:
-                return render_template('_compounds.html', first_page=True,
-                    mistake=True, no_hyphen=True)
+                mistake_header = '''The input you provided lacks a hyphen ("-") or
+                includes a hyphen with at least one space next to it. Please try again
+                and ensure that your input includes one hyphen with no spaces around it
+                (e.g., "well-being").'''
+                return render_template('_compounds.html', mistake=mistake_header, first_page=True)
 
             remaining = user_input[hyphenated_compound.end(): ]
             if "-" in remaining:
-                return render_template('_compounds.html', first_page=True,
-                    mistake=True, multiple_hyphens=True)
+                mistake_header = '''The input you provided includes multiple hyphens.
+                Please enter a compound that has only one hyphen (e.g., "well-being").'''
+                return render_template('_compounds.html', mistake=mistake_header, first_page=True)
 
             compound_from_input = user_input[hyphenated_compound.start(): hyphenated_compound.end()]
             elements_of_compound = compound_from_input.split("-")
-            compound = Compound(elements_of_compound, compound_from_input)
 
+            if elements_of_compound[0] == elements_of_compound[1]:
+                mistake_header = '''The elements of your compound are identical; please
+                enter a compound with two unique elements.'''
+                return render_template('_compounds.html', mistake=mistake_header, first_page=True)
+            
+            compound = Compound(elements_of_compound, compound_from_input)
             has_numeral, idx_and_type = check_for_numerals(compound)
             if has_numeral:
                 new_page = handle_comp_with_num(compound, idx_and_type)
@@ -402,44 +410,49 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
     entry information that will be returned to the user.
     """
     mw_entries = []
-    for entry in mw_response: 
-        the_id = entry_parser.get_entry_id(entry)
-        part = entry.get("fl")
-        if the_id == search_term or the_id == search_term.capitalize():
-            if part is None:
-                cxl = entry.get("cxs")[0]["cxl"]
-                cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
-                cxt_search_term = entry_parser.get_cxt_search_term(cxt)
-                cxs_mw_response = call_mw_api(cxt_search_term)
-                entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl)            
-            else:
-                if part in IGNORED_PARTS_OF_SPEECH:
-                    continue
-
-                cxs = entry.get("cxs")
-                if cxs is None:
-                    entry_parser.standard_main_entry(the_id, entry, mw_entries, part)
+    
+    try:
+        for entry in mw_response:
+            
+            the_id = entry_parser.get_entry_id(entry)
+            part = entry.get("fl")
+            if the_id == search_term or the_id == search_term.capitalize():
+                if part is None:
+                    cxl = entry.get("cxs")[0]["cxl"]
+                    cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
+                    cxt_search_term = entry_parser.get_cxt_search_term(cxt)
+                    cxs_mw_response = call_mw_api(cxt_search_term)
+                    entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl)            
                 else:
-                    entry_parser.main_entry_with_cxs(the_id, entry, mw_entries, part)
+                    if part in IGNORED_PARTS_OF_SPEECH:
+                        continue
 
-        else: 
-            existing_entry = False
-            for k,v in StandardEntry.stems_and_parts.items():
-                if k == part and the_id in v:
-                    existing_entry = True
-            ###Avoid retrieving prefix entries if the entry ID != the search term
-            if not existing_entry and part != "prefix":
-                entry_parser.var_inf_or_stem(the_id, search_term, entry, mw_entries, part)
+                    cxs = entry.get("cxs")
+                    if cxs is None:
+                        entry_parser.standard_main_entry(the_id, entry, mw_entries, part)
+                    else:
+                        entry_parser.main_entry_with_cxs(the_id, entry, mw_entries, part)
 
-    if not comp_in_mw:
-        if len(mw_entries) == 0:
-            mw_entries.append(NoEntries(search_term))
-        to_format = [entry for entry in mw_entries if entry.entry_type != "one_diff_cxts"]
-        [entry.format_entries() for entry in to_format]
+            else: 
+                existing_entry = False
+                for k,v in StandardEntry.stems_and_parts.items():
+                    if k == part and the_id in v:
+                        existing_entry = True
+                ###Avoid retrieving prefix entries if the entry ID != the search term
+                if not existing_entry and part != "prefix":
+                    entry_parser.var_inf_or_stem(the_id, search_term, entry, mw_entries, part)
 
-        Nonstandard.cxt_entry_combiner(mw_entries)
-        for i in mw_entries:
-            if i.entry_type != "main_entry":
-                i.to_display = i.format_entry_header()
+        if not comp_in_mw:
+            if len(mw_entries) == 0:
+                mw_entries.append(NoEntries(search_term))
+            to_format = [entry for entry in mw_entries if entry.entry_type != "one_diff_cxts"]
+            [entry.format_entries() for entry in to_format]
 
+            Nonstandard.cxt_entry_combiner(mw_entries)
+            for i in mw_entries:
+                if i.entry_type != "main_entry":
+                    i.to_display = i.format_entry_header()
+    except:
+        pass
+    
     return mw_entries
