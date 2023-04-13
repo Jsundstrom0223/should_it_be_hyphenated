@@ -185,24 +185,17 @@ def handle_comp_with_num(compound, idx_and_type):
     if num_results.answer_ready:
         new_page = render_by_type(num_results)
     else:
-        NumericElementResults = namedtuple('Results', ['ne_answer_ready', 'ne_outcome',
-            'ne_outcome_type'])
-        ne_answer_ready = False
-
         for k,v in idx_and_type.items():
-            num_element = Number(compound.elements[k], {k:v})
+            num_element = Number(compound.elements[k], k)
 
         #This will always have a length of 1.
         non_num = [v for i,v in enumerate(compound.elements) if i not in idx_and_type.keys()]
         mw_response = call_mw_api(*non_num)
         mw_entries = start_parsing(mw_response, *non_num)
-
-        ne_outcome = [num_element, [mw_entries]]
-        ne_outcome_type = "comp_with_number"
-        ne_results = NumericElementResults(ne_answer_ready, ne_outcome, ne_outcome_type)
-
+      
         new_page = render_template('_compounds.html',
-        comp_with_number = ne_results.ne_outcome, search_term = compound.elements)
+        comp_with_number=mw_entries, search_term = compound.elements[num_element.other],   
+            num=num_element)
 
     return new_page
 
@@ -411,39 +404,39 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
     """
     mw_entries = []
     
-    try:
-        for entry in mw_response:
-            the_id = entry_parser.get_entry_id(entry)
-            part = entry.get("fl")
+    for entry in mw_response:
+        the_id = entry_parser.get_entry_id(entry)
+        part = entry.get("fl")
 
-            if the_id == search_term or the_id == search_term.capitalize():
-                if part is None:
-                    cxl = entry.get("cxs")[0]["cxl"]
-                    cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
-                    cxt_search_term = entry_parser.get_cxt_search_term(cxt)
-                    cxs_mw_response = call_mw_api(cxt_search_term)
-                    entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl)            
+        if the_id == search_term or the_id == search_term.capitalize():
+            if part is None:
+                cxl = entry.get("cxs")[0]["cxl"]
+                cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
+                cxt_search_term = entry_parser.get_cxt_search_term(cxt)
+                cxs_mw_response = call_mw_api(cxt_search_term)
+                entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl)            
+            else:
+                if part in IGNORED_PARTS_OF_SPEECH:
+                    continue
+
+                cxs = entry.get("cxs")
+                if cxs is None:
+                    entry_parser.standard_main_entry(the_id, entry, mw_entries, part)
                 else:
-                    if part in IGNORED_PARTS_OF_SPEECH:
-                        continue
+                    entry_parser.main_entry_with_cxs(the_id, entry, mw_entries, part)
+        else: 
+            existing_entry = False
+            for k,v in StandardEntry.stems_and_parts.items():
+                if k == part and the_id in v:
+                    existing_entry = True
+            ###Avoid retrieving prefix entries if the entry ID != the search term
+            if not existing_entry and part != "prefix":
+                entry_parser.var_inf_or_stem(the_id, search_term, entry, mw_entries, part)
 
-                    cxs = entry.get("cxs")
-                    if cxs is None:
-                        entry_parser.standard_main_entry(the_id, entry, mw_entries, part)
-                    else:
-                        entry_parser.main_entry_with_cxs(the_id, entry, mw_entries, part)
-            else: 
-                existing_entry = False
-                for k,v in StandardEntry.stems_and_parts.items():
-                    if k == part and the_id in v:
-                        existing_entry = True
-                ###Avoid retrieving prefix entries if the entry ID != the search term
-                if not existing_entry and part != "prefix":
-                    entry_parser.var_inf_or_stem(the_id, search_term, entry, mw_entries, part)
-
-        if not comp_in_mw:
-            if len(mw_entries) == 0:
-                mw_entries.append(NoEntries(search_term))
+    if not comp_in_mw:
+        if len(mw_entries) == 0:
+            mw_entries.append(NoEntries(search_term))
+        else:
             to_format = [entry for entry in mw_entries if entry.entry_type != "one_diff_cxts"]
             [entry.format_entries() for entry in to_format]
 
@@ -451,7 +444,6 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
             for i in mw_entries:
                 if i.entry_type != "main_entry":
                     i.to_display = i.format_entry_header()
-    except:
-        pass
+
     
     return mw_entries
