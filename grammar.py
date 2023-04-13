@@ -113,7 +113,7 @@ def cmos_rules(selected):
     final_outcome = None
     final_header = ("According to Chicago Manual of Style hyphenation standards, your"
     " compound should be handled as follows:")
-    
+   
     if selected[0] == "number":
         if selected[1] == "superlative":
             final_outcome = NUM_SUPERLATIVE
@@ -146,7 +146,7 @@ def cmos_rules(selected):
     if "participle" in selected[0] and selected[1] == "noun":
         final_outcome = BY_PART_PARTICIPLE_NOUN
 
-    if selected[0] == "adverb" and selected[1] == "adjective" or "participle" in selected[1]:
+    if selected[0] == "adverb" and selected[1] == "adjective" or selected[0] == "adverb" and "participle" in selected[1]:
         final_outcome = BY_PART_ADVERB_ADJ_OR_PARTICIP
 
     if final_outcome is None:
