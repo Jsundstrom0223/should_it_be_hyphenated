@@ -113,14 +113,14 @@ def cmos_rules(selected):
     final_outcome = None
     final_header = ("According to Chicago Manual of Style hyphenation standards, your"
     " compound should be handled as follows:")
-
+    
     if selected[0] == "number":
         if selected[1] == "superlative":
             final_outcome = NUM_SUPERLATIVE
         if selected[1] == "noun":
             final_outcome = NUM_NOUN
 
-    elif selected[0] == "noun":
+    if selected[0] == "noun":
         if "participle" in selected[1] or selected[1] == "inflection (conjugated form)":
             key = "PARTICIP_INFL"
         else:
@@ -130,30 +130,30 @@ def cmos_rules(selected):
             if k == key:
                 final_outcome = v
 
-    elif selected[0] == "verb" or selected[0] == "inflection (conjugated form)":
+    if selected[0] == "verb" or selected[0] == "inflection (conjugated form)":
         key = selected[1].upper()
         if key in BY_PART_VERB.keys():
             final_outcome = BY_PART_VERB[key]
         else:
             final_outcome = BY_PART_VERB["VERB_OTHER"]
 
-    elif selected[0] == "adjective":
+    if selected[0] == "adjective":
         if selected[1] == "noun" or "participle" in selected[1]:
             final_outcome= ADJ_NOUN_OR_PARTICIP
         if selected[1] == "verb" or selected[1] == "inflection (conjugated form)":
             final_outcome = ADJ_VERB
 
-    elif "participle" in selected[0] and selected[1] == "noun":
+    if "participle" in selected[0] and selected[1] == "noun":
         final_outcome = BY_PART_PARTICIPLE_NOUN
 
-    elif selected[0] == "adverb" and selected[1] == "adjective" or "participle" in selected[1]:
+    if selected[0] == "adverb" and selected[1] == "adjective" or "participle" in selected[1]:
         final_outcome = BY_PART_ADVERB_ADJ_OR_PARTICIP
 
-    else:
+    if final_outcome is None:
         final_outcome = ("There are no Chicago Manual of Style standards regarding"
         " the compound you entered, and the compound is not in the dictionary. The"
         " compound should likely be left open regardless of its position in a" 
         " sentence.")
         final_header = ""
-
+    
     return final_outcome, final_header
