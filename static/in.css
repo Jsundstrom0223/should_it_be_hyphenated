@@ -107,7 +107,7 @@ input[type=text] {
 display: flex;
 align-items: center; 
 background-color: #8c8c8c;
-height: calc(50vh - 50px);
+height: calc(30vh - 30px);
 flex-flow: wrap;
 }
 
