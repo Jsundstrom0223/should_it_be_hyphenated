@@ -4,6 +4,7 @@ Functions:
 -get_entry_id
 -get_entry_definition
 -is_def_duplicate
+-is_part_duplicate
 -get_cxt_search_term
 -cognate_cross_reference
 -standard_main_entry
@@ -65,6 +66,20 @@ def is_def_duplicate(mw_entries, definition):
                 dupe_def = True
 
     return dupe_def
+
+def is_part_duplicate(mw_entries, part_of_speech, definition):
+
+    dupe_part = False
+    standards = [r for r in mw_entries if r.entry_type == "main_entry" and
+    r.part == part_of_speech]
+
+    ##test with multiples (multiple defs for same part)
+    for i in standards:
+        if i.part == part_of_speech:
+            combined_defs = "; ".join([i.definition[part_of_speech], definition[part_of_speech]])
+            i.definition[part_of_speech] = combined_defs
+            dupe_part = True
+    return dupe_part
 
 def get_cxt_search_term(cxt):
     """Get the search term that will be used in an additional API call.
@@ -130,9 +145,7 @@ def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl):
                 dupe_def = is_def_duplicate(mw_entries, cxs_target_def)
                 if not dupe_def:
                     cxs_defs[part_of_speech] = cxs_target_def
-                else:
-                    continue
-
+                
     for k, v in cxs_defs.items():
         mw_entries.append(Nonstandard(the_id, entry_type, k, {k:v}, cxt, cxl))
 
@@ -150,10 +163,12 @@ def standard_main_entry(the_id, entry, mw_entries, part_of_speech):
     definition = {part_of_speech: def_of_term}
     stems = entry['meta'].get("stems")
 
-    dupe_def = is_def_duplicate(mw_entries, def_of_term)
-    if not dupe_def:
-        StandardEntry.stems_and_parts[part_of_speech] = stems
-        mw_entries.append(StandardEntry(the_id, "main_entry", part_of_speech, definition))
+    dupe_part = is_part_duplicate(mw_entries, part_of_speech, definition)
+    if not dupe_part:
+        dupe_def = is_def_duplicate(mw_entries, def_of_term)
+        if not dupe_def:
+            StandardEntry.stems_and_parts[part_of_speech] = stems
+            mw_entries.append(StandardEntry(the_id, "main_entry", part_of_speech, definition))
 
 def main_entry_with_cxs(the_id, entry, mw_entries, part_of_speech):
     """Handle entries that have their own part of speech and definition + a cxs field.
