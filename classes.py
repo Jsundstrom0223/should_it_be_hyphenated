@@ -39,6 +39,8 @@ class StandardEntry():
 class Nonstandard(StandardEntry):
     grouped = {}
     def __init__(self, the_id, entry_type, part, definition, cxt, relation):
+        super().__init__(the_id, entry_type, part, definition)
+      
         self.cxt = cxt
         self.relation = relation
         if part == "verb":
@@ -51,8 +53,6 @@ class Nonstandard(StandardEntry):
 
         Nonstandard.grouped[relation] = self
         self.to_display = None
-
-        super().__init__(the_id, entry_type, part, definition)
 
     def shorten_verb_labels(self):
         if "participle of" in self.relation:
@@ -150,9 +150,14 @@ class NoEntries():
         self.menu_option = VALID_PARTS_OF_SPEECH
 
 class Number():
-    def __init__(self, numeral, idx_and_type):
+    def __init__(self, numeral, idx):
         self.numeral = numeral
-        self.idx_and_type = idx_and_type
+        self.idx = idx
+        if self.idx == 0:
+            self.which = "first"
+            self.other = 1
+        else:
+            self.which = "second"
+            self.other = 0
         self.entry_type = "number"
-        self.to_display = f'''The first term in your compound is {self.numeral}. There's no 
-        need to provide information on its use.'''
+        self.to_display = f'''The {self.which} term in your compound is {self.numeral}. There's no need to provide information on its use.'''
