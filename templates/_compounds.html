@@ -7,8 +7,8 @@
 </head>
 
 {% macro pick_a_part(name, entry_lists ='', terms='') -%}
-    <div id="column_container">
-        <div class="newb">
+    <div class="column_container">
+        <div class="column_box">
             <p style="font-size: 1.25em"> Merriam-Webster's Collegiate® Dictionary lists the following definitions and senses for the words in your search term. For each part of your search term, review the definitions and associated senses; then select the part of speech that most closely matches your use from the drop-down menu.</p>
         </div>
     </div>
@@ -70,8 +70,8 @@
     {% endmacro %}
     
 {% macro comp_with_num(name, entries = '', term='', num="") %}
-    <div id="column_container">
-        <div class="newb">
+    <div class="column_container">
+        <div class="column_box">
             <p style="font-size: 1.25em">{{num.to_display}}</p>
             <p style="font-size: 1.25em"> Merriam-Webster's Collegiate® Dictionary lists the following definitions and senses for the non-numeric element of your compound, "{{term}}." Please review the definitions and associated senses; then select the part of speech that most closely matches your use from the drop-down menu.</p>
         </div>
@@ -133,7 +133,7 @@
 
 <body>
     <div id="new_con">
-        <div class="newb">
+        <div class="column_box">
             <h1>Should it be hyphenated?
             Let's find out.</h1>
         </div>
@@ -141,10 +141,10 @@
   
     {% if first_page %}
     <div id="new_con">
-        <div class="newb" style="margin-left: 1em">
+        <div class="column_box" style="margin-left: 1em">
             <a href="/">Back to the main page</a>
         </div>
-        <div class="newb">
+        <div class="column_box">
         <h2>Enter a Compound Term</h2>
         {% if not mistake %}
             <p>Please enter a term that you think may be hyphenated. Your search term
