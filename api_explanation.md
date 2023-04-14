@@ -1,6 +1,6 @@
 # The App and the API
 # A Note on Merriam-Webster's Collegiate® Dictionary with Audio API
-This documentation details the JSON responses returned by Merriam-Webster's  Collegiate®  
+This documentation details the JSON responses returned by Merriam-Webster's Collegiate®  
 Dictionary with Audio API and the ways in which Should It Be Hyphenated? parses those  
 responses. For more specific information on the app's handling of those  responses, see  
 the docstrings in the source code.
