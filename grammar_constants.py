@@ -77,8 +77,9 @@ NUM_SUPERLATIVE = ("A compound formed from an ordinal number and a superlative s
 " hyphenated before but not after a noun (e.g., 'the second-best player' but 'ranked the"
 " second best).")
 
-NUM_NOUN = ("A number-noun compound should be hyphenated before but not after a noun"
-" (e.g., 'a two-year contract' but 'contracted for two years).'")
+NUM_NOUN = ("A number-noun compound should be hyphenated before a noun"
+" (e.g., 'two-factor authentication'); otherwise, it should be left open"
+" ('authenticate using two factors').")
 
 BY_PART_NUM = {"SUPERLATIVE": NUM_SUPERLATIVE, "NOUN": NUM_NOUN}
 
@@ -206,7 +207,14 @@ PART_OF_SPEECH_DEFS = {
 #The final constants are lists of parts of speech that the app ignores and parts of speech
 #that it considers valid.
 
-IGNORED_PARTS_OF_SPEECH = ["biographical name", "auxiliary verb", "abbreviation", "symbol", "trademark", "pronunciation spelling"]
+IGNORED_PARTS_OF_SPEECH = [
+    "abbreviation",
+    "auxiliary verb",
+    "biographical name",
+    "pronunciation spelling",
+    "symbol",
+    "trademark"
+    ]
 
 VALID_PARTS_OF_SPEECH = [
     "adjective",
