@@ -105,10 +105,10 @@ input[type=text] {
 }
 
 .container {
-display: flex;
-align-items: center; 
-background-color: #8c8c8c;
-flex-flow: wrap;
+    display: flex;
+    flex: 1;
+    background-color: #8c8c8c;
+    flex-flow: wrap;
 }
 
 .column_container {
@@ -133,11 +133,10 @@ flex-flow: wrap;
 
 .box {
     flex: 1;
-    height: 30vh; 
+    height: auto; 
     display: flex;
     color: rgb(152, 157, 153);
     text-align: center;
     font-size: 1em;
     padding: .25em;
-    flex-flow: row wrap;
 }

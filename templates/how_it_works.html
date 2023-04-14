@@ -48,7 +48,7 @@
                         <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">What is it?</p>
                     </div>
                     <div class="column_box">
-                <p>Should It Be Hyphenated? is a work-in-progress Flask app with a Python back end. The app relies on Merriam-Webster's Collegiate® Dictionary with Audio API and is hosted on Render.
+                <p>Should It Be Hyphenated? is a Flask app with a Python back end. The app relies on Merriam-Webster's Collegiate® Dictionary with Audio API and is hosted on Render.
 
                 For details on the JSON responses returned by the API and the app's handling of those responses, see <a href="https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md">"The App and the API: A Note on Merriam-Webster's Collegiate® Dictionary with Audio API."</a> For more extensive information on the API, see the Merriam-Webster Developer Center's <a href="https://dictionaryapi.com/info/frequently-asked-questions">FAQ page</a> or <a href="https://dictionaryapi.com/products/json">JSON documentation</a>.</p> 
             </div>
@@ -60,11 +60,25 @@
                     <li>The app adheres to Chicago Manual of Style hyphenation standards and retrieves all definitions / spellings from Merriam-Webster's Collegiate Dictionary, one of the dictionaries recommended by the manual.</li>
                     <li>Currently, the app does not support search terms with more than one hyphen; nor does it differentiate between compounds that use a hyphen and compounds that use an en dash.</li>
                     <li>Merriam-Webster's Collegiate® Dictionary with Audio API enforces a rate limit of 1,000 queries a day.</li>
+                    <li>Should It Be Hyphenated? ignores the parts of speech listed below. If a dictionary entry's functional label (part of speech) field includes one of those parts of speech, the app will omit that entry from
+                    the entry information it returns; however, it will still return the other entries for the search term.
+                    <p>
+                    <ul>
+                        <li>Abbreviations</li>
+                        <li>Auxiliary verbs</li>
+                        <li>Biographical names</li>
+                        <li>Pronunciation spellings</li>
+                        <li>Symbols</li>
+                        <li>Trademarks</li>
+                    </ul>
+                    </li>
+                    
                 </ul>
             <br>
             <br>
         </div>
-    <div class="column_box">
+    <div class="column_container">
+    <div class="column_box" style="text-align: center">
         <svg width="50" height="50">
             <img src="./static/mw_logo.png" height="50" width="50"/>
             </svg>
