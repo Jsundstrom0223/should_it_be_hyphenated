@@ -9,7 +9,7 @@ import existing_compound_handler
 import grammar
 import entry_parser
 from grammar_constants import ORDINALS, PART_OF_SPEECH_DEFS, IGNORED_PARTS_OF_SPEECH
-from classes import (Compound, ExistingCompound, GrammarDef, NoEntries, Nonstandard, Number, StandardEntry)
+from classes import ExistingCompound, NoEntries, Nonstandard, Number, StandardEntry
 
 # with open("../../key.txt", "r") as key:
 #     MW_KEY = key.read()
@@ -40,12 +40,14 @@ def grammar_defs():
     the user: the 'official' definition from Merriam-Webster's Collegiate® Dictionary and
     a 'plain English' definition written by the app's developer. 
     """
+    Grammar_Defs = namedtuple('Grammar_Defs', ['term', 'official', 'plain_english'])
     defs_to_get = [k for k,v in request.form.items() if v == "on"]
     def_list = []
-    for def_to_get in defs_to_get:
-        official = call_mw_api(def_to_get, just_get_def=True)
-        plain_english = PART_OF_SPEECH_DEFS.get(def_to_get)
-        def_list.append(GrammarDef(def_to_get, official, plain_english))
+    
+    for term in defs_to_get:
+        official = call_mw_api(term, just_get_def=True)
+        plain_english = PART_OF_SPEECH_DEFS.get(term)
+        def_list.append(Grammar_Defs(term, official, plain_english))
 
     terms_page = render_template('_terms.html', answer=def_list)
     return terms_page
@@ -55,9 +57,8 @@ def hyphenation_answer():
     """Render the _compounds template, which takes in a compound and displays results.
     
     Take a user-provided compound and check its validity. If the compound is valid, create an
-    instance of the Compound class. If the compound contains a numeral, pass the instance to the
-    handle_comp_with_num function. If it does not, pass the instance to the call_mw_api function.
-    In either case, render the _compounds template again, with the results of the function call.
+    instance of the Compound class and pass it to the handle_comp_with_num or call_mw_api 
+    function. Then render the _compounds template again, with the results of the function call.
     
     For more details, see the following documentation on the API:
     https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md.
@@ -93,7 +94,11 @@ def hyphenation_answer():
                 enter a compound with two unique elements.'''
                 return render_template('_compounds.html', mistake=mistake_header, first_page=True)
             
-            compound = Compound(elements_of_compound, compound_from_input)
+            Compound = namedtuple('Compound', ['elements', 'full', 'open', 'closed'])
+            open = elements_of_compound[0] + " " + elements_of_compound[1]
+            closed = "".join(elements_of_compound)
+            compound = Compound(elements_of_compound, compound_from_input, open, closed)
+
             has_numeral, idx_and_type = check_for_numerals(compound)
             if has_numeral:
                 new_page = handle_comp_with_num(compound, idx_and_type)
@@ -101,7 +106,7 @@ def hyphenation_answer():
 
             results = call_mw_api(compound, is_a_compound=True)
             if results.answer_ready is False:
-                new_page = render_template('_compounds.html', defs_to_show=results.outcome, search_term=compound.elements)
+                new_page = render_template('_compounds.html', display=results.outcome, search_term=compound.elements)
             else:
                 new_page = render_by_type(results)
 
@@ -132,7 +137,10 @@ def render_by_type(results):
         2. outcome: The information that will be displayed to the user.
         3. outcome_type: A variable that tells the _compounds template how to display that
         information.
-        4. header: A summary of that information or, if answer_ready is False, an empty string..
+        4. header: A summary of that information or, if answer_ready is False, an empty string.
+
+    Returns:
+    new_page: The _compounds template, with the results to be displayed to the user.
     """
     arg_dict = {results.outcome_type: results.outcome, "header": results.header}
     new_page = render_template('_compounds.html', **arg_dict)
@@ -146,7 +154,7 @@ def check_for_numerals(compound):
     of the number ("cardinal" or, for an ordinal, its ending) to idx_and_type.
 
     Argument:
-    compound: The compound instance created in hyphenation_answer.
+    compound: The 'compound' named tuple created in hyphenation_answer.
 
     Returns:
     has_numeral: A boolean value.
@@ -177,8 +185,11 @@ def handle_comp_with_num(compound, idx_and_type):
     start_parsing with only the non-numeric element of the compound.
     
     Arguments:
-    compound: The compound instance created in hyphenation_answer.
+    compound: The 'compound' named tuple created in hyphenation_answer.
     idx_and_type: A dictionary that identifies the numeric element(s) of the compound.
+
+    Returns:
+    new_page: The _compounds template, with the results to be displayed to the user.
     """
     num_results = grammar.check_cmos_num_rules(compound, idx_and_type)
 
@@ -204,7 +215,8 @@ def call_mw_api(term, is_a_compound=False, just_get_def=False):
     
     Arguments:
     term: The search term used in the API call.
-    is_a_compound: A boolean value. True means that compound_checker should be called.
+    is_a_compound: A boolean value. True means that compound_checker should be called and
+    that its return value should be returned to hyphenation_answer.
     just_get_def: A boolean value. True means that the return value should be just
     the shortdef field of the entry rather than the full API response.
     """
@@ -232,7 +244,7 @@ def compound_checker(mw_response, compound):
     Arguments:
     mw_response: The API's response to the initial call, in which the search term is 
     the full compound.
-    compound: The compound instance created in hyphenation_answer.
+    compound: The 'compound' named tuple created in hyphenation_answer.
 
     Returns:
     results: A named tuple with four named fields:
@@ -277,7 +289,7 @@ def compound_checker(mw_response, compound):
                     if comp.with_article not in compound_types:
                         compound_types.append(comp.with_article)
 
-                header = ExistingCompound.format_compound_header(compound_types, compound)
+                header = ExistingCompound.format_outcome_header(compound_types, compound)
                 answer_ready = True
                 outcome_type = "found_in_MW"
 
@@ -300,7 +312,9 @@ def validate_response(mw_response):
     mw_response: The API's JSON response.
 
     Returns:
-    response_type: A variable set to either "empty," "typo," or "valid."
+    response_type: A variable set to either "empty," "typo," or "valid." "Typo" means
+    that the search term is misspelled, but the API returned a list of spelling suggestions.
+    "Empty" means that the term is misspelled, and no spelling suggestions were returned.
     """
     if len(mw_response) == 0:
         response_type = "empty"
@@ -320,7 +334,7 @@ def handle_separately(compound):
     make two calls to start_parsing, one for each element and the associated API response.
     
     Argument:
-    compound: The compound instance created in hyphenation_answer.
+    compound: The 'compound' named tuple created in hyphenation_answer.
 
     Returns:
     answer_ready, outcome, outcome_type, header: The fields that form the named tuple 
@@ -347,7 +361,7 @@ def handle_invalid_entries(mw_responses, compound, response_types):
     
     Arguments:
     mw_responses: The API's responses (for both elements of the compound).
-    compound: The compound instance created in hyphenation_answer.
+    compound: The 'compound' named tuple created in hyphenation_answer.
     response_types: A list of variables set to either "typo," "valid," or "empty."
 
     Returns:
@@ -437,13 +451,22 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
         if len(mw_entries) == 0:
             mw_entries.append(NoEntries(search_term))
         else:
-            to_format = [entry for entry in mw_entries if entry.entry_type != "one_diff_cxts"]
-            [entry.format_entries() for entry in to_format]
+            prep_entries_for_display(mw_entries)
 
-            Nonstandard.cxt_entry_combiner(mw_entries)
-            for i in mw_entries:
-                if i.entry_type != "main_entry":
-                    i.to_display = i.format_entry_header()
-
-    
     return mw_entries
+
+def prep_entries_for_display(mw_entries):
+    '''Check the collected entries' types and pass them to the appropriate formatting functions.
+    
+    Argument:
+
+    mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
+    entry information that will be returned to the user.
+    '''
+    to_format = [entry for entry in mw_entries if entry.entry_type != "one_diff_cxts"]
+    [entry.format_entry_defs() for entry in to_format]
+
+    Nonstandard.cxt_entry_combiner(mw_entries)
+    for i in mw_entries:
+        if i.entry_type != "main_entry":
+            i.format_entry_header()

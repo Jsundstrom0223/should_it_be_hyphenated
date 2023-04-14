@@ -3,19 +3,6 @@ import re
 from collections import defaultdict
 from grammar_constants import VALID_PARTS_OF_SPEECH
 
-class Compound():
-    def __init__(self, elements, full):
-        self.elements = elements
-        self.full = full
-        self.open = self.elements[0] + " " + self.elements[1]
-        self.closed = self.elements[0] + self.elements[1]
-
-class GrammarDef():
-    def __init__(self, term, official, plain_english):
-        self.term = term
-        self.official = official
-        self.plain_english = plain_english
-
 class StandardEntry():
     stems_and_parts = {}
     def __init__(self, the_id, entry_type, part, definition):
@@ -28,7 +15,9 @@ class StandardEntry():
             self.to_display = part.capitalize()
             self.menu_option = part
 
-    def format_entries(self):
+    def format_entry_defs(self):
+        '''Format the entry definitions that will be displayed to the user.'''
+        print("FORMATTING ENTRY DEFS")
         for k, v in self.definition.items():
             if v.startswith("—"):
                 v_without_leading_dash = re.sub(r"^—", "", v)
@@ -40,7 +29,7 @@ class Nonstandard(StandardEntry):
     grouped = {}
     def __init__(self, the_id, entry_type, part, definition, cxt, relation):
         super().__init__(the_id, entry_type, part, definition)
-      
+
         self.cxt = cxt
         self.relation = relation
         if part == "verb":
@@ -66,19 +55,25 @@ class Nonstandard(StandardEntry):
                 self.menu_option = self.part
 
     def format_entry_header(self):
+        '''Format the entry headers that will be displayed to the user.'''
+        print("FORMATTING ENTRY HEADER")
         if self.entry_type == "variant_or_cxs":
-            to_display = f"{self.part.capitalize()}: {self.relation.capitalize()} {self.cxt}"
+            self.to_display = f"{self.part.capitalize()}: {self.relation.capitalize()} {self.cxt}"
 
         if self.entry_type == "one_diff_cxts":
             header_components = []
             header_components.append(self.relation)
             header_components.append(self.cxt)
-            to_display = f"{self.part.capitalize()}: {' '.join(header_components)}"
-
-        return to_display
+            self.to_display = f"{self.part.capitalize()}: {' '.join(header_components).capitalize()}"
 
     @staticmethod
     def cxt_entry_combiner(mw_entries):
+        '''Combine entries that have the same part of speech and cxl but different cxts.
+        
+        Argument:
+        mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
+        entry information that will be returned to the user.
+        '''
         entries = [(i.relation, i) for i in mw_entries if i.entry_type == "one_diff_cxts"]
 
         combined = defaultdict(list)
@@ -98,8 +93,8 @@ class Nonstandard(StandardEntry):
 
             joined_defs = "; ".join(all_defs)
             keep.definition[keep.part] = joined_defs
-            StandardEntry.format_entries(keep)
-            keep.to_display = Nonstandard.format_entry_header(keep)
+            keep.format_entry_defs()
+            keep.format_entry_header()
 
         for item in discard:
             to_discard = mw_entries.index(item)
@@ -124,7 +119,17 @@ class ExistingCompound(StandardEntry):
         super().__init__(the_id, entry_type, part, definition)
 
     @staticmethod
-    def format_compound_header(compound_types, compound):
+    def format_outcome_header(compound_types, compound):
+        '''Format the header that will be displayed if the compound is in the dictionary.
+        
+        Arguments:
+        compound_types: A variable indicating the type(s) of the existing compound(s) 
+        (open, closed, or hyphenated).
+        compound: The 'compound' named tuple created in hyphenation_answer.
+
+        Returns:
+        header: The header that will be displayed to the user.
+        '''
         if len(compound_types) == 2:
             final_types = " and ".join(compound_types)
         elif len(compound_types) > 2:
@@ -133,7 +138,10 @@ class ExistingCompound(StandardEntry):
         else:
             final_types = compound_types[0]
 
-        header = f"M-W lists '{compound.full}' as {final_types}. Details are provided below."
+        header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
+        {final_types}. Details on the compound and an explanation of whether it should be
+        hyphenated are provided below.'''
+
         return header
 
 class NoEntries():
@@ -160,4 +168,5 @@ class Number():
             self.which = "second"
             self.other = 0
         self.entry_type = "number"
-        self.to_display = f'''The {self.which} term in your compound is {self.numeral}. There's no need to provide information on its use.'''
+        self.to_display = f'''The {self.which} term in your compound is {self.numeral}. 
+        There's no need to provide information on its use.'''
