@@ -11,7 +11,7 @@ def check_first_element_lists(compound):
     lists in grammar_constants.py (the values of the FIRST_ELEMENT_DICT dictionary). 
     
     Argument:
-    compound: The compound instance created in hyphenation_answer.
+    compound: The 'compound' named tuple created in hyphenation_answer.
 
     Returns:
     ele_answer_ready: A boolean. False means that there are no Chicago Manual of Style
@@ -39,7 +39,7 @@ def check_cmos_num_rules(compound, idx_and_type):
     of the CMOS_NUM_DICT dictionary). 
 
     Arguments:
-    compound: The compound instance created in hyphenation_answer.
+    compound: The 'compound' named tuple created in hyphenation_answer.
     idx_and_type: A dictionary that identifies the numeric element(s) of the compound.
 
     Returns:

@@ -45,7 +45,7 @@ def get_entry_definition(entry):
     return def_of_term
 
 def is_def_duplicate(mw_entries, definition):
-    """Confirm that the entry to be added to mw_entries is unique.
+    """Check whether the definition of the entry to be added to mw_entries is unique.
     
     Two dictionary entries in an API response can contain the same definition. 
     In those cases, the second entry should not be added to mw_entries.
@@ -53,7 +53,7 @@ def is_def_duplicate(mw_entries, definition):
     Arguments:
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
-    definition: The definition being checked against existing definitions.
+    definition: The definition being checked.
 
     Returns:
     dupe_def: A boolean value. True means that the definition is a duplicate.
@@ -68,7 +68,20 @@ def is_def_duplicate(mw_entries, definition):
     return dupe_def
 
 def is_part_duplicate(mw_entries, part_of_speech, definition):
+    '''Check whether the part of speech of the entry to be added to mw_entries is unique.
+    
+    If the entry has the same part of speech as an existing entry in mw_entries, combine
+    the two entries.
+    
+    Arguments:
+    mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
+    entry information that will be returned to the user.
+    part_of_speech: The part of speech being checked.
+    definition: The definition of the entry.
 
+    Returns: 
+    dupe_part: A boolean value. True means that the definition is a duplicate.
+    '''
     dupe_part = False
     standards = [r for r in mw_entries if r.entry_type == "main_entry" and
     r.part == part_of_speech]
@@ -79,6 +92,7 @@ def is_part_duplicate(mw_entries, part_of_speech, definition):
             combined_defs = "; ".join([i.definition[part_of_speech], definition[part_of_speech]])
             i.definition[part_of_speech] = combined_defs
             dupe_part = True
+
     return dupe_part
 
 def get_cxt_search_term(cxt):

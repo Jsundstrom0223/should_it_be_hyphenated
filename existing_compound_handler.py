@@ -95,6 +95,8 @@ def existing_hyphenated_compound(ce, compound_from_input):
         if ce.entry_type == "variant_or_cxs":
             outcome = compound_is_variant + "\n\n" + f"Because it is a {ce.part}, it should likely be hyphenated regardless of its position in a sentence. Its definition is as follows: "
         else:
-            outcome = f"M-W lists the search term you entered, '{compound_from_input}', as {article_before_part} {ce.part}.' The term should likely be hyphenated regardless of its position in a sentence. Its definition is as follows: "
+            outcome = f'''M-W lists the search term you entered, '{compound_from_input}', as
+            {article_before_part} {ce.part}. The term should likely be hyphenated regardless 
+            of its position in a sentence. Its definition is as follows: '''
    
     return outcome
