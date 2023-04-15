@@ -46,8 +46,37 @@ FRACTION_GUIDANCE = ("CMoS recommends spelling out simple fractions and states t
 
 COMPARATIVE_ADVERBS = ["more", "most", "less", "least", "very"]
 ALWAYS_PREFIXES = ["self", "ex", "great"]
+SOMETIMES_PREFIXES = [
+    "anti",
+    "bi",
+    "bio",
+    "co",
+    "counter",
+    "cyber",
+    "extra",
+    "hyper",
+    "infra",
+    "inter",
+    "intra",
+    "macro",
+    "mega",
+    "meta",
+    "mid",
+    "mini",
+    "multi",
+    "over",
+    "proto",
+    "semi",
+    "sub",
+    "super",
+    "supra",
+    "ultra",
+    "un",
+    "under"
+    ]
+
 AS_ADJS = ["foster", "near", "half"]
-FIRST_ELEMENT_DICT = {"ADVS": COMPARATIVE_ADVERBS, "PREFIXES": ALWAYS_PREFIXES, "ADJS": AS_ADJS}
+FIRST_ELEMENT_DICT = {"ADVS": COMPARATIVE_ADVERBS, "ALWAYS_PREFIXES": ALWAYS_PREFIXES, "SOMETIMES_PREFIXES": SOMETIMES_PREFIXES, "ADJS": AS_ADJS}
 
 # SECOND_ALWAYS = ["free", "odd"]
 # SECOND_ELEMENT_LISTS = [SECOND_ALWAYS]
@@ -56,17 +85,30 @@ CMOS_ADVS = ("Compounds consisting of 'more,' 'most,' 'less,' 'least,' or 'very'
 " and an adjective or participle (e.g., 'a more perfect nation,' 'the least traveled"
 " path' do not need to be hyphenated unless there is a risk of misinterpretation.")
 
-CMOS_PREFIXES = ("With very few exceptions, compounds beginning with the prefixes"
+CMOS_ALWAYS_PREFIXES = ("With very few exceptions, compounds beginning with the prefixes"
 " 'self', 'ex', and 'great' should be hyphenated. The few exceptions apply to 'self,'"
 " which should be hyphenated unless it is followed by a suffix (as in 'selfless') or"
 " preceded by 'un' (as in 'unselfconscious').")
+
+CMOS_SOMETIMES_PREFIXES = ("A two-word compound that begins with a prefix (e.g., 'cyber,'"
+" 'sub,' 'un,' etc.) should generally be closed up--that is, written as one word"
+" ('cyberthreat,' 'subfolder,' 'unidiomatic'). However, it should be hyphenated if the"
+" second term in the compound is a capitalized word or a numeral or if closing the compound"
+" up could cause confusion. Moreover, it is usually best to hyphenate compounds in which the"
+" prefix ends with the first letter of the second word (e.g., 'anti-intellectual'), although"
+" there are exceptions, such as 'unnecessary.'\n\n")
 
 CMOS_AS_ADJS = ("Certain compounds, such as those beginning with 'foster,' 'near,'"
 " and 'half,' are hyphenated when used as adjectives (e.g.,'a near-perfect game,'"
 " 'foster-family training,' 'a half-asleep student') but not as verbs ('half listened')" 
 " or nouns ('a foster family').")
 
-FIRST_ELEMENT_OUTCOMES = {"ADVS": CMOS_ADVS, "PREFIXES": CMOS_PREFIXES, "ADJS": CMOS_AS_ADJS}
+FIRST_ELEMENT_OUTCOMES = {
+    "ADVS": CMOS_ADVS,
+    "ALWAYS_PREFIXES": CMOS_ALWAYS_PREFIXES,
+    "SOMETIMES_PREFIXES": CMOS_SOMETIMES_PREFIXES,
+    "ADJS": CMOS_AS_ADJS
+    }
 
 #__________________________________________________________________________________________
 #The following constants relate to Chicago Manual of Style hyphenation standards that are

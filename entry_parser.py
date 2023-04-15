@@ -241,10 +241,9 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
         if term_is_inflection:
             add, stem_defs, relation = inflection_entry(entry, inflection_label, mw_entries, part_of_speech)
     else:
-        term_is_stem=is_stem(stems, search_term)
+        term_is_stem = is_stem(stems, search_term)
         if term_is_stem:
             add, stem_defs, relation = stem_entry(entry, mw_entries, part_of_speech) 
-
     if add:
         entry_type = "variant_or_cxs"
         if relation in Nonstandard.grouped.keys():
@@ -256,6 +255,9 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
                     here.entry_type = "one_diff_cxts"
                     mw_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs, new_cxt, relation))
                     break
+                else:
+                    mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
+               
         else:
             for k in stem_defs.keys():
                 mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
@@ -416,11 +418,11 @@ def is_stem(stems, search_term):
         term_is_stem = True
     else:
         to_check = list(search_term)
+        
         for stem in stems:
-            term_is_stem = check_alt_forms(to_check, stem)
-            if term_is_stem:
-                break
-
+            if not term_is_stem:
+                term_is_stem = check_alt_forms(to_check, stem)
+            
     return term_is_stem
 
 def stem_entry(entry, mw_entries, part_of_speech):
@@ -446,7 +448,6 @@ def stem_entry(entry, mw_entries, part_of_speech):
         relation = "variant of"
 
     add, stem_defs = get_stem_defs(entry, mw_entries, part_of_speech)
-
     return add, stem_defs, relation
 
 def get_stem_defs(entry, mw_entries, part_of_speech):

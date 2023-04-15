@@ -22,13 +22,32 @@ def check_first_element_lists(compound):
     ele_answer_ready = False; ele_outcome = None
     in_first_element_lists = [k for k,v in FIRST_ELEMENT_DICT.items() if
         compound.elements[0] in v]
-
-    if in_first_element_lists:
+    
+    if len(in_first_element_lists) > 0:
         ele_answer_ready = True
         the_list = in_first_element_lists[0]
-        ele_outcome =  FIRST_ELEMENT_OUTCOMES[the_list]
+        if the_list == 'SOMETIMES_PREFIXES':
+            outcome_details = sometimes_hyphenated_prefixes(compound)
+            ele_outcome = FIRST_ELEMENT_OUTCOMES[the_list] + outcome_details
+        else:
+            ele_outcome =  FIRST_ELEMENT_OUTCOMES[the_list]
 
     return ele_answer_ready, ele_outcome
+
+def sometimes_hyphenated_prefixes(compound):
+    end_of_prefix = compound.elements[0][-1]
+    other_ele_first_letter = compound.elements[1][0]
+    print("END OF PREFIX", end_of_prefix, other_ele_first_letter)
+    if end_of_prefix != other_ele_first_letter:
+        outcome_details = (f"Because the prefix in your compound, '{compound.elements[0]}', does not"
+                            f" end with '{other_ele_first_letter},' the first letter of the second word,"
+                            f" it should likely be closed up ('{compound.closed}').")
+    else:
+        outcome_details = (f"Because the prefix in your compound, {compound.elements[0]}, ends"
+                           f" with '{other_ele_first_letter},' the first letter of the second word,"
+                            " it should likely be hyphenated in all cases.")
+        
+    return outcome_details
 
 def check_cmos_num_rules(compound, idx_and_type):
     """Check whether any number-specific Chicago Manual standards apply to the compound.
