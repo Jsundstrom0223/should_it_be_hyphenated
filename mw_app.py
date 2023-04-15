@@ -94,7 +94,6 @@ def hyphenation_answer():
                 enter a compound with two unique elements.'''
                 return render_template('_compounds.html', mistake=mistake_header, first_page=True)
             
-            print("MOM'S INPUT RECEIVED")
             Compound = namedtuple('Compound', ['elements', 'full', 'open', 'closed'])
             open = elements_of_compound[0] + " " + elements_of_compound[1]
             closed = "".join(elements_of_compound)
@@ -106,6 +105,7 @@ def hyphenation_answer():
                 return new_page
 
             results = call_mw_api(compound, is_a_compound=True)
+
             if results.answer_ready is False:
                 new_page = render_template('_compounds.html', display=results.outcome, search_term=compound.elements)
             else:
@@ -345,7 +345,7 @@ def handle_separately(compound):
     response_types = [validate_response(i) for i in mw_responses]
     outcome_type, header = None, None
 
-    if response_types[0] == "valid" and response_types[1] == "valid":
+    if all(response_type == "valid" for response_type in response_types):
         compound_and_responses = dict(zip(compound.elements, mw_responses))
         mw_entries = [start_parsing(v, k) for k, v in compound_and_responses.items()]
         answer_ready = False
