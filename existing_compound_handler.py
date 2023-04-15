@@ -35,14 +35,16 @@ def sort_entries(mw_entries, compound):
 
 def in_mw_as_main_entry(compound_type, ce, compound_from_input):
     if compound_type == "closed compound":
-        outcome = f"According to M-W, the search term you entered is a {compound_type}, '{ce.the_id}', which means that it should not be hyphenated. Its definition is as follows: '"
+        outcome = f"According to M-W, the search term you entered is a {compound_type}, '{ce.the_id}', which means that it should be written as one word (i.e., closed up). Its definition is as follows: '"
        
     elif compound_type == "open compound":                
         if ce.part ==  "adjective" or ce.part == "adverb":
             outcome = f"M-W lists the search term you entered as an {compound_type}, '{ce.the_id}'. However, as CMoS 7.85 says, 'it is never incorrect to hyphenate adjectival compounds before a noun.' The term's definition is as follows: '.'"
         else:
             article = get_article(ce.part)
-            outcome = f"M-W lists the search term you entered as an {compound_type}, '{ce.the_id}'. Because it is {article} {ce.part}, it should likely be left open in all cases. Its definition is as follows: "
+            outcome = f'''M-W lists the search term you entered as an {compound_type}, '{ce.the_id}'. Because it is 
+            {article} {ce.part}, it should likely be left open (written as two words) in all cases. Its definition is as
+            follows: '''
     
     else:
         outcome = existing_hyphenated_compound(ce, compound_from_input)
@@ -54,14 +56,18 @@ def in_mw_as_variant(compound_type, ce, compound_from_input):
     article_before_part = get_article(ce.part)
 
     if compound_type == "closed compound":
-        outcome = f"According to M-W, the search term you entered, '{compound_from_input}', is {article_before_relation} {ce.relation} '{ce.cxt}', which is a {compound_type}. The definition of {ce.cxt} is as follows: '"
+        outcome = f'''According to M-W, the search term you entered, '{compound_from_input}', is
+        {article_before_relation} {ce.relation} '{ce.cxt}', which is a {compound_type}. As such, 
+        it should be written as one word. The definition of {ce.cxt} is as follows: '''
                                 
     elif compound_type == "open compound":     
         compound_is_open_compound = f"The search term you entered, '{compound_from_input}', is {article_before_relation} {ce.relation} '{ce.cxt}', which is an {compound_type}."           
         if ce.part ==  "adjective" or ce.part == "adverb":
             outcome = compound_is_open_compound + "\n\n" + f"However, as CMoS 7.85 says, 'it is never incorrect to hyphenate adjectival compounds before a noun.' The definition of {ce.cxt} is as follows: .'"
         else:
-            outcome = compound_is_open_compound + "\n\n" + f"Because {ce.cxt} is {article_before_part} {ce.part}, it should likely be left open in all cases. The definition of {ce.cxt} is as follows: .'" 
+            outcome = compound_is_open_compound + "\n\n" + f'''Because {ce.cxt} is 
+            {article_before_part} {ce.part}, it should likely be left open (written as two words) in all
+            cases. The definition of {ce.cxt} is as follows: .'''
                             
     else:
         outcome = existing_hyphenated_compound(ce, compound_from_input)
