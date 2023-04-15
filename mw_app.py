@@ -94,6 +94,7 @@ def hyphenation_answer():
                 enter a compound with two unique elements.'''
                 return render_template('_compounds.html', mistake=mistake_header, first_page=True)
             
+            print("MOM'S INPUT RECEIVED")
             Compound = namedtuple('Compound', ['elements', 'full', 'open', 'closed'])
             open = elements_of_compound[0] + " " + elements_of_compound[1]
             closed = "".join(elements_of_compound)
