@@ -88,6 +88,7 @@ def hyphenation_answer():
 
             compound_from_input = user_input[hyphenated_compound.start(): hyphenated_compound.end()]
             elements_of_compound = compound_from_input.split("-")
+            print("COMPOUND FROM INPUT", compound_from_input)
 
             if elements_of_compound[0] == elements_of_compound[1]:
                 mistake_header = '''The elements of your compound are identical; please
