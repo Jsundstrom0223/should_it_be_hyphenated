@@ -74,27 +74,19 @@ def hyphenation_answer():
             # stray characters/extra input
             hyphenated_compound = re.search(r"[\w\d]+-[\w\d]+", user_input)
             if hyphenated_compound is None:
-                mistake_header = '''The input you provided lacks a hyphen ("-") or
-                includes a hyphen with at least one space next to it. Please try again
-                and ensure that your input includes one hyphen with no spaces around it
-                (e.g., "well-being").'''
-                return render_template('_compounds.html', mistake=mistake_header, first_page=True)
+                return handle_input_mistakes(user_input, "no_hyphen")
 
             remaining = user_input[hyphenated_compound.end(): ]
             if "-" in remaining:
-                mistake_header = '''The input you provided includes multiple hyphens.
-                Please enter a compound that has only one hyphen (e.g., "well-being").'''
-                return render_template('_compounds.html', mistake=mistake_header, first_page=True)
+                return handle_input_mistakes(user_input, "multiple_hyphens")
 
             compound_from_input = user_input[hyphenated_compound.start(): hyphenated_compound.end()]
             elements_of_compound = compound_from_input.split("-")
             print("COMPOUND FROM INPUT", compound_from_input)
 
             if elements_of_compound[0] == elements_of_compound[1]:
-                mistake_header = '''The elements of your compound are identical; please
-                enter a compound with two unique elements.'''
-                return render_template('_compounds.html', mistake=mistake_header, first_page=True)
-            
+                return handle_input_mistakes(user_input, "dupe_elements")
+    
             Compound = namedtuple('Compound', ['elements', 'full', 'open', 'closed'])
             open = elements_of_compound[0] + " " + elements_of_compound[1]
             closed = "".join(elements_of_compound)
@@ -126,6 +118,27 @@ def hyphenation_answer():
             return final_page
 
     return render_template('_compounds.html', first_page=True)
+
+def handle_input_mistakes(user_input, mistake_type):
+    
+    if mistake_type == "no_hyphen":
+        mistake_header = '''The input you provided lacks a hyphen ("-") or
+            includes a hyphen with at least one space next to it. Please try again
+            and ensure that your input includes one hyphen with no spaces around it
+            (e.g., "well-being").'''
+        
+    if mistake_type == "multiple_hyphens":
+        mistake_header = f'''The input you provided includes multiple hyphens.
+            Please enter a compound that has only one hyphen (e.g., "well-being").'''
+        
+    if mistake_type == "dupe_elements":
+        mistake_header = '''The elements of your compound are identical; please
+            enter a compound with two unique elements.'''
+
+    mistake_args = {'input': user_input, 'mistake': mistake_header, 'first_page': True}
+    mistake_page = render_template('_compounds.html', **mistake_args)
+
+    return mistake_page
 
 def render_by_type(results):
     """Pass the results returned by handle_comp_with_num or call_mw_api to render_template.
@@ -429,7 +442,6 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
                 cxl = entry.get("cxs")[0]["cxl"]
                 cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
                 cxt_search_term, cxt_only = entry_parser.get_cxt_search_term(cxt)
-                print("\n", cxt_search_term)
                 cxs_mw_response = call_mw_api(cxt_search_term)
                 entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxl)            
             else:

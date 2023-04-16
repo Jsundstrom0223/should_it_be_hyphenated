@@ -133,8 +133,10 @@ class ExistingCompound(StandardEntry):
         if len(compound_types) == 2:
             final_types = " and ".join(compound_types)
         elif len(compound_types) > 2:
-            compound_types.insert(-1, "and ")
-            final_types = ", ".join(compound_types)
+     
+            compound_types.insert(1, ", ")
+            compound_types.insert(-1, ", and ")
+            final_types = "".join(compound_types)
         else:
             final_types = compound_types[0]
 

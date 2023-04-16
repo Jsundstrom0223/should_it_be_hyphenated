@@ -59,12 +59,10 @@ def is_def_duplicate(mw_entries, definition):
     dupe_def: A boolean value. True means that the definition is a duplicate.
     """
     dupe_def = False
-
     for i in mw_entries:
         for k, v in i.definition.items():
             if v == definition:
                 dupe_def = True
-
     return dupe_def
 
 def is_part_duplicate(mw_entries, part_of_speech, definition):
@@ -258,10 +256,11 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
             for k in stem_defs.keys():
                 here = Nonstandard.grouped[relation]
                 if here.part == k:
-                    new_cxt = here.cxt + " and " + the_id
-                    here.cxt = new_cxt
-                    here.entry_type = "one_diff_cxts"
-                    mw_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs, new_cxt, relation))
+                    if the_id != here.cxt:
+                        new_cxt = here.cxt + " and " + the_id
+                        here.cxt = new_cxt
+                        here.entry_type = "one_diff_cxts"
+                        mw_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs, new_cxt, relation))
                     break
                 else:
                     mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
@@ -480,6 +479,7 @@ def get_stem_defs(entry, mw_entries, part_of_speech):
     stem_defs = None
 
     def_of_term = get_entry_definition(entry)
+
     if def_of_term:
         dupe_def = is_def_duplicate(mw_entries, def_of_term)
         if not dupe_def:

@@ -168,7 +168,9 @@
             associated parts of speech, and will need to select the appropriate part of speech from a 
             drop-down menu.</p>
 
-        {% else %}   
+        {% else %}
+            <h2>Oh no!</h2> 
+            <p style="font-size: 1.25em; color: rgb(11, 64, 85); font-weight: bolder; margin-left: .80em">Something about '{{input}}' is not quite right.</p>  
             <p>{{mistake}}</p>
         
         {% endif %}
@@ -219,8 +221,8 @@
         <p style="font-weight: bolder; color: rgb(36, 101, 49);
         font-size: 1.5em; margin: .66em">{{header}}</p>      
             {% for o in found_in_MW %}
-                <p style=" font-weight: bold">{{o.entry_type | capitalize}}</p>
-                <p>{{o.outcome}}</p>
+                <p style="font-weight: bold">{{o.entry_type | capitalize}}</p>
+                <p style="white-space: pre-wrap;">{{o.outcome}}</p>
                 <ul>
                 <li>{{o.part}}: {{o.definition}}</p>
                 </ul>
