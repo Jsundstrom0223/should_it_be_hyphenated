@@ -98,24 +98,32 @@ def is_part_duplicate(mw_entries, part_of_speech, definition):
 def get_cxt_search_term(cxt):
     """Get the search term that will be used in an additional API call.
     
-    Check whether the search term to be used in an additional API call is two words; if it is,
-    URL encode the space character. (See cognate_cross_reference's docstring for additional info.)
+    Check whether the search term to be used in an additional API call (the value of an
+    entry's cxt field) includes a colon and split it if so. Also check whether it is two
+    words; if it is, URL encode the space character. (See cognate_cross_reference's
+    docstring for additional info.)
     
     Argument: 
     cxt: The entry's cxt field, which indicates the term being referenced in the entry.
     
     Returns:
-    search_term: The search_term to be used in the new API query.
+    cxt_search_term: The search_term to be used in the new API query.
+    cxt_only: The value of the cxt field, without any colons or numerals.
     """
-    split_id = cxt.split(" ")
-    if len(split_id) > 1:
-        search_term = split_id[0] + "%20" + split_id[1]
+    if ":" in cxt:
+        cxt_only = cxt.split(":")[0]
     else:
-        search_term = cxt
+        cxt_only = cxt
 
-    return search_term
+    split_id = cxt_only.split(" ")
+    if len(split_id) > 1:
+        cxt_search_term = split_id[0] + "%20" + split_id[1]
+    else:
+        cxt_search_term = cxt_only
 
-def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl):
+    return cxt_search_term, cxt_only
+
+def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxl):
     """Handle incomplete entries that have a cognate cross-reference (cxs) field.
     
     Get the definition and part of speech of an entry's cross-reference target (cxt) and 
@@ -131,7 +139,7 @@ def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl):
     the search term.
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
-    cxt: The entry's cxt field.
+    cxt_only: The value of the cxt field, without any colons or numerals.
     cxl: The entry's cxl field.
     """
     cxs_defs = {}
@@ -161,7 +169,7 @@ def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl):
                     cxs_defs[part_of_speech] = cxs_target_def
                 
     for k, v in cxs_defs.items():
-        mw_entries.append(Nonstandard(the_id, entry_type, k, {k:v}, cxt, cxl))
+        mw_entries.append(Nonstandard(the_id, entry_type, k, {k:v}, cxt_only, cxl))
 
 def standard_main_entry(the_id, entry, mw_entries, part_of_speech):
     """Handle standard complete entries.

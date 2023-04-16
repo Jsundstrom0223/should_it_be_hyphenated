@@ -428,9 +428,10 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
             if part is None:
                 cxl = entry.get("cxs")[0]["cxl"]
                 cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
-                cxt_search_term = entry_parser.get_cxt_search_term(cxt)
+                cxt_search_term, cxt_only = entry_parser.get_cxt_search_term(cxt)
+                print("\n", cxt_search_term)
                 cxs_mw_response = call_mw_api(cxt_search_term)
-                entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt, cxl)            
+                entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxl)            
             else:
                 if part in IGNORED_PARTS_OF_SPEECH:
                     continue
