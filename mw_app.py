@@ -100,26 +100,32 @@ def hyphenation_answer():
             results = call_mw_api(compound, is_a_compound=True)
 
             if results.answer_ready is False:
-                new_page = render_template('_compounds.html', display=results.outcome, search_term=compound.elements)
+                # headers_and_outcomes = dict(zip(results.header, results.outcome_type))
+                new_page = render_template('_compounds.html', initial_results=results)
             else:
                 new_page = render_by_type(results)
 
             return new_page
 
         if request.form.get("part_of_speech_selections") is not None:
-            if "non_numeric_element" in request.form.keys():
-                selected = ["number", request.form['non_numeric_element']]
-            else:
-                selected = [request.form["first_part_of_speech"].lower(),
-                    request.form["second_part_of_speech"].lower()]
+            selected = [request.form["part_of_speech_1"].lower(), request.form["part_of_speech_2"].lower()]
             final_outcome, final_header = grammar.cmos_rules(selected)
-
             final_page = render_template('_compounds.html', standard=final_outcome, header=final_header)
+
             return final_page
 
     return render_template('_compounds.html', first_page=True)
 
 def handle_input_mistakes(user_input, mistake_type):
+    """Prepare the message that is displayed if the user input is invalid.
+    
+    Arguments:
+    user_input: The user-provided compound.
+    mistake_type: A variable set to either "no_hyphen," "multiple_hyphens," or "dupe_elements."
+    
+    Returns:
+    mistake_page: The _compounds template, with a message explaining the mistake.
+    """
     
     if mistake_type == "no_hyphen":
         mistake_header = '''The input you provided lacks a hyphen ("-") or
@@ -152,7 +158,7 @@ def render_by_type(results):
         2. outcome: The information that will be displayed to the user.
         3. outcome_type: A variable that tells the _compounds template how to display that
         information.
-        4. header: A summary of that information or, if answer_ready is False, an empty string.
+        4. header: A summary of that information or, in some cases, an empty string.
 
     Returns:
     new_page: The _compounds template, with the results to be displayed to the user.
@@ -211,6 +217,7 @@ def handle_comp_with_num(compound, idx_and_type):
     if num_results.answer_ready:
         new_page = render_by_type(num_results)
     else:
+        Results = namedtuple('Results', ['answer_ready', 'outcome', 'outcome_type', 'header'])
         for k,v in idx_and_type.items():
             num_element = Number(compound.elements[k], k)
 
@@ -218,10 +225,16 @@ def handle_comp_with_num(compound, idx_and_type):
         non_num = [v for i,v in enumerate(compound.elements) if i not in idx_and_type.keys()]
         mw_response = call_mw_api(*non_num)
         mw_entries = start_parsing(mw_response, *non_num)
-      
-        new_page = render_template('_compounds.html',
-        comp_with_number=mw_entries, search_term = compound.elements[num_element.other],   
-            num=num_element)
+
+        outcome = []
+        if num_element.idx == 0:
+            outcome = [[num_element], mw_entries]
+        else:
+            outcome = [mw_entries, [num_element]]
+        
+        outcome_type, header = get_outcome_type_and_header(outcome, compound)
+        results = Results(num_results.answer_ready, outcome, outcome_type, header)
+        new_page = render_template('_compounds.html', initial_results = results)
 
     return new_page
 
@@ -268,7 +281,7 @@ def compound_checker(mw_response, compound):
         2. outcome: The information that will be displayed to the user.
         3. outcome_type:  A variable that tells the _compounds template how to display that
         information.
-        4. header: A summary of that information or, if answer_ready is False, an empty string.
+        4. header: A summary of that information or, in some cases, an empty string.
     """
     Results = namedtuple('Results', ['answer_ready', 'outcome', 'outcome_type', 'header'])
     answer_ready, outcome = False, False
@@ -313,7 +326,7 @@ def compound_checker(mw_response, compound):
 
     results = Results(answer_ready, outcome, outcome_type, header)
     Nonstandard.grouped = {}
-
+    print(results.header)
     return results
 
 def validate_response(mw_response):
@@ -361,15 +374,43 @@ def handle_separately(compound):
 
     if all(response_type == "valid" for response_type in response_types):
         compound_and_responses = dict(zip(compound.elements, mw_responses))
-        mw_entries = [start_parsing(v, k) for k, v in compound_and_responses.items()]
+        outcome = [start_parsing(v, k) for k, v in compound_and_responses.items()]
         answer_ready = False
-        outcome = mw_entries
+        outcome_type, header = get_outcome_type_and_header(outcome, compound)
+
     else:
         answer_ready = True
         outcome_type = "typo"
         outcome, header = handle_invalid_entries(mw_responses, compound, response_types)
 
     return answer_ready, outcome, outcome_type, header
+
+def get_outcome_type_and_header(outcome, compound):
+    """Get the type of information being returned to the user and headers summarizing that info.
+    
+    Check whether the user will need to provide more information on either element of the 
+    compound. Also create the header that will be shown to the user.
+    
+    Returns:
+    outcome_types: A list of variables that tell the _compounds template how to display the 
+    information being returned to the user.
+    header: A list of summaries of that information (one for each element of the compound).
+    """
+    idx_as_ord = {0: "first", 1: "second"}
+    headers = []
+    outcome_types = []
+    numeral_or_no_entries = ["no_entries", "number"]
+    
+    for entry_list_idx, entry_list in enumerate(outcome):
+        if len(entry_list) == 1 and entry_list[0].entry_type in numeral_or_no_entries:
+            headers.append(entry_list[0].to_display)
+            outcome_types.append("no_selection")
+        else:
+            headers.append(f"The {idx_as_ord[entry_list_idx]} term in your compound is"
+                           f" '{compound.elements[entry_list_idx]}.' How is it being used?")
+            outcome_types.append("selection_needed")
+
+    return outcome_types, headers
 
 def handle_invalid_entries(mw_responses, compound, response_types):
     """Prepare the info that is returned to the user when the compound includes a typo.
@@ -471,13 +512,13 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
     return mw_entries
 
 def prep_entries_for_display(mw_entries):
-    '''Check the collected entries' types and pass them to the appropriate formatting functions.
+    """Check the collected entries' types and pass them to the appropriate formatting functions.
     
     Argument:
 
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
-    '''
+    """
     to_format = [entry for entry in mw_entries if entry.entry_type != "one_diff_cxts"]
     [entry.format_entry_defs() for entry in to_format]
 

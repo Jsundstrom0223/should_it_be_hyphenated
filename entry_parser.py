@@ -66,7 +66,7 @@ def is_def_duplicate(mw_entries, definition):
     return dupe_def
 
 def is_part_duplicate(mw_entries, part_of_speech, definition):
-    '''Check whether the part of speech of the entry to be added to mw_entries is unique.
+    """Check whether the part of speech of the entry to be added to mw_entries is unique.
     
     If the entry has the same part of speech as an existing entry in mw_entries, combine
     the two entries.
@@ -79,7 +79,7 @@ def is_part_duplicate(mw_entries, part_of_speech, definition):
 
     Returns: 
     dupe_part: A boolean value. True means that the definition is a duplicate.
-    '''
+    """
     dupe_part = False
     standards = [r for r in mw_entries if r.entry_type == "main_entry" and
     r.part == part_of_speech]
@@ -241,7 +241,6 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
         term_is_variant = is_variant(vrs, search_term)
         if term_is_variant:
             add, stem_defs, relation = variant_entry(entry, vrs, mw_entries, part_of_speech)
-
     elif inflections is not None:
         term_is_inflection, inflection_label = is_inflection(inflections, search_term)
         if term_is_inflection:
@@ -250,24 +249,27 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
         term_is_stem = is_stem(stems, search_term)
         if term_is_stem:
             add, stem_defs, relation = stem_entry(entry, mw_entries, part_of_speech) 
-    if add:
-        entry_type = "variant_or_cxs"
-        if relation in Nonstandard.grouped.keys():
-            for k in stem_defs.keys():
-                here = Nonstandard.grouped[relation]
-                if here.part == k:
-                    if the_id != here.cxt:
-                        new_cxt = here.cxt + " and " + the_id
-                        here.cxt = new_cxt
-                        here.entry_type = "one_diff_cxts"
-                        mw_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs, new_cxt, relation))
-                    break
-                else:
-                    mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
-               
-        else:
-            for k in stem_defs.keys():
+   
+    if not add:
+        return
+    
+    entry_type = "variant_or_cxs"
+    if relation in Nonstandard.grouped.keys():
+        for k in stem_defs.keys():
+            here = Nonstandard.grouped[relation]
+            if here.part == k:
+                if the_id != here.cxt:
+                    new_cxt = here.cxt + " and " + the_id
+                    here.cxt = new_cxt
+                    here.entry_type = "one_diff_cxts"
+                    mw_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs, new_cxt, relation))
+                break
+            else:
                 mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
+            
+    else:
+        for k in stem_defs.keys():
+            mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
 
 def check_alt_forms(search_term_chars, field_value):
     """Check whether a dictionary entry's va, inf, or stems field contains a form of the search term.

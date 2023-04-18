@@ -16,8 +16,7 @@ class StandardEntry():
             self.menu_option = part
 
     def format_entry_defs(self):
-        '''Format the entry definitions that will be displayed to the user.'''
-        print("FORMATTING ENTRY DEFS")
+        """Format the entry definitions that will be displayed to the user."""
         for k, v in self.definition.items():
             if v.startswith("—"):
                 v_without_leading_dash = re.sub(r"^—", "", v)
@@ -55,8 +54,7 @@ class Nonstandard(StandardEntry):
                 self.menu_option = self.part
 
     def format_entry_header(self):
-        '''Format the entry headers that will be displayed to the user.'''
-        print("FORMATTING ENTRY HEADER")
+        """Format the entry headers that will be displayed to the user."""
         if self.entry_type == "variant_or_cxs":
             self.to_display = f"{self.part.capitalize()}: {self.relation.capitalize()} {self.cxt}"
 
@@ -68,12 +66,12 @@ class Nonstandard(StandardEntry):
 
     @staticmethod
     def cxt_entry_combiner(mw_entries):
-        '''Combine entries that have the same part of speech and cxl but different cxts.
+        """Combine entries that have the same part of speech and cxl but different cxts.
         
         Argument:
         mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
         entry information that will be returned to the user.
-        '''
+        """
         entries = [(i.relation, i) for i in mw_entries if i.entry_type == "one_diff_cxts"]
 
         combined = defaultdict(list)
@@ -120,7 +118,7 @@ class ExistingCompound(StandardEntry):
 
     @staticmethod
     def format_outcome_header(compound_types, compound):
-        '''Format the header that will be displayed if the compound is in the dictionary.
+        """Format the header that will be displayed if the compound is in the dictionary.
         
         Arguments:
         compound_types: A variable indicating the type(s) of the existing compound(s) 
@@ -129,7 +127,7 @@ class ExistingCompound(StandardEntry):
 
         Returns:
         header: The header that will be displayed to the user.
-        '''
+        """
         if len(compound_types) == 2:
             final_types = " and ".join(compound_types)
         elif len(compound_types) > 2:
@@ -151,7 +149,7 @@ class NoEntries():
         self.search_term = search_term
         self.entry_type = "no_entries"
         self.to_display = f'''The app did not retrieve any definitions for one of the
-        elements in your compound, '{self.search_term}'. This may mean that the element
+        elements in your compound, '{self.search_term}.'\n\n This may mean that the element
         is a biographical name, a symbol, a trademark, an abbreviation, or a term that 
         should be written as more than two words. Unfortunately, it may also mean that 
         Should It Be Hyphenated? encountered an error. If you know the part of speech of
@@ -170,5 +168,6 @@ class Number():
             self.which = "second"
             self.other = 0
         self.entry_type = "number"
+        self.menu_option = "number"
         self.to_display = f'''The {self.which} term in your compound is {self.numeral}. 
         There's no need to provide information on its use.'''

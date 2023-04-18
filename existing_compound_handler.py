@@ -1,3 +1,4 @@
+"""Prepare the information that will be returned to the user if the compound is in the dictionary."""
 from classes import ExistingCompound
 
 def get_article(next_word):
@@ -11,7 +12,6 @@ def get_article(next_word):
     return article
 
 def sort_entries(mw_entries, compound):
-    existing_compounds = []
     for entry in mw_entries:
         if "-" in entry.the_id:
             compound_type = "hyphenated compound"
@@ -90,9 +90,9 @@ def in_mw_as_variant(compound_type, ce, compound_from_input):
     return outcome
 
 def existing_hyphenated_compound(ce, compound_from_input):
-    adj_caveat = ("Although Merriam-Webster's Collegiate® Dictionary lists the term as a"
-                  " hyphenated compound, it should likely be hyphenated before but not after"
-                  " a noun. As CMoS 7.85 says, 'It is never incorrect to hyphenate adjectival"
+    adj_caveat = ("Although the dictionary lists the term as a hyphenated compound, it should"
+                  " likely be hyphenated before but not after a noun. As the Chicago Manual of" 
+                  " Style (section 7.85) says, 'It is never incorrect to hyphenate adjectival"
                   " compounds before a noun. When such compounds follow the noun they modify,"
                   " hyphenation is usually unnecessary, even for adjectival compounds that are" 
                   " hyphenated in Webster's (such as well-read or ill-humored).'\n\n")

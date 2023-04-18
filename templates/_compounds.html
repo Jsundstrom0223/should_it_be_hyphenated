@@ -6,49 +6,52 @@
     <meta name="viewport" content="width=device-width">
 </head>
 
-{% macro pick_a_part(name, entry_lists ='', terms='') -%}
+{% macro pick_a_part(name, i_r='') -%}
     <div class="column_container">
         <div class="column_box">
             <p style="font-size: 1.25em"> Merriam-Webster's Collegiate® Dictionary lists the following definitions and senses for the words in your search term. For each part of your search term, review the definitions and associated senses; then select the part of speech that most closely matches your use from the drop-down menu.</p>
         </div>
-    </div>
+    
 
     <form action="/_compounds.html" method="post" id="gill">
-    <fieldset style="border: solid transparent">
+        <fieldset style="border: solid transparent">
         
-    <br>
-    <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;"></hr>
-    <br>
-    {% for entry_list in entry_lists %}
-        {% if loop.first %}
-            {% set which = "first" %}
-            {% set term = terms[0] %}
-            {% set sn = "first_part_of_speech" %}  
-        {% else %}
-            {% set which = "second" %}
-            {% set term = terms[1] %}
-            {% set sn = "second_part_of_speech" %}      
-        {% endif %}
+   
+        <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;"></hr>
         
-        <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The {{which}} term in your compound is "{{term}}." How is it being used?</label>
-        
-        {% for entry in entry_list %}
-            <p style="font-weight: bold; font-size: 1.5em">{{entry.to_display}}</p>
-            
-            {% if entry.entry_type != "no_entries" %}
-                {% for k, v in entry.definition.items() %}
-                    <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
-                    margin-left: 3em;">{{v}}</dd>
-                {% endfor %}
-            {% endif %}
-        {% endfor %}
+        {% for header in i_r.header %}
 
-        <br>  
+            {% if loop.first %}
+                {% set sn = "part_of_speech_1" %}  
+            {% else %}
+                {% set sn = "part_of_speech_2" %}      
+            {% endif %}
+        
+        
+            <div class="column_box">
+            <p style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">{{header}}</p>
+            </div>
+
+            {% if i_r.outcome_type[loop.index0] == "selection_needed" %}
+            
+            {% for entry in i_r.outcome[loop.index0] %}
+                <p style="font-weight: bold; font-size: 1.5em">{{entry.to_display}}</p>
+                
+                {% if entry.entry_type != "no_entries" %}
+                    {% for k, v in entry.definition.items() %}
+                        <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
+                        margin-left: 3em;">{{v}}</dd>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+            {% endif %}
+            
+            <br>
             <select name = "{{sn}}" class="select">    
-            {% for entry in entry_list %}
+            {% for entry in i_r.outcome[loop.index0] %}
                 {% if entry.entry_type != "no_entries" %}
                     {% set here = entry.menu_option %}
-                    <option value="{{here}}" class="option_value">{{entry.menu_option | capitalize}}</option>
+                    <option value="{{here}}">{{entry.menu_option | capitalize}}</option>
                 {% else %}
                     {% for part_of_speech in entry.menu_option %}
                         {% set here = part_of_speech %}
@@ -56,82 +59,22 @@
                     {% endfor %}
                 {% endif %}
             {% endfor %}
-
             </select>   
-    <br>
-    <p>
-    {% endfor %}    
-    <p>
-
-    <input type="submit" class="standard_submit" style="font-size: 1em" name="part_of_speech_selections"/> 
-    </form>
-    </fieldset>
-    
-    {% endmacro %}
-    
-{% macro comp_with_num(name, entries = '', term='', num="") %}
-    <div class="column_container">
-        <div class="column_box">
-            
-            <p style="font-size: 1.25em"> Merriam-Webster's Collegiate® Dictionary lists the following definitions and senses for the non-numeric element of your compound, "{{term}}." Please review the definitions and associated senses; then select the part of speech that most closely matches your use of that element from the drop-down menu.</p>
-        </div>
-    </div>
-
-    <form action="/_compounds.html" method="post" id="gill">
-    <fieldset style="border: solid transparent"> 
         
-    <br>
-    <hr style="background-color:  rgb(36, 101, 49); height: .25em; border: none;"></hr>
-    <br>
-
-    <p style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">{{num.to_display}}</p>
-
-    <label style="margin-left: .66em; color: rgb(36, 101, 49); font-size: 1.75em;">The non-numeric element of your compound is "{{term}}." How is it being used?</label>
-    
-    {% for entry in entries %}
-        <p style="font-weight: bold; font-size: 1.5em">{{entry.to_display}}</p>
-        {% if entry.entry_type != "no_entries" %}
-            {% for k, v in entry.definition.items() %}
-                <dd style="font-family: Georgia, serif; font-size: 1.25em; color: rgb(11, 64, 85);
-                margin-left: 3em;">{{v}}</dd>
-            {% endfor %}
-        {% endif %}
-    {% endfor %}
-
-    <br> 
-    {% if num.idx == 0 %}
-        {% set sn = "second_part_of_speech" %} 
-        {% set numeric_element = "first_part_of_speech" %}
-    {% else %}
-        {% set sn = "first_part_of_speech" %} 
-        {% set numeric_element = "second_part_of_speech" %}
-    {% endif %}
-
-    <select name = "{{numeric_element}}" class="select">  
-        <option value=Number class="option_value">Number</option>
-    </select>
-    
-    <select name = "{{sn}}" class="select">    
-        {% for entry in entries %}
-            {% if entry.entry_type != "no_entries" %}
-                {% set here = entry.menu_option %}
-                <option value="{{here}}" class="option_value">{{entry.menu_option | capitalize}}</option>
-            {% else %}
-                {% for part_of_speech in entry.menu_option %}
-                    {% set here = part_of_speech %}
-                    <option value="{{here}}" class="option_value">{{part_of_speech | capitalize}}</option>
-                {% endfor %}
-            {% endif %}
-        {% endfor %}
-
-        </select>   
-    <br>
-    <p>
-    <input type="submit" class="standard_submit" style="font-size: 1em" name="part_of_speech_selections"/> 
+        <p>
+        {% endfor %}    
+        <p>
+        <p>
+        <div class="column_box">
+            <input type="submit" class="standard_submit" style="font-size: 1.5em";  name="part_of_speech_selections"/> 
+        </div>
+        <p>
+        </fieldset>
     </form>
-    </fieldset>
     
+    </div>
     {% endmacro %}
+    
 
 <body>
     <div id="new_con">
@@ -184,9 +127,6 @@
     
     {% else %}
 
-    {% if comp_with_number %}
-    <p>{{comp_with_num(entries=comp_with_number, term=search_term, num=num)}}</p>
-    {% endif %}
    
     {% if typo %}
         <h2>Oh no!</h2>
@@ -195,6 +135,7 @@
         <p>To try again, click <a href="/_compounds.html">here.</a></p>
     
     {% else %}
+
     <div class="column_container">
         <div class="column_box" style="margin: .25em 1em">
         <a href="/_compounds.html">Enter another compound</a>
@@ -206,25 +147,23 @@
         {% if standard %}
             {% if header %}
                 <h2>{{header}}</h2>
-                <p style="white-space: pre-wrap;">{{standard}}</p>
-            {% else %}
-                <p style="white-space: pre-wrap">{{standard}}</p>
             {% endif %}
-        
+            <p style="white-space: pre-wrap; font-size: 1.5em; margin-left: .75em">{{standard}}</p>
+           
         {% endif %}
 
-    {% if display and search_term %}
-        <p>{{pick_a_part(part_selection, entry_lists=display, terms=search_term) }}</p>
+    {% if initial_results %}
+   <p>{{pick_a_part(i_r=initial_results)}}</p>
     {% endif %}
 
     {% if found_in_MW %}
         <p style="font-weight: bolder; color: rgb(36, 101, 49);
-        font-size: 1.5em; margin: .66em">{{header}}</p>      
+        font-size: 1.75em; margin: .66em">{{header}}</p>      
             {% for o in found_in_MW %}
-                <p style="font-weight: bold">{{o.entry_type | capitalize}}</p>
-                <p style="white-space: pre-wrap;">{{o.outcome}}</p>
+                <p style="font-weight: bold; font-size: 1.5em">{{o.entry_type | capitalize}}</p>
+                <p style="white-space: pre-wrap; font-size: 1.25em; margin-left: 1.25em">{{o.outcome}}</p>
                 <ul>
-                <li>{{o.part}}: {{o.definition}}</p>
+                <li style="font-size: 1.25em">{{o.part}}: {{o.definition}}</p>
                 </ul>
                 <br>
             {% endfor %} 

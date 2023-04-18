@@ -1,3 +1,5 @@
+"""Handle grammar-related checks and prepare the grammar explanations returned to the user."""
+
 from collections import namedtuple
 from grammar_constants import (ADJ_NOUN_OR_PARTICIP, ADJ_VERB,
 BY_PART_ADVERB_ADJ_OR_PARTICIP, BY_PART_NOUN, BY_PART_PARTICIPLE_NOUN, BY_PART_VERB,
@@ -69,7 +71,7 @@ def check_cmos_num_rules(compound, idx_and_type):
         that explains whether the compound should be hyphenated. Otherwise, None.
         3. outcome_type:  A variable that tells the _compounds template how to display that
         information..
-        4. header: A summary of that information or, if answer_ready is False, an empty string.
+        4. header: A summary of that information or, in some cases, an empty string.
     """
     Num_Results = namedtuple('Num_Results', ['answer_ready', 'outcome', 'outcome_type', 'header'])
 
