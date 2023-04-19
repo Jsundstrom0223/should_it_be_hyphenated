@@ -25,7 +25,7 @@ from grammar_constants import IGNORED_PARTS_OF_SPEECH
 
 def get_entry_id(entry):
     """Get the ID (headword or homograph) of an M-W entry returned by the API."""
-    entry_id = entry['meta']['id']
+    entry_id = entry.get('meta').get('id')
     if ":" in entry_id:
         the_id = entry_id.split(":")[0]
     else:
@@ -38,7 +38,7 @@ def get_entry_definition(entry):
     if entry.get('shortdef') is not None:
         raw_def = entry['shortdef']
     else:
-        raw_def = entry['def']
+        raw_def = entry.get('def')
 
     def_of_term = "; ".join(raw_def)
 
@@ -121,7 +121,7 @@ def get_cxt_search_term(cxt):
 
     return cxt_search_term, cxt_only
 
-def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxl):
+def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxs):
     """Handle incomplete entries that have a cognate cross-reference (cxs) field.
     
     Get the definition and part of speech of an entry's cross-reference target (cxt) and 
@@ -138,19 +138,19 @@ def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxl):
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
     cxt_only: The value of the cxt field, without any colons or numerals.
-    cxl: The entry's cxl field.
+    cxs: The entry's cxs field.
     """
+    cxl = cxs[0].get('cxl')
     cxs_defs = {}
     part_of_speech = None
     entry_type = "variant_or_cxs"
 
     for i in cxs_mw_response:
-        part_of_speech = i.get("fl")
+        part_of_speech = i.get('fl')
         #If the original search term is a verbal inflection, retrieve only verb definitions.
         if "tense" in cxl or "participle" in cxl:
             if part_of_speech == "verb":
                 cxs_target_def = get_entry_definition(i)
-
                 dupe_def = is_def_duplicate(mw_entries, cxs_target_def)
                 if not dupe_def:
                     cxs_defs[part_of_speech] = cxs_target_def
@@ -181,7 +181,7 @@ def standard_main_entry(the_id, entry, mw_entries, part_of_speech):
     """
     def_of_term = get_entry_definition(entry)
     definition = {part_of_speech: def_of_term}
-    stems = entry['meta'].get("stems")
+    stems = entry['meta'].get('stems')
 
     dupe_part = is_part_duplicate(mw_entries, part_of_speech, definition)
     if not dupe_part:
@@ -190,7 +190,7 @@ def standard_main_entry(the_id, entry, mw_entries, part_of_speech):
             StandardEntry.stems_and_parts[part_of_speech] = stems
             mw_entries.append(StandardEntry(the_id, "main_entry", part_of_speech, definition))
 
-def main_entry_with_cxs(the_id, entry, mw_entries, part_of_speech):
+def main_entry_with_cxs(the_id, entry, mw_entries, part_of_speech, cxs):
     """Handle entries that have their own part of speech and definition + a cxs field.
     
     Arguments:
@@ -199,11 +199,12 @@ def main_entry_with_cxs(the_id, entry, mw_entries, part_of_speech):
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
     part_of_speech: The part of speech of the headword.
+    cxs: The entry's cxs field.
     """
-    cxl = entry.get("cxs")[0]["cxl"]
-    cxt = entry.get("cxs")[0]["cxtis"][0]["cxt"]
+    cxl = cxs[0].get('cxl')
+    cxt = cxs[0].get('cxtis')[0]['cxt']
+ 
     def_of_term = get_entry_definition(entry)
-
     if def_of_term:
         dupe_def = is_def_duplicate(mw_entries, def_of_term)
 
@@ -230,9 +231,9 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
     """
     add = False
 
-    vrs = entry.get("vrs")
-    inflections = entry.get("ins")
-    stems = entry['meta'].get("stems")
+    vrs = entry.get('vrs')
+    inflections = entry.get('ins')
+    stems = entry['meta'].get('stems')
 
     if vrs is None and inflections is None and stems is None:
         return
@@ -368,7 +369,9 @@ def is_inflection(inflections, search_term):
     inflection_label = None
     
     for i in inflections:
-        inf = i['if']
+        inf = i.get('if')
+        if inf is None:
+            continue
         if "*" in inf:
             inf = inf.replace("*", "")
         if inf == search_term:
@@ -450,12 +453,12 @@ def stem_entry(entry, mw_entries, part_of_speech):
     relation: The search term's relationship to the headword (or a modified version of it).
     """
     relation = None
-
-    if entry.get("cxs") is not None:
-        relation = entry.get("cxs")[0]["cxl"]    
-    else:
+    cxs = entry.get('cxs')
+    if cxs is not None:
+        relation = cxs[0].get('cxl')   
+    if relation is None:
         relation = "variant of"
-
+   
     add, stem_defs = get_stem_defs(entry, mw_entries, part_of_speech)
     return add, stem_defs, relation
 
