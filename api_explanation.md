@@ -20,11 +20,11 @@ the compound is in the dictionary as an open, closed, or hyphenated compound  (v
 to the `start_parsing` function). 
 
 If there is a directly applicable CMoS standard or the compound is in the dictionary, the app  
-returns an explanation of whether the term should be hyphenated. Otherwise, the app splits  
-the compound into two and sends two new requests to the API (one for each element of the  
-compound). It then provides each element's definitions to the user and asks the user to pick  
-the relevant definition (e.g., whether the user intends for "well" to be an adverb or a noun).  
-Finally, the app returns an answer to the user's hyphenation question.
+returns an explanation of whether the term should be hyphenated. Otherwise, the app sends  
+two new requests to the API, one for each element of the compound. It then provides each  
+element's definitions to the user and asks the user to pick the relevant definition  
+(e.g., whether the user intends for "well" to be an adverb or a noun). Finally, the app returns  
+an answer to the user's hyphenation question.
 
 ## The API's JSON Responses  
 
