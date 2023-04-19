@@ -213,7 +213,7 @@ def main_entry_with_cxs(the_id, entry, mw_entries, part_of_speech):
             mw_entries.append(Nonstandard(the_id, entry_type, part_of_speech, definition, cxt, cxl))
 
 def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
-    """Handle entries in which the search term is an inflection, variant, or stem of another word.
+    """Handle entries that list the search term as an inflection, variant, or stem.
 
     If the search term (X) is a less common spelling or a conjugated form of another word (Y),
     M-W may return the entry for Y (with Y's ID), with X listed as a variant, inflection, or stem of Y. 

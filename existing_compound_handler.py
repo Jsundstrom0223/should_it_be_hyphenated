@@ -1,7 +1,8 @@
-"""Prepare the information that will be returned to the user if the compound is in the dictionary."""
+"""Prepare the results that are returned when the user's compound is in the dictionary."""
 from classes import ExistingCompound
 
 def get_article(next_word):
+    """Get the article that should precede a noun in an f-string expression."""
     vowels = ["a", "e", "i", "o", "u"]
     first_letter = next_word[0]
     if first_letter in vowels:
@@ -11,117 +12,168 @@ def get_article(next_word):
 
     return article
 
-def sort_entries(mw_entries, compound):
-    for entry in mw_entries:
-        if "-" in entry.the_id:
-            compound_type = "hyphenated compound"
+def check_compound_type(entry, compound):
+    """Check the type of the existing compound and the associated MW entry.
+
+    Arguments:
+    entry: Entry information returned by start_parsing (an instance of the StandardEntry
+    or Nonstandard class).
+    compound: The 'compound' named tuple created in hyphenation_answer.
+
+    Returns:
+    An instance of the ExistingCompound class.
+    """
+    if "-" in entry.the_id:
+        compound_type = "hyphenated compound"
+    else:
+        split_k = entry.the_id.split(" ")
+        if len(split_k) > 1:
+            compound_type = "open compound"
         else:
-            split_k = entry.the_id.split(" ")
-            if len(split_k) > 1:
-                compound_type = "open compound"
-            else:
-                compound_type = "closed compound"
+            compound_type = "closed compound"
 
-        if entry.entry_type == "main_entry":
-            entry_outcome = in_mw_as_main_entry(compound_type, 
-                entry, compound.full)  
-            
-            return ExistingCompound(compound.full, compound_type, entry.part, entry.definition, entry_outcome, "found_in_MW")
-      
-        if entry.entry_type == "variant_or_cxs" or entry.entry_type == "one_diff_cxts":
-            entry_outcome = in_mw_as_variant(compound_type, entry, compound.full)
+    if entry.entry_type == "main_entry":
+        entry_outcome = in_mw_as_main_entry(compound_type, entry, compound)
 
-            return ExistingCompound(compound.full, compound_type, entry.part, entry.definition, entry_outcome, "found_in_MW")
+        return ExistingCompound(compound.full, compound_type, entry.part, entry.definition,
+                                entry_outcome, "found_in_MW")
 
-def in_mw_as_main_entry(compound_type, ce, compound_from_input):
+    if entry.entry_type == "variant_or_cxs" or entry.entry_type == "one_diff_cxts":
+        entry_outcome = in_mw_as_variant(compound_type, entry, compound)
+
+        return ExistingCompound(compound.full, compound_type, entry.part, entry.definition,
+                                entry_outcome, "found_in_MW")
+
+def in_mw_as_main_entry(compound_type, entry, compound):
+    """Prepare information on open and closed compounds in main dictionary entries.
+    
+    Arguments:
+    compound_type: A variable indicating the type of the existing compound (open, closed,
+    or hyphenated).
+    entry: Entry information returned by start_parsing (an instance of the StandardEntry class).
+    compound: The 'compound' named tuple created in hyphenation_answer.
+
+    Returns:
+    outcome: A string summarizing the dictionary entry and explaining whether the
+    compound should be hyphenated.
+    """
     if compound_type == "closed compound":
         outcome = (f"Merriam-Webster's Collegiate® Dictionary lists the search term you"
-                f" entered as a {compound_type}, '{ce.the_id},' which means that it should be"
-                " written as one word (i.e., closed).\n\nIts definition is as follows: ")
-       
-    elif compound_type == "open compound":                
-        if ce.part ==  "adjective" or ce.part == "adverb":
-            outcome = (f"Merriam-Webster's Collegiate® Dictionary lists the search term you"
-                       f" entered as an {compound_type}, '{ce.the_id}.' However, it should"
-                       "likely be hyphenated if it precedes a noun. As the Chicago"
-                        " Manual of Style (section 7.85) says, 'it is never incorrect to hyphenate"
-                        " adjectival compounds before a noun.'\n\nIts definition is as follows:")
+                f" entered as a {compound_type}, '{entry.the_id},' which means that it should be"
+                " written as one word.\n\nIts definition is as follows: ")
+
+    elif compound_type == "open compound":
+        if entry.part ==  "adjective" or entry.part == "adverb":
+            outcome = ("Merriam-Webster's Collegiate® Dictionary lists the search term you"
+                       f" entered as an {compound_type}, '{entry.the_id}.' However, it should"
+                       " likely be hyphenated if it precedes a noun. As the Chicago Manual of"
+                       " Style (section 7.85) says, 'it is never incorrect to hyphenate"
+                       " adjectival compounds before a noun.'\n\nIts definition is as follows:")
         else:
-            article = get_article(ce.part)
-            outcome = (f"Merriam-Webster's Collegiate® Dictionary lists the search term you"
-                       f" entered as an {compound_type}, '{ce.the_id}.' Because it is {article}"
-                       f" {ce.part}, it should likely be left open (written as two words) in all"
+            article = get_article(entry.part)
+            outcome = ("Merriam-Webster's Collegiate® Dictionary lists the search term you"
+                       f" entered as an {compound_type}, '{entry.the_id}.' Because it is {article}"
+                       f" {entry.part}, it should likely be left open in all"
                         " cases.\n\nIts definition is as follows: ")
-    
+
     else:
-        outcome = existing_hyphenated_compound(ce, compound_from_input)
+        outcome = existing_hyphenated_compound(entry, compound)
 
     return outcome
 
-def in_mw_as_variant(compound_type, ce, compound_from_input):
-    article_before_relation = get_article(ce.relation)
-    article_before_part = get_article(ce.part)
+def in_mw_as_variant(compound_type, entry, compound):
+    """Prepare information on open and closed compounds in nonstandard dictionary entries.
+    
+    Arguments:
+    compound_type: A variable indicating the type of the existing compound (open, closed,
+    or hyphenated).
+    entry: Entry information returned by start_parsing (an instance of the Nonstandard class).
+    compound: The 'compound' named tuple created in hyphenation_answer.
+
+    Returns:
+    outcome: A string summarizing the dictionary entry and explaining whether the
+    compound should be hyphenated.
+    """
+    article_before_relation = get_article(entry.relation)
+    article_before_part = get_article(entry.part)
 
     if compound_type == "closed compound":
         outcome = ("Merriam-Webster's Collegiate® Dictionary lists the search term you entered,"
-                   f" '{compound_from_input},' as {article_before_relation} {ce.relation} "
-                   f" '{ce.cxt}', which is a {compound_type}. As such, it should be written as"
-                   f" one word.\n\nThe definition of '{ce.cxt}' is as follows:")
-                            
-    elif compound_type == "open compound":     
-        open_compound = ("Merriam-Webster's Collegiate® Dictionary lists the search term you"
-                         f" entered, '{compound_from_input},' as {article_before_relation}"
-                         f" {ce.relation} '{ce.cxt},' which is an open (unhyphenated)"
+                   f" '{compound.full},' as {article_before_relation} {entry.relation} "
+                   f" '{entry.cxt},' which is a {compound_type}. As such, it should be written as"
+                   f" one word.\n\nThe definition of '{entry.cxt}' is as follows:")
+
+    elif compound_type == "open compound":
+        comp_is_open = ("Merriam-Webster's Collegiate® Dictionary lists the search term you"
+                         f" entered, '{compound.full},' as {article_before_relation}"
+                         f" {entry.relation} '{entry.cxt},' which is an open (unhyphenated)"
                          " compound.\n\n")
-        
-        if ce.part ==  "adjective" or ce.part == "adverb":
-            outcome = (f"{open_compound}However, because the compound is an {ce.part}, it should"
-                       " likely be hyphenated when used before a noun. As the Chicago Manual of"
-                       " Style (section 7.85) says, 'it is never incorrect to hyphenate adjectival"
-                       f" compounds before a noun.'\n\nThe definition of '{ce.cxt}' is as follows:")
+
+        if entry.part ==  "adjective" or entry.part == "adverb":
+            outcome = (f"{comp_is_open}However, because the compound is an {entry.part}, it"
+                       " should likely be hyphenated when used before a noun. As the Chicago"
+                       " Manual of Style (section 7.85) says, 'it is never incorrect to hyphenate"
+                       f" adjectival compounds before a noun.'\n\nThe definition of '{entry.cxt}'"
+                       " is as follows:")
         else:
-            outcome = (f"{open_compound}Because '{ce.cxt}' is {article_before_part} {ce.part}, it"
-                       " should likely be left open (written as two words) in all cases.\n\nThe"
-                       f" definition of '{ce.cxt}' is as follows:")
-                            
+            outcome = (f"{comp_is_open}Because '{entry.cxt}' is {article_before_part}"
+                       f" {entry.part}, it should likely be left open in all cases.\n\nThe"
+                       f" definition of '{entry.cxt}' is as follows:")
+
     else:
-        outcome = existing_hyphenated_compound(ce, compound_from_input)
-    
+        outcome = existing_hyphenated_compound(entry, compound)
+
     return outcome
 
-def existing_hyphenated_compound(ce, compound_from_input):
+def existing_hyphenated_compound(entry, compound):
+    """Prepare information about hyphenated compounds.
+    
+    Check the part of speech of the entry and the entry type. Then prepare the information
+    that will be returned to the user.
+    
+    Arguments:
+    entry: Entry information returned by start_parsing (an instance of the StandardEntry or
+    Nonstandard class). 
+    compound: The 'compound' named tuple created in hyphenation_answer.
+
+    Returns:
+    outcome: A string summarizing the dictionary entry and explaining whether the
+    compound should be hyphenated.
+    """
     adj_caveat = ("Although the dictionary lists the term as a hyphenated compound, it should"
-                  " likely be hyphenated before but not after a noun. As the Chicago Manual of" 
+                  " likely be hyphenated before but not after a noun. As the Chicago Manual of"
                   " Style (section 7.85) says, 'It is never incorrect to hyphenate adjectival"
                   " compounds before a noun. When such compounds follow the noun they modify,"
                   " hyphenation is usually unnecessary, even for adjectival compounds that are" 
                   " hyphenated in Webster's (such as well-read or ill-humored).'\n\n")
-   
-    if ce.entry_type != "main_entry":
-        article_before_relation = get_article(ce.relation)
+
+    if entry.entry_type != "main_entry":
+        article_before_relation = get_article(entry.relation)
         comp_is_variant = ("According to Merriam-Webster's Collegiate® Dictionary, the search term"
-                       f" you entered, '{compound_from_input},' is {article_before_relation}"
-                       f" {ce.relation} of '{ce.cxt}' and is {article_before_part} {ce.part}."
-                       f"You should likely use '{ce.cxt}' instead of '{compound_from_input}.'\n\n")
-    article_before_part = get_article(ce.part)
-    
-    if ce.part == "adjective" or ce.part == "adverb":
-        if ce.entry_type == "variant_or_cxs":
-            outcome = f"{comp_is_variant} {adj_caveat}The definition of '{ce.cxt}' is as follows: '" 
+                       f" you entered, '{compound.full},' is {article_before_relation}"
+                       f" {entry.relation} of '{entry.cxt}' and is {article_before_part}"
+                       f" {entry.part}. You should likely use '{entry.cxt}' instead of"
+                       f" '{compound.full}.'\n\n")
+
+    article_before_part = get_article(entry.part)
+
+    if entry.part == "adjective" or entry.part == "adverb":
+        if entry.entry_type == "variant_or_cxs":
+            outcome = f"{comp_is_variant} {adj_caveat}The definition of '{entry.cxt}' is as follows: '"
         else:
             outcome = (f"Merriam-Webster's Collegiate® Dictionary lists the search term you"
-                       f" entered, '{compound_from_input},' as {article_before_part} {ce.part}."
+                       f" entered, '{compound.full},' as {article_before_part} {entry.part}."
                        f" {adj_caveat}Its definition is as follows:")
-    
+
     else:
-        if ce.entry_type == "variant_or_cxs":
-            outcome = (f"{comp_is_variant}Because it is {article_before_part} {ce.part},"
+        if entry.entry_type == "variant_or_cxs":
+            outcome = (f"{comp_is_variant}Because it is {article_before_part} {entry.part},"
                        " it should likely be hyphenated regardless of its position in a"
                        " sentence.\n\nIts definition is as follows: ")
         else:
             outcome = ("Merriam-Webster's Collegiate® Dictionary lists the search term you"
-                       f" entered, '{compound_from_input},' as {article_before_part} {ce.part}."
+                       f" entered, '{compound.full},' as {article_before_part} {entry.part}."
                        " The term should likely be hyphenated regardless of its position in a"
                        " sentence.\n\nIts definition is as follows: ")
-   
+
     return outcome

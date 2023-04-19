@@ -39,7 +39,6 @@ def check_first_element_lists(compound):
 def sometimes_hyphenated_prefixes(compound):
     end_of_prefix = compound.elements[0][-1]
     other_ele_first_letter = compound.elements[1][0]
-    print("END OF PREFIX", end_of_prefix, other_ele_first_letter)
     if end_of_prefix != other_ele_first_letter:
         outcome_details = (f"Because the prefix in your compound, '{compound.elements[0]}', does not"
                             f" end with '{other_ele_first_letter},' the first letter of the second word,"
@@ -113,8 +112,8 @@ def check_cmos_num_rules(compound, idx_and_type):
 
     if outcome is not None:
         answer_ready = True
-        header = '''According to Chicago Manual of Style hyphenation
-         standards, your compound should be handled as follows:'''
+        header = '''According to Chicago Manual of Style hyphenation standards,
+         your compound should be handled as follows:'''
 
     num_results = Num_Results(answer_ready, outcome, outcome_type, header)
 
@@ -132,8 +131,8 @@ def cmos_rules(selected):
     an empty string.
     """
     final_outcome = None
-    final_header = ("According to Chicago Manual of Style hyphenation standards, your"
-    " compound should be handled as follows:")
+    final_header = '''According to Chicago Manual of Style hyphenation standards,
+     your compound should be handled as follows:'''
    
     if selected[0] == "number":
         if selected[1] == "superlative":
@@ -173,8 +172,8 @@ def cmos_rules(selected):
     if final_outcome is None:
         final_outcome = ("There are no Chicago Manual of Style standards regarding"
         " the compound you entered, and the compound is not in the dictionary. The"
-        " compound should likely be left open regardless of its position in a" 
-        " sentence.")
+        " compound should likely be left open (i.e., written as two words) regardless"
+        " of its position in a sentence.")
         final_header = ""
     
     return final_outcome, final_header

@@ -37,12 +37,12 @@ UNIT_OUTCOME = ("Compounds consisting of a number and an abbreviated unit of mea
         
 CMOS_NUM_OUTCOMES = {"PCT": PCT_OUTCOME, "CURRENCY": CURRENCY_OUTCOME, "UNITS": UNIT_OUTCOME}
 
-FRACTION_GUIDANCE = ("CMoS recommends spelling out simple fractions and states that they"
-" should be hyphenated unless the second number is hyphenated (e.g.," 
-" 'one twenty-fifth'). If you choose to use numerals for the numbers in a fraction"
-" (which may be appropriate in technical contexts), the numerator and denominator should"
-" be separated by a horizontal bar or a slash, and both should be cardinal numbers"
-" (e.g., 1/5).")
+FRACTION_GUIDANCE = ("The Chicago Manual of Style recommends spelling out simple fractions and"
+                     " states that they should be hyphenated unless the second number is"
+                     " hyphenated (e.g., 'one twenty-fifth'). If you choose to use numerals for"
+                     " the numbers in a fraction (which may be appropriate in technical contexts),"
+                     " the numerator and denominator should be separated by a horizontal bar or a"
+                     " slash, and both should be cardinal numbers (e.g., 1/5).")
 
 COMPARATIVE_ADVERBS = ["more", "most", "less", "least", "very"]
 ALWAYS_PREFIXES = ["self", "ex", "great"]
@@ -99,7 +99,7 @@ CMOS_SOMETIMES_PREFIXES = ("A two-word compound that begins with a prefix (e.g.,
 " there are exceptions, such as 'unnecessary.'\n\n")
 
 CMOS_AS_ADJS = ("Certain compounds, such as those beginning with 'foster,' 'near,'"
-" and 'half,' are hyphenated when used as adjectives (e.g.,'a near-perfect game,'"
+" and 'half,' are hyphenated when used as adjectives (e.g., 'a near-perfect game,'"
 " 'foster-family training,' 'a half-asleep student') but not as verbs ('half listened')" 
 " or nouns ('a foster family').")
 

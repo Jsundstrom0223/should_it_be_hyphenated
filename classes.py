@@ -100,47 +100,47 @@ class Nonstandard(StandardEntry):
 
 class ExistingCompound(StandardEntry):
     def __init__(self, the_id, entry_type, part, definition, outcome, outcome_type):
+        super().__init__(the_id, entry_type, part, definition)
         self.outcome = outcome
         self.outcome_type = outcome_type
-        for k,v in definition.items():
-            part = k.strip("'").capitalize()
-            definition = v.capitalize()
-
-        self.outcome = outcome
-        self.outcome_type = outcome_type
+        definition = self.format_entry_defs()
 
         if entry_type == "open compound":
             self.with_article = "an open compound"
+            self.to_display = "An open compound (two words)"
         else:
+            if entry_type == "closed compound":
+                self.to_display = "A closed compound (one word)"
+            else:
+                self.to_display = entry_type.capitalize()
             self.with_article = f"a {entry_type}"
-
-        super().__init__(the_id, entry_type, part, definition)
 
     @staticmethod
     def format_outcome_header(compound_types, compound):
         """Format the header that will be displayed if the compound is in the dictionary.
         
         Arguments:
-        compound_types: A variable indicating the type(s) of the existing compound(s) 
-        (open, closed, or hyphenated).
+        compound_types: A list of variables indicating the type(s) of the existing 
+        compound(s) (open, closed, or hyphenated).
         compound: The 'compound' named tuple created in hyphenation_answer.
 
         Returns:
         header: The header that will be displayed to the user.
         """
-        if len(compound_types) == 2:
-            final_types = " and ".join(compound_types)
-        elif len(compound_types) > 2:
-     
-            compound_types.insert(1, ", ")
-            compound_types.insert(-1, ", and ")
-            final_types = "".join(compound_types)
-        else:
-            final_types = compound_types[0]
+        if len(compound_types) == 1:
+            header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
+            {compound_types[0]}. Details on the compound and an explanation of whether it should be hyphenated are provided below.'''
 
-        header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
-        {final_types}. Details on the compound and an explanation of whether it should be
-        hyphenated are provided below.'''
+        else:
+            if len(compound_types) == 2:
+                final_types = " and ".join(compound_types)
+            if len(compound_types) > 2:
+                compound_types.insert(1, ", ")
+                compound_types.insert(-1, ", and ")
+                final_types = "".join(compound_types)
+   
+            header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
+            {final_types}. This means that the hyphenation of the compound depends on its use. Details on the compound are provided below.'''
 
         return header
 
