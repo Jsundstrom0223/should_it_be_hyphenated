@@ -69,7 +69,7 @@ def hyphenation_answer():
 
         if request.form.get("user_compound") is not None:
             user_input = html.escape(request.form['user_compound']).lower()
-
+            print("USER INPUT", user_input)
             #Using a regex instead of "if '-' in user_input" to catch/ignore any
             # stray characters/extra input
             hyphenated_compound = re.search(r"[\w\d]+-[\w\d]+", user_input)
@@ -93,8 +93,8 @@ def hyphenation_answer():
             results = call_mw_api(compound, is_a_compound=True)
 
             #If results.answer_ready is False, the app returns the definitions of the 
-            # compound's elements and asks the user to select the relevant definitions. Then
-            # it uses the associated parts of speech to determine whether it should be hyphenated.
+            # compound's elements and asks the user to select the relevant definitions. 
+            # Then it uses the associated parts of speech to determine whether the compound should be hyphenated.
             if not results.answer_ready:
                 new_page = render_template('_compounds.html', initial_results=results)
             else:
@@ -103,7 +103,8 @@ def hyphenation_answer():
             return new_page
 
         if request.form.get("part_of_speech_selections") is not None:
-            selected = [request.form["part_of_speech_1"].lower(), request.form["part_of_speech_2"].lower()]
+            selected = [request.form["part_of_speech_1"].lower(), 
+                        request.form["part_of_speech_2"].lower()]
             final_outcome, final_header = grammar.cmos_rules(selected)
             final_page = render_template('_compounds.html', standard=final_outcome, header=final_header)
 
@@ -111,8 +112,17 @@ def hyphenation_answer():
 
     return render_template('_compounds.html', first_page=True)
 
-
 def validate_input(hyphenated_compound, user_input):
+    """Validate the user input.
+    
+    Arguments:
+    hyphenated_compound: The user-provided compound.
+    user_input: The full user input (as a string).
+    
+    Returns: 
+        None: If the compound is valid.
+        mistake_page: The _compounds template, with a message explaining the input issue.
+    """
     if hyphenated_compound is None:
         return handle_input_mistakes(user_input, "no_hyphen")
     
@@ -132,14 +142,15 @@ def validate_input(hyphenated_compound, user_input):
     return None
 
 def handle_input_mistakes(user_input, mistake_type):
-    """Prepare the message that will be displayed if the user input is invalid.
+    """Return the message that will be displayed if the user input is invalid.
     
     Arguments:
-    user_input: The user input.
-    mistake_type: A variable set to either "no_hyphen," "multiple_hyphens," or "dupe_elements."
+    user_input: The full user input (as a string).
+    mistake_type: A variable set to either "no_hyphen," "multiple_hyphens," 
+    "extra_punctuation," "dupe_elements."
     
     Returns:
-    mistake_page: The _compounds template, with a message explaining the mistake.
+    mistake_page: The _compounds template, with a message explaining the input issue.
     """
     if mistake_type == "no_hyphen":
         mistake_header = '''The input you provided lacks a hyphen ("-") or
@@ -153,12 +164,12 @@ def handle_input_mistakes(user_input, mistake_type):
         
     if mistake_type == "extra_punctuation":
         mistake_header = '''The input you provided includes at least one punctuation mark
-        other than a hyphen. Please enter a compound that has no punctuation marks other than
-        a hyphen. (If you entered a number with a comma in it, remove the comma.)'''
+        other than a hyphen. Please enter a compound that has no punctuation marks other 
+        than a hyphen. (If you entered a number with a comma in it, remove the comma.)'''
         
     if mistake_type == "dupe_elements":
-        mistake_header = '''The elements of your compound are identical; please
-            enter a compound with two unique elements.'''
+        mistake_header = '''The elements of your compound are identical; please 
+        enter a compound with two unique elements.'''
 
     mistake_args = {'input': user_input, 'mistake': mistake_header, 'first_page': True}
     mistake_page = render_template('_compounds.html', **mistake_args)
@@ -171,12 +182,11 @@ def render_by_type(results):
     Create a dictionary of kwargs and pass them to Flask's render_template function. 
 
     Argument:
-    results: A named tuple with four named fields:
+    results: A named tuple with four named fields
         1. answer_ready: A boolean value. False means that the user needs to provide more 
         information on the compound's use. (Will always be True in render_by_type.)
         2. outcome: The information that will be displayed to the user.
-        3. outcome_type: A variable that tells the _compounds template how to display that
-        information.
+        3. outcome_type: A variable indicating the type of that information; necessary because the _compounds template displays different results in different ways.
         4. header: A summary of that information or, in some cases, an empty string.
 
     Returns:
@@ -194,7 +204,11 @@ def check_for_numerals(compound):
     of the number ("cardinal" or, for an ordinal, its ending) to idx_and_type.
 
     Argument:
-    compound: The 'compound' named tuple created in hyphenation_answer.
+    compound: A named tuple with four named fields
+    1. elements: A list of the elements of the compound (i.e., both words)
+    2. full: The full hyphenated compound
+    3. open: An open-compound version (e.g., 'well being' instead of 'well-being')
+    4. closed: A closed-compound version (e.g., 'wellbeing' instead of 'well being')
 
     Returns:
     has_numeral: A boolean value.
@@ -225,9 +239,13 @@ def handle_comp_with_num(compound, idx_and_type):
     start_parsing with only the non-numeric element of the compound.
     
     Arguments:
-    compound: The 'compound' named tuple created in hyphenation_answer.
     idx_and_type: A dictionary that identifies the numeric element(s) of the compound.
-
+    compound: A named tuple with four named fields
+    1. elements: A list of the elements of the compound (i.e., both words)
+    2. full: The full hyphenated compound
+    3. open: An open-compound version (e.g., 'well being' instead of 'well-being')
+    4. closed: A closed-compound version (e.g., 'wellbeing' instead of 'well being') 
+   
     Returns:
     new_page: The _compounds template, with the results to be displayed to the user.
     """
@@ -290,15 +308,14 @@ def compound_checker(mw_response, compound):
     Arguments:
     mw_response: The API's response to the initial call, in which the search term is 
     the full compound.
-    compound: The 'compound' named tuple created in hyphenation_answer.
+    
 
     Returns:
-    results: A named tuple with four named fields:
+    results: A named tuple with four named fields
         1. answer_ready: A boolean. False means that the user needs to provide more 
         information on the compound's use. 
         2. outcome: The information that will be displayed to the user.
-        3. outcome_type:  A variable that tells the _compounds template how to display that
-        information.
+        3. outcome_type: A variable indicating the type of that information; necessary because the _compounds template displays different results in different ways.
         4. header: A summary of that information or, in some cases, an empty string.
     """
     Results = namedtuple('Results', ['answer_ready', 'outcome', 'outcome_type', 'header'])
