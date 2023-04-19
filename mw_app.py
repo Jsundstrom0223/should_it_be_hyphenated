@@ -11,11 +11,11 @@ import entry_parser
 from grammar_constants import ORDINALS, PART_OF_SPEECH_DEFS, IGNORED_PARTS_OF_SPEECH
 from classes import ExistingCompound, NoEntries, Nonstandard, Number, StandardEntry
 
-with open("../../key.txt", "r") as key:
-    MW_KEY = key.read()
-
-# with open("/etc/secrets/key.txt", "r") as key:
+# with open("../../key.txt", "r") as key:
 #     MW_KEY = key.read()
+
+with open("/etc/secrets/key.txt", "r") as key:
+    MW_KEY = key.read()
 
 QUERY_STRING = "?"
 BASE  = "https://www.dictionaryapi.com/api/v3/references/collegiate/json/"
