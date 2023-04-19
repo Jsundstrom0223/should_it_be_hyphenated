@@ -5,7 +5,7 @@ import json
 import re
 import html
 from flask import Flask, request, render_template
-import existing_compound_handler
+from existing_compound_handler import check_compound_type
 import grammar
 import entry_parser
 from grammar_constants import ORDINALS, PART_OF_SPEECH_DEFS, IGNORED_PARTS_OF_SPEECH
@@ -56,8 +56,8 @@ def grammar_defs():
 def hyphenation_answer():
     """Render the _compounds template, which takes in a compound and displays results.
     
-    Take a user-provided compound and check its validity. If the compound is valid, create an
-    instance of the Compound class and pass it to the handle_comp_with_num or call_mw_api 
+    Take a user-provided compound and check its validity. If the compound is valid, create a 
+    named tuple for the compound and pass it to the handle_comp_with_num or call_mw_api
     function. Then render the _compounds template again, with the results of the function call.
     
     For more details, see the following documentation on the API:
@@ -73,24 +73,17 @@ def hyphenation_answer():
             #Using a regex instead of "if '-' in user_input" to catch/ignore any
             # stray characters/extra input
             hyphenated_compound = re.search(r"[\w\d]+-[\w\d]+", user_input)
-            if hyphenated_compound is None:
-                return handle_input_mistakes(user_input, "no_hyphen")
+            mistake_template = validate_input(hyphenated_compound, user_input)
 
-            remaining = user_input[hyphenated_compound.end(): ]
-            if "-" in remaining:
-                return handle_input_mistakes(user_input, "multiple_hyphens")
-
+            if mistake_template is not None:
+                return mistake_template
+    
             compound_from_input = user_input[hyphenated_compound.start(): hyphenated_compound.end()]
             elements_of_compound = compound_from_input.split("-")
-            print("COMPOUND FROM INPUT", compound_from_input)
-
-            if elements_of_compound[0] == elements_of_compound[1]:
-                return handle_input_mistakes(user_input, "dupe_elements")
-    
             Compound = namedtuple('Compound', ['elements', 'full', 'open', 'closed'])
-            open = elements_of_compound[0] + " " + elements_of_compound[1]
+            open_compound = elements_of_compound[0] + " " + elements_of_compound[1]
             closed = "".join(elements_of_compound)
-            compound = Compound(elements_of_compound, compound_from_input, open, closed)
+            compound = Compound(elements_of_compound, compound_from_input, open_compound, closed)
 
             has_numeral, idx_and_type = check_for_numerals(compound)
             if has_numeral:
@@ -99,8 +92,10 @@ def hyphenation_answer():
 
             results = call_mw_api(compound, is_a_compound=True)
 
-            if results.answer_ready is False:
-                # headers_and_outcomes = dict(zip(results.header, results.outcome_type))
+            #If results.answer_ready is False, the app returns the definitions of the 
+            # compound's elements and asks the user to select the relevant definitions. Then
+            # it uses the associated parts of speech to determine whether it should be hyphenated.
+            if not results.answer_ready:
                 new_page = render_template('_compounds.html', initial_results=results)
             else:
                 new_page = render_by_type(results)
@@ -116,17 +111,36 @@ def hyphenation_answer():
 
     return render_template('_compounds.html', first_page=True)
 
+
+def validate_input(hyphenated_compound, user_input):
+    if hyphenated_compound is None:
+        return handle_input_mistakes(user_input, "no_hyphen")
+    
+    if "-" in user_input[hyphenated_compound.end(): ]:
+        return handle_input_mistakes(user_input, "multiple_hyphens")
+    
+    extra_punctuation = re.findall(r"[^-\w\d]", user_input)
+    if len(extra_punctuation) > 0:
+        return handle_input_mistakes(user_input, "extra_punctuation")
+    
+    compound_from_input = user_input[hyphenated_compound.start(): hyphenated_compound.end()]
+    elements_of_compound = compound_from_input.split("-")
+    
+    if elements_of_compound[0] == elements_of_compound[1]:
+        return handle_input_mistakes(user_input, "dupe_elements")
+    
+    return None
+
 def handle_input_mistakes(user_input, mistake_type):
-    """Prepare the message that is displayed if the user input is invalid.
+    """Prepare the message that will be displayed if the user input is invalid.
     
     Arguments:
-    user_input: The user-provided compound.
+    user_input: The user input.
     mistake_type: A variable set to either "no_hyphen," "multiple_hyphens," or "dupe_elements."
     
     Returns:
     mistake_page: The _compounds template, with a message explaining the mistake.
     """
-    
     if mistake_type == "no_hyphen":
         mistake_header = '''The input you provided lacks a hyphen ("-") or
             includes a hyphen with at least one space next to it. Please try again
@@ -134,8 +148,13 @@ def handle_input_mistakes(user_input, mistake_type):
             (e.g., "well-being").'''
         
     if mistake_type == "multiple_hyphens":
-        mistake_header = f'''The input you provided includes multiple hyphens.
+        mistake_header = '''The input you provided includes multiple hyphens.
             Please enter a compound that has only one hyphen (e.g., "well-being").'''
+        
+    if mistake_type == "extra_punctuation":
+        mistake_header = '''The input you provided includes at least one punctuation mark
+        other than a hyphen. Please enter a compound that has no punctuation marks other than
+        a hyphen. (If you entered a number with a comma in it, remove the comma.)'''
         
     if mistake_type == "dupe_elements":
         mistake_header = '''The elements of your compound are identical; please
@@ -154,7 +173,7 @@ def render_by_type(results):
     Argument:
     results: A named tuple with four named fields:
         1. answer_ready: A boolean value. False means that the user needs to provide more 
-        information on the compound's use. 
+        information on the compound's use. (Will always be True in render_by_type.)
         2. outcome: The information that will be displayed to the user.
         3. outcome_type: A variable that tells the _compounds template how to display that
         information.
@@ -218,13 +237,12 @@ def handle_comp_with_num(compound, idx_and_type):
         new_page = render_by_type(num_results)
     else:
         Results = namedtuple('Results', ['answer_ready', 'outcome', 'outcome_type', 'header'])
-        for k,v in idx_and_type.items():
-            num_element = Number(compound.elements[k], k)
-
-        #This will always have a length of 1.
-        non_num = [v for i,v in enumerate(compound.elements) if i not in idx_and_type.keys()]
-        mw_response = call_mw_api(*non_num)
-        mw_entries = start_parsing(mw_response, *non_num)
+        for idx in idx_and_type.keys():
+            num_element = Number(compound.elements[idx], idx)
+          
+        non_num = compound.elements[num_element.other]
+        mw_response = call_mw_api(non_num)
+        mw_entries = start_parsing(mw_response, non_num)
 
         outcome = []
         if num_element.idx == 0:
@@ -306,8 +324,8 @@ def compound_checker(mw_response, compound):
             for k in all_forms.keys():
                 mw_entries = start_parsing(mw_response, k, comp_in_mw=True)
                 if mw_entries:
-                    existing_compounds.append(existing_compound_handler.sort_entries
-                    (mw_entries, compound))
+                    for entry in mw_entries:
+                        existing_compounds.append(check_compound_type(entry, compound))
 
             outcome = existing_compounds
             compound_types = []
@@ -326,7 +344,6 @@ def compound_checker(mw_response, compound):
 
     results = Results(answer_ready, outcome, outcome_type, header)
     Nonstandard.grouped = {}
-    print(results.header)
     return results
 
 def validate_response(mw_response):
@@ -473,7 +490,6 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
     entry information that will be returned to the user.
     """
     mw_entries = []
-    
     for entry in mw_response:
         the_id = entry_parser.get_entry_id(entry)
         part = entry.get("fl")
@@ -515,7 +531,6 @@ def prep_entries_for_display(mw_entries):
     """Check the collected entries' types and pass them to the appropriate formatting functions.
     
     Argument:
-
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
     """
