@@ -18,7 +18,8 @@ def check_compound_type(entry, compound):
     Arguments:
     entry: Entry information returned by start_parsing (an instance of the StandardEntry
     or Nonstandard class).
-    compound: The 'compound' named tuple created in hyphenation_answer.
+    compound: A named tuple with four named fields. Holds information about the
+    user-provided compound and alternate versions (open and closed versions) of it.
 
     Returns:
     An instance of the ExistingCompound class.
@@ -51,19 +52,22 @@ def in_mw_as_main_entry(compound_type, entry, compound):
     compound_type: A variable indicating the type of the existing compound (open, closed,
     or hyphenated).
     entry: Entry information returned by start_parsing (an instance of the StandardEntry class).
-    compound: The 'compound' named tuple created in hyphenation_answer.
+    compound: A named tuple with four named fields. Holds information about the
+    user-provided compound and alternate versions (open and closed versions) of it.
 
     Returns:
     outcome: A string summarizing the dictionary entry and explaining whether the
     compound should be hyphenated.
     """
+    before_a_noun = ["adjective", "adverb", "noun"]
+
     if compound_type == "closed compound":
         outcome = (f"Merriam-Webster's Collegiate® Dictionary lists the search term you"
                 f" entered as a {compound_type}, '{entry.the_id},' which means that it should be"
                 " written as one word.\n\nIts definition is as follows: ")
 
     elif compound_type == "open compound":
-        if entry.part ==  "adjective" or entry.part == "adverb":
+        if entry.part in before_a_noun:
             outcome = ("Merriam-Webster's Collegiate® Dictionary lists the search term you"
                        f" entered as an {compound_type}, '{entry.the_id}.' However, it should"
                        " likely be hyphenated if it precedes a noun. As the Chicago Manual of"
@@ -88,7 +92,8 @@ def in_mw_as_variant(compound_type, entry, compound):
     compound_type: A variable indicating the type of the existing compound (open, closed,
     or hyphenated).
     entry: Entry information returned by start_parsing (an instance of the Nonstandard class).
-    compound: The 'compound' named tuple created in hyphenation_answer.
+    compound: A named tuple with four named fields. Holds information about the
+    user-provided compound and alternate versions (open and closed versions) of it.
 
     Returns:
     outcome: A string summarizing the dictionary entry and explaining whether the
@@ -96,6 +101,7 @@ def in_mw_as_variant(compound_type, entry, compound):
     """
     article_before_relation = get_article(entry.relation)
     article_before_part = get_article(entry.part)
+    before_a_noun = ["adjective", "adverb", "noun"]
 
     if compound_type == "closed compound":
         outcome = ("Merriam-Webster's Collegiate® Dictionary lists the search term you entered,"
@@ -109,8 +115,8 @@ def in_mw_as_variant(compound_type, entry, compound):
                          f" {entry.relation} '{entry.cxt},' which is an open (unhyphenated)"
                          " compound.\n\n")
 
-        if entry.part ==  "adjective" or entry.part == "adverb":
-            outcome = (f"{comp_is_open}However, because the compound is an {entry.part}, it"
+        if entry.part in before_a_noun:
+            outcome = (f"{comp_is_open}However, because the compound is a {article_before_part} {entry.part}, it"
                        " should likely be hyphenated when used before a noun. As the Chicago"
                        " Manual of Style (section 7.85) says, 'it is never incorrect to hyphenate"
                        f" adjectival compounds before a noun.'\n\nThe definition of '{entry.cxt}'"
@@ -134,7 +140,8 @@ def existing_hyphenated_compound(entry, compound):
     Arguments:
     entry: Entry information returned by start_parsing (an instance of the StandardEntry or
     Nonstandard class). 
-    compound: The 'compound' named tuple created in hyphenation_answer.
+    compound: A named tuple with four named fields. Holds information about the
+    user-provided compound and alternate versions (open and closed versions) of it.
 
     Returns:
     outcome: A string summarizing the dictionary entry and explaining whether the

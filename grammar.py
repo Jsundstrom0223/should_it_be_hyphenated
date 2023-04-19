@@ -63,13 +63,12 @@ def check_cmos_num_rules(compound, idx_and_type):
     idx_and_type: A dictionary that identifies the numeric element(s) of the compound.
 
     Returns:
-    num_results: A named tuple with four named fields:
+    num_results: A named tuple with four named fields
         1. answer_ready: A boolean. False means that the user needs to provide more 
         information on the compound's use. 
         2. outcome: If ele_answer_ready is True, the Chicago Manual of Style standard 
         that explains whether the compound should be hyphenated. Otherwise, None.
-        3. outcome_type:  A variable that tells the _compounds template how to display that
-        information..
+        3. outcome_type: A variable indicating the type of that information; necessary because the _compounds template displays different results in different ways.
         4. header: A summary of that information or, in some cases, an empty string.
     """
     Num_Results = namedtuple('Num_Results', ['answer_ready', 'outcome', 'outcome_type', 'header'])
