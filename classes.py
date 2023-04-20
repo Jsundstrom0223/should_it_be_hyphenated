@@ -28,16 +28,15 @@ class Nonstandard(StandardEntry):
     grouped = {}
     def __init__(self, the_id, entry_type, part, definition, cxt, relation):
         super().__init__(the_id, entry_type, part, definition)
-
         self.cxt = cxt
         self.relation = relation
-        if part == "verb":
+        if self.part == "verb":
             self.shorten_verb_labels()
         else:
             if self.relation == "superlative of":
                 self.menu_option = "superlative"
             else:
-                self.menu_option = part
+                self.menu_option = self.part
 
         Nonstandard.grouped[relation] = self
         self.to_display = None
@@ -103,13 +102,13 @@ class ExistingCompound(StandardEntry):
         super().__init__(the_id, entry_type, part, definition)
         self.outcome = outcome
         self.outcome_type = outcome_type
-        definition = self.format_entry_defs()
+        self.format_entry_defs()
 
-        if entry_type == "open compound":
+        if self.entry_type == "open compound":
             self.with_article = "an open compound"
             self.to_display = "An open compound (two words)"
         else:
-            if entry_type == "closed compound":
+            if self.entry_type == "closed compound":
                 self.to_display = "A closed compound (one word)"
             else:
                 self.to_display = entry_type.capitalize()

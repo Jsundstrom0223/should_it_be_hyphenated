@@ -5,7 +5,7 @@ import json
 import re
 import html
 from flask import Flask, request, render_template
-from existing_compound_handler import check_compound_type
+from existing_compound_handler import parse_existing_comps
 import grammar
 import entry_parser
 from grammar_constants import ORDINALS, PART_OF_SPEECH_DEFS, IGNORED_PARTS_OF_SPEECH
@@ -191,7 +191,6 @@ def render_by_type(results):
     """
     arg_dict = {results.outcome_type: results.outcome, "header": results.header}
     new_page = render_template('_compounds.html', **arg_dict)
-
     return new_page
 
 def check_for_numerals(compound):
@@ -322,36 +321,37 @@ def compound_checker(mw_response, compound):
 
     answer_ready, ele_outcome = grammar.check_first_element_lists(compound)
     if answer_ready:
-        outcome = ele_outcome
-        outcome_type = "standard"
         header = '''According to Chicago Manual of Style hyphenation standards, 
         your compound should be handled as follows:'''
-    else:
-        response_type = validate_response(mw_response)
-        if response_type == "valid":
-            all_forms = {
-                compound.full: "hyphenated compound",
-                compound.open: "open compound",
-                compound.closed: "closed compound"
-                }
+        results = Results(answer_ready, ele_outcome, "standard", header)
+        
+        return results
+    
+    response_type = validate_response(mw_response)
+    if response_type == "valid":
+        all_versions = {
+            compound.full: "hyphenated compound",
+            compound.open: "open compound",
+            compound.closed: "closed compound"
+            }
 
-            existing_compounds = []
-            for k in all_forms.keys():
-                mw_entries = start_parsing(mw_response, k, comp_in_mw=True)
-                if mw_entries:
-                    for entry in mw_entries:
-                        existing_compounds.append(check_compound_type(entry, compound))
+        existing_comps = []
+        for version_of_comp in all_versions.keys():
+            mw_entries = start_parsing(mw_response, version_of_comp, comp_in_mw=True)
+            for entry in mw_entries:
+                existing_comps.append(entry)
+             
+        outcome = parse_existing_comps(existing_comps, compound)
 
-            outcome = existing_compounds
-            compound_types = []
-            if existing_compounds:
-                for comp in existing_compounds:
-                    if comp.with_article not in compound_types:
-                        compound_types.append(comp.with_article)
+        compound_types = []
+        if len(outcome) > 0:
+            for comp in outcome:
+                if comp.with_article not in compound_types:
+                    compound_types.append(comp.with_article)
 
-                header = ExistingCompound.format_outcome_header(compound_types, compound)
-                answer_ready = True
-                outcome_type = "found_in_MW"
+            header = ExistingCompound.format_outcome_header(compound_types, compound)
+            answer_ready = True
+            outcome_type = "found_in_MW"
 
     if not answer_ready:
         answer_ready, outcome, outcome_type, header = handle_separately(compound)

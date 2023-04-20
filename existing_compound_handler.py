@@ -1,16 +1,29 @@
 """Prepare the results that are returned when the user's compound is in the dictionary."""
 from classes import ExistingCompound
 
-def get_article(next_word):
-    """Get the article that should precede a noun in an f-string expression."""
-    vowels = ["a", "e", "i", "o", "u"]
-    first_letter = next_word[0]
-    if first_letter in vowels:
-        article = "an"
-    else:
-        article = "a"
+def parse_existing_comps(existing_comps, compound):
+    outcome = []
+    if len(existing_comps) > 1:
+        unique_entries = get_unique_entries(existing_comps)
+        for unique_entry in unique_entries:
+            outcome.append(check_compound_type(unique_entry, compound))
+    
+    if len(existing_comps) == 1:
+        outcome.append(check_compound_type(existing_comps[0], compound))
+    
+    return outcome
 
-    return article
+def get_unique_entries(existing_comps):
+    defs_only = [i.definition for i in existing_comps if i.entry_type == "main_entry"]
+    entry_and_def = {i: i.definition for i in existing_comps if i.entry_type == "main_entry"}
+
+    for comp_entry in existing_comps:
+        if comp_entry.definition not in defs_only:
+            entry_and_def[comp_entry] = comp_entry.definition
+            
+    unique_entries = [k for k in entry_and_def.keys()]
+
+    return unique_entries
 
 def check_compound_type(entry, compound):
     """Check the type of the existing compound and the associated MW entry.
@@ -44,6 +57,17 @@ def check_compound_type(entry, compound):
 
         return ExistingCompound(compound.full, compound_type, entry.part, entry.definition,
                                 entry_outcome, "found_in_MW")
+
+def get_article(next_word):
+    """Get the article that should precede a noun in an f-string expression."""
+    vowels = ["a", "e", "i", "o", "u"]
+    first_letter = next_word[0]
+    if first_letter in vowels:
+        article = "an"
+    else:
+        article = "a"
+
+    return article
 
 def in_mw_as_main_entry(compound_type, entry, compound):
     """Prepare information on open and closed compounds in main dictionary entries.
