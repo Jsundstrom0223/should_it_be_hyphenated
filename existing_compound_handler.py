@@ -32,7 +32,7 @@ def check_compound_type(entry, compound):
     entry: Entry information returned by start_parsing (an instance of the StandardEntry
     or Nonstandard class).
     compound: A named tuple with four named fields. Holds information about the
-    user-provided compound and alternate versions (open and closed versions) of it.
+    user-provided compound and open and closed versions of it.
 
     Returns:
     An instance of the ExistingCompound class.
@@ -77,7 +77,7 @@ def in_mw_as_main_entry(compound_type, entry, compound):
     or hyphenated).
     entry: Entry information returned by start_parsing (an instance of the StandardEntry class).
     compound: A named tuple with four named fields. Holds information about the
-    user-provided compound and alternate versions (open and closed versions) of it.
+    user-provided compound and open and closed versions of it.
 
     Returns:
     outcome: A string summarizing the dictionary entry and explaining whether the
@@ -117,7 +117,7 @@ def in_mw_as_variant(compound_type, entry, compound):
     or hyphenated).
     entry: Entry information returned by start_parsing (an instance of the Nonstandard class).
     compound: A named tuple with four named fields. Holds information about the
-    user-provided compound and alternate versions (open and closed versions) of it.
+    user-provided compound and open and closed versions of it.
 
     Returns:
     outcome: A string summarizing the dictionary entry and explaining whether the
@@ -165,7 +165,7 @@ def existing_hyphenated_compound(entry, compound):
     entry: Entry information returned by start_parsing (an instance of the StandardEntry or
     Nonstandard class). 
     compound: A named tuple with four named fields. Holds information about the
-    user-provided compound and alternate versions (open and closed versions) of it.
+    user-provided compound and open and closed versions of it.
 
     Returns:
     outcome: A string summarizing the dictionary entry and explaining whether the
@@ -208,3 +208,31 @@ def existing_hyphenated_compound(entry, compound):
                        " sentence.\n\nIts definition is as follows: ")
 
     return outcome
+
+def format_outcome_header(compound_types, compound):
+    """Format the header that will be displayed if the compound is in the dictionary.
+    
+    Arguments:
+    compound_types: A list of variables indicating the type(s) of the existing 
+    compound(s) (open, closed, or hyphenated).
+    compound: The 'compound' named tuple created in hyphenation_answer.
+
+    Returns:
+    header: The header that will be displayed to the user.
+    """
+    if len(compound_types) == 1:
+        header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
+        {compound_types[0]}. Details on the compound and an explanation of whether it should be hyphenated are provided below.'''
+
+    else:
+        if len(compound_types) == 2:
+            final_types = " and ".join(compound_types)
+        if len(compound_types) > 2:
+            compound_types.insert(1, ", ")
+            compound_types.insert(-1, ", and ")
+            final_types = "".join(compound_types)
+
+        header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
+        {final_types}. This means that the hyphenation of the compound depends on its use. Details on the compound are provided below.'''
+    print(header)
+    return header

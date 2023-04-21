@@ -42,6 +42,10 @@ class Nonstandard(StandardEntry):
         self.to_display = None
 
     def shorten_verb_labels(self):
+        """Shorten long descriptions of verb forms.
+        
+        Examples of long descriptions include "present tense second-person singular and present tense plural of."
+        """
         if "participle of" in self.relation:
             self.relation = "participle of"
             self.menu_option = "participle"
@@ -106,42 +110,13 @@ class ExistingCompound(StandardEntry):
 
         if self.entry_type == "open compound":
             self.with_article = "an open compound"
-            self.to_display = "An open compound (two words)"
+            self.to_display = "Open compound (two words)"
         else:
             if self.entry_type == "closed compound":
-                self.to_display = "A closed compound (one word)"
+                self.to_display = "Closed compound (one word)"
             else:
-                self.to_display = entry_type.capitalize()
-            self.with_article = f"a {entry_type}"
-
-    @staticmethod
-    def format_outcome_header(compound_types, compound):
-        """Format the header that will be displayed if the compound is in the dictionary.
-        
-        Arguments:
-        compound_types: A list of variables indicating the type(s) of the existing 
-        compound(s) (open, closed, or hyphenated).
-        compound: The 'compound' named tuple created in hyphenation_answer.
-
-        Returns:
-        header: The header that will be displayed to the user.
-        """
-        if len(compound_types) == 1:
-            header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
-            {compound_types[0]}. Details on the compound and an explanation of whether it should be hyphenated are provided below.'''
-
-        else:
-            if len(compound_types) == 2:
-                final_types = " and ".join(compound_types)
-            if len(compound_types) > 2:
-                compound_types.insert(1, ", ")
-                compound_types.insert(-1, ", and ")
-                final_types = "".join(compound_types)
-   
-            header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
-            {final_types}. This means that the hyphenation of the compound depends on its use. Details on the compound are provided below.'''
-
-        return header
+                self.to_display = "Hyphenated compound"
+            self.with_article = f"a hyphenated compound"
 
 class NoEntries():
     def __init__(self, search_term):

@@ -11,9 +11,9 @@ first verifies that it contains exactly one hyphen. If it does not, the app  ret
 message (rendered in the `_compounds.html` template). If the compound is valid,  
 `hyphenation_answer` passes it to one of two functions: `handle_comp_with_num`,  
 which handles compounds that contain at least one numeral, or `call_mw_api`,  
-which calls the API and passes its response to the `compound_checker` function. 
+which calls the API and passes its response to the `check_compound` function. 
 
-Both `handle_comp_with_num` and `compound_checker` check the compound against  
+Both `handle_comp_with_num` and `check_compound` check the compound against  
 Chicago Manual of Style (CMoS) hyphenation standards to determine whether any  are  
 directly applicable to the compound. If none are, the latter function also checks whether  
 the compound is in the dictionary as an open, closed, or hyphenated compound  (via calls  

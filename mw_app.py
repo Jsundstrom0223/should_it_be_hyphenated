@@ -5,11 +5,11 @@ import json
 import re
 import html
 from flask import Flask, request, render_template
-from existing_compound_handler import parse_existing_comps
+from existing_compound_handler import parse_existing_comps, format_outcome_header
 import grammar
 import entry_parser
 from grammar_constants import ORDINALS, PART_OF_SPEECH_DEFS, IGNORED_PARTS_OF_SPEECH
-from classes import ExistingCompound, NoEntries, Nonstandard, Number, StandardEntry
+from classes import NoEntries, Nonstandard, Number, StandardEntry
 
 # with open("../../key.txt", "r") as key:
 #     MW_KEY = key.read()
@@ -99,7 +99,6 @@ def hyphenation_answer():
                 new_page = render_template('_compounds.html', initial_results=results)
             else:
                 new_page = render_by_type(results)
-
             return new_page
 
         if request.form.get('part_of_speech_selections') is not None:
@@ -107,7 +106,6 @@ def hyphenation_answer():
                         request.form['part_of_speech_2'].lower()]
             final_outcome, final_header = grammar.cmos_rules(selected)
             final_page = render_template('_compounds.html', standard=final_outcome, header=final_header)
-
             return final_page
 
     return render_template('_compounds.html', first_page=True)
@@ -201,7 +199,7 @@ def check_for_numerals(compound):
 
     Argument:
     compound: A named tuple with four named fields. Holds information about the
-    user-provided compound and alternate versions (open and closed versions) of it.
+    user-provided compound and open and closed versions of it.
 
     Returns:
     has_numeral: A boolean value.
@@ -233,7 +231,7 @@ def handle_comp_with_num(compound, idx_and_type):
     
     Arguments:
     compound: A named tuple with four named fields. Holds information about the
-    user-provided compound and alternate versions (open and closed versions) of it.
+    user-provided compound and open and closed versions of it.
     idx_and_type: A dictionary that identifies the numeric element(s) of the compound.
    
     Returns:
@@ -269,20 +267,19 @@ def call_mw_api(term, is_a_compound=False, just_get_def=False):
     
     Arguments:
     term: The search term to be used in the API call.
-    is_a_compound: A boolean value. True means that compound_checker should be called and
-    that its return value should be returned to hyphenation_answer.
-    just_get_def: A boolean value. True means that the return value should be just
-    the shortdef field of the entry rather than the full API response.
+    is_a_compound: A boolean value. True means that the search term is the full
+    user-provided compound and that check_compound should be called.
+    just_get_def: A boolean value. True means that the user (via the _terms template) has
+    requested the definition of a grammar term.
 
     Returns:
     shortdef: The shortdef field of a dictionary entry. Returned if just_get_def is True.
-    results: The named tuple returned by compound_checker. Returned if is_a_compound is True. 
-    mw_response: The full API response.
+    results: The named tuple returned by check_compound. Returned if is_a_compound is True. 
+    mw_response: The full API response. Returned if the search term is a single element
+    of the user-provided compound.
     """
-    #API is being called with the full compound.
     if is_a_compound:
         search_term = term.full
-    #API is being called with only one element (word) of the compound.
     else:
         search_term = term
 
@@ -295,12 +292,12 @@ def call_mw_api(term, is_a_compound=False, just_get_def=False):
         return shortdef[0]
 
     if is_a_compound:
-        return compound_checker(mw_response, term)
+        return check_compound(mw_response, term)
 
     return mw_response
 
-def compound_checker(mw_response, compound):
-    r"""Check whether the compound is in the dictionary/whether any CMoS rules apply to it. 
+def check_compound(mw_response, compound):
+    r"""Check whether the compound is in the dictionary/any CMoS rules apply to it. 
 
     If the compound is not in the dictionary and there are no directly applicable Chicago 
     Manual of Style standards, call handle_separately to handle the individual elements of
@@ -309,6 +306,8 @@ def compound_checker(mw_response, compound):
     Arguments:
     mw_response: The API's response to the initial call, in which the search term is 
     the full compound.
+    compound: A named tuple with four named fields. Holds information about the
+    user-provided compound and open and closed versions of it.
     
     Returns:
     results: A named tuple with four named fields. Holds the information that will be
@@ -324,7 +323,6 @@ def compound_checker(mw_response, compound):
         header = '''According to Chicago Manual of Style hyphenation standards, 
         your compound should be handled as follows:'''
         results = Results(answer_ready, ele_outcome, "standard", header)
-        
         return results
     
     response_type = validate_response(mw_response)
@@ -337,19 +335,18 @@ def compound_checker(mw_response, compound):
 
         existing_comps = []
         for version_of_comp in all_versions.keys():
-            mw_entries = start_parsing(mw_response, version_of_comp, comp_in_mw=True)
+            mw_entries = start_parsing(mw_response, version_of_comp, full_compound=True)
             for entry in mw_entries:
                 existing_comps.append(entry)
              
         outcome = parse_existing_comps(existing_comps, compound)
-
         compound_types = []
         if len(outcome) > 0:
             for comp in outcome:
                 if comp.with_article not in compound_types:
                     compound_types.append(comp.with_article)
 
-            header = ExistingCompound.format_outcome_header(compound_types, compound)
+            header = format_outcome_header(compound_types, compound)
             answer_ready = True
             outcome_type = "found_in_MW"
 
@@ -364,17 +361,14 @@ def compound_checker(mw_response, compound):
 def validate_response(mw_response):
     """Check for empty responses and responses that contain only spelling suggestions.
 
-    When a word isn't in the dictionary but there are other similar words in the dictionary,
-    the API returns a list of those words (a list of strings). If there are no similar words,
-    it returns an empty list.
-
     Argument:
     mw_response: The API's JSON response.
 
     Returns:
     response_type: A variable set to either "empty," "typo," or "valid." "Typo" means
-    that the search term is misspelled, but the API returned a list of spelling suggestions.
-    "Empty" means that the term is misspelled, and no spelling suggestions were returned.
+    that the search term is misspelled, but the API returned a list of spelling suggestions
+    (strings). "Empty" means that the term is misspelled, and no spelling suggestions were
+    returned.
     """
     if len(mw_response) == 0:
         response_type = "empty"
@@ -388,21 +382,22 @@ def validate_response(mw_response):
     return response_type
 
 def handle_separately(compound):
-    """Handle compounds that are not in the dictionary.
+    """Handle the individual elements of the compound separately.
     
-    Call the call_mw_api function with each element of the compound. If the compound is valid,
-    make two calls to start_parsing, one for each element and the associated API response.
+    Call the call_mw_api function with each element of the compound. If the compound is
+    valid, make two calls to start_parsing, one for each element and the associated API
+    response.
     
     Argument:
     compound: A named tuple with four named fields. Holds information about the
-    user-provided compound and alternate versions (open and closed versions) of it.
+    user-provided compound and open and closed versions of it.
 
     Returns:
     answer_ready, outcome, outcome_type, header: The fields that form the named tuple 
-    created in compound_checker.
+    returned by check_compound.
     """
     mw_responses = [call_mw_api(element) for element in compound.elements]
-    response_types = [validate_response(i) for i in mw_responses]
+    response_types = [validate_response(mw_response) for mw_response in mw_responses]
     outcome_type, header = None, None
 
     if all(response_type == "valid" for response_type in response_types):
@@ -413,13 +408,13 @@ def handle_separately(compound):
 
     else:
         answer_ready = True
-        outcome_type = "typo"
+        outcome_type = "typo_or_empty"
         outcome, header = handle_invalid_entries(mw_responses, compound, response_types)
 
     return answer_ready, outcome, outcome_type, header
 
 def get_outcome_type_and_header(outcome, compound):
-    """Get the type of information being returned to the user and headers summarizing that info.
+    """Check the type(s) of info being returned and generate headers summarizing that info.
     
     Check whether the user will need to provide more information on either element of the 
     compound. Also create the header that will be shown to the user.
@@ -427,7 +422,7 @@ def get_outcome_type_and_header(outcome, compound):
     Returns:
     outcome_types: A list of variables that tell the _compounds template how to display the 
     information being returned to the user.
-    header: A list of summaries of that information (one for each element of the compound).
+    headers: A list of summaries of that information (one for each element of the compound).
     """
     idx_as_ord = {0: "first", 1: "second"}
     headers = []
@@ -437,74 +432,87 @@ def get_outcome_type_and_header(outcome, compound):
     for entry_list_idx, entry_list in enumerate(outcome):
         if len(entry_list) == 1 and entry_list[0].entry_type in numeral_or_no_entries:
             headers.append(entry_list[0].to_display)
-            outcome_types.append("no_selection")
+            outcome_types.append("no_defs_to_show")
         else:
-            headers.append(f"The {idx_as_ord[entry_list_idx]} term in your compound is"
-                           f" '{compound.elements[entry_list_idx]}.' How is it being used?")
-            outcome_types.append("selection_needed")
+            headers.append(f'''The {idx_as_ord[entry_list_idx]} term in your compound is
+            '{compound.elements[entry_list_idx]}.' How is it being used?''')
+            outcome_types.append("defs_to_show")
 
     return outcome_types, headers
 
 def handle_invalid_entries(mw_responses, compound, response_types):
-    """Prepare the info that is returned to the user when the compound includes a typo.
+    """Prepare the information that is returned when the compound includes a misspelling.
     
     Arguments:
     mw_responses: The API's responses (for both elements of the compound).
     compound: A named tuple with four named fields. Holds information about the
-    user-provided compound and alternate versions (open and closed versions) of it.
+    user-provided compound and open and closed versions of it.
     response_types: A list of variables set to either "typo," "valid," or "empty."
 
     Returns:
     outcome: The information that will be displayed to the user.
     header: A summary of that information or, in some cases, an empty string.
     """
+    both_formatted = []
+    for mw_response in mw_responses:
+        formatted = str(mw_response).strip("[]")
+        both_formatted.append(formatted)
+   
     if all(response_type == "typo" for response_type in response_types):
-        header = f'''Both elements of the compound you entered, '{compound.full},' 
-        are misspelled. However, the dictionary returned spelling suggestions 
-        for both elements. Please review the suggestions and enter another compound.'''
-        outcome = f'''Spelling suggestions for the first element, '{compound.elements[0]},' 
-        are as follows: {mw_responses[0]}. Spelling suggestions for the second element, 
-        '{compound.elements[1]},' are as follows: {mw_responses[1]}.'''
+        header = (f'''Both elements of the compound you entered, '{compound.full},'
+        are misspelled. However, the dictionary returned spelling suggestions for both elements. Please review those suggestions and re-enter the compound.''')
+
+        #Some parts of the _compounds template preserve whitespace. Using quotation marks at the start/end of each line prevents the displayed string from breaking at the end of each line but preserves newline characters. https://stackoverflow.com/a/3077017
+        outcome = (f"Spelling suggestions for the first element, '{compound.elements[0]},'"
+                   f" are as follows: {both_formatted[0]}.\n\nSpelling suggestions for the"
+                   f" second element, '{compound.elements[1]},' are as follows:"
+                   f" {both_formatted[1]}.")
 
     elif all(response_type == "empty" for response_type in response_types):
         header = " "
-        outcome = f'''Both parts of the compound you entered, '{compound.full},' 
-        are misspelled, and the dictionary did not return any alternative spellings.
-        Please check the spelling of your compound and enter it again.'''
-
+        outcome = (f"Both elements of the compound you entered, '{compound.full},'"
+                   " are misspelled, and the dictionary did not return any alternative"
+                   " spellings. Please check the spelling of your compound and enter it"
+                   " again.")
+        
     else:
-        header = f'''At least one element of the compound you entered,
-        '{compound.full}', appears to be misspelled.'''
+        if not "valid" in response_types:
+            header = f'''Both elements of the compound you entered, '{compound.full},'
+            are misspelled.'''
+        else:
+            header = f'''One of the elements of the compound you entered, '{compound.full},'
+            is misspelled.'''
+     
         outcomes = []
-        both = {0: response_types[0], 1: response_types[1]}
-        for index, response_type in both.items():
+        for index, response_type in enumerate(response_types):
             if response_type == "typo":
-                outcomes.append(f'''The dictionary returned the following spelling 
-                suggestions for '{compound.elements[index]}', which is misspelled: 
-                {mw_responses[index]}.''')
+                outcomes.append("The dictionary returned the following spelling" 
+                                f" suggestions for '{compound.elements[index]},'"
+                                f" which is misspelled: {both_formatted[index]}.\n\n")
                 
             if response_type == "empty":
-                outcomes.append(f'''The dictionary did not return any spelling suggestions 
-                for '{compound.elements[index]}', which is misspelled.''')
+                outcomes.append("The dictionary did not return any spelling"
+                                f" suggestions for '{compound.elements[index]},'"
+                                " which is misspelled.\n\n")
 
         outcome = " ".join(outcomes).strip("'[]")
 
     return outcome, header
 
-def start_parsing(mw_response, search_term, comp_in_mw=False): 
-    """Parse the API responses and pass each entry in the responses to the appropriate 
+def start_parsing(mw_response, search_term, full_compound=False): 
+    """Parse the API response and pass each entry in the response to the appropriate 
     function.
     
     Arguments:
     mw_response: The API's JSON response.
-    search_term: The search term used in the API call (an element of the compound).
-    comp_in_mw: A boolean value. False means that the compound is an existing compound (one
-    that is in the dictionary) and that the information that will be displayed to the user
-    does not need to be formatted.
+    search_term: The search term used in the API call.
+    full_compound: A boolean value. True means that the search term is a full compound, not an element of a compound, and that the app is essentially checking whether the full
+    compound is in the dictionary. Necessary because information on existing compounds is displayed to the user differently.
     
     Returns:
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
-    entry information that will be returned to the user.
+    entry information that will be returned to the user. Alternatively, if no 
+    entries are retrieved, a list consisting of a sole NoEntries class instance.
     """
     mw_entries = []
     for entry in mw_response:
@@ -512,31 +520,34 @@ def start_parsing(mw_response, search_term, comp_in_mw=False):
         part = entry.get('fl')
 
         if the_id == search_term or the_id == search_term.capitalize():
+            cxs = entry.get('cxs')
             if part is None:
-                cxs = entry.get('cxs')
                 cxt = cxs[0].get('cxtis')[0]['cxt']
                 cxt_search_term, cxt_only = entry_parser.get_cxt_search_term(cxt)
                 cxs_mw_response = call_mw_api(cxt_search_term)
-                entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxs)            
+                entry_parser.cognate_cross_reference(the_id, cxs_mw_response, mw_entries,
+                                                    cxt_only, cxs)            
             else:
                 if part in IGNORED_PARTS_OF_SPEECH:
                     continue
-
-                cxs = entry.get('cxs')
                 if cxs is None:
                     entry_parser.standard_main_entry(the_id, entry, mw_entries, part)
                 else:
                     entry_parser.main_entry_with_cxs(the_id, entry, mw_entries, part, cxs)
         else: 
+            #A response can include entries for words related to the search term (its stems).
+            #If a stem entry has the same part of speech as an entry for the search term,
+            #the entry is ignored. (This basically ignores superlatives and comparatives.) 
+            #Entries for prefixes are also ignored if the entry ID != the search term.
             existing_entry = False
-            for k,v in StandardEntry.stems_and_parts.items():
-                if k == part and the_id in v:
+            for part_of_speech, stems in StandardEntry.stems_and_parts.items():
+                if part_of_speech == part and the_id in stems:
                     existing_entry = True
-            ###Avoid retrieving prefix entries if the entry ID != the search term
+   
             if not existing_entry and part != "prefix":
                 entry_parser.var_inf_or_stem(the_id, search_term, entry, mw_entries, part)
 
-    if not comp_in_mw:
+    if not full_compound:
         if len(mw_entries) == 0:
             mw_entries.append(NoEntries(search_term))
         else:
@@ -551,8 +562,9 @@ def prep_entries_for_display(mw_entries):
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
     """
-    to_format = [entry for entry in mw_entries if entry.entry_type != "one_diff_cxts"]
-    [entry.format_entry_defs() for entry in to_format]
+    for entry in mw_entries:
+        if entry.entry_type != "one_diff_cxts":
+            entry.format_entry_defs()
 
     Nonstandard.cxt_entry_combiner(mw_entries)
     for i in mw_entries:

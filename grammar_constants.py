@@ -136,7 +136,7 @@ NOUN_PARTICIP_INFL = ("A compound formed from a noun and a present or past parti
                       " hyphenated before but not after a noun (e.g., 'security-focused"
                       " configuration management' or 'an error-handling issue' but 'sound error"
                       " handling'). If the second element of the compound is another form of a"
-                      " verb, like the present tense of a verb ('hacks'), the compound should"
+                      " verb, like the present tense of a verb ('focuses'), the compound should"
                       " likely be left open.")
 
 NOUN_ADJ = ("A noun-adjective compound should be hyphenated if it precedes a noun, as in"
