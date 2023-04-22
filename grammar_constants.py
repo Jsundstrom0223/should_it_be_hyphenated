@@ -1,4 +1,4 @@
-"""Grammar constants"""
+"""Constants related to CMoS hyphenation guidance and explanations of grammar terms."""
 #__________________________________________________________________________________________
 #The following constants relate to Chicago Manual of Style rules on specific compounds--
 #for example, compounds that end with "percent" ("10 percent") or begin with "least" 
@@ -16,6 +16,8 @@ UNITS_OF_MEASUREMENT = [
     ]
 
 CMOS_NUM_DICT = {"PCT": PERCENTS, "CURRENCY": CURRENCY_UNITS, "UNITS": UNITS_OF_MEASUREMENT}
+
+#Some parts of the _compounds template preserve whitespace. Using quotation marks at the start/end of each line prevents the displayed string from breaking at the end of each line but preserves newline characters. https://stackoverflow.com/a/3077017
 
 PCT_OUTCOME = ("According to the Chicago Manual of Style, a single compound consisting" 
 " of a number and 'percent' or 'percentage' should not be hyphenated. However, when two"
