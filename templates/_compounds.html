@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html>
     
-<head>
-    <link rel="stylesheet" href='/static/in.css' />
-    <meta name="viewport" content="width=device-width">
-</head>
+    <head>
+        <link rel="stylesheet" href='/static/in.css' />
+        <meta name="viewport" content="width=device-width">
+    </head>
 
 {% macro pick_a_part(name, i_r='') -%}
     <div class="column_container">
@@ -76,105 +76,105 @@
     {% endmacro %}
     
 
-<body>
-    <div id="new_con">
-        <div class="column_box">
-            <h1>Should it be hyphenated?
-            Let's find out.</h1>
+    <body>
+        <div id="new_con">
+            <div class="column_box">
+                <h1>Should it be hyphenated?
+                Let's find out.</h1>
+            </div>
         </div>
-    </div>
-  
-    {% if first_page %}
-    <div id="new_con">
-        <div class="column_box" style="margin-left: 1em">
-            <a href="/">Back to the main page</a>
-        </div>
-        <div class="column_box">
-        <h2>Enter a Compound Term</h2>
-        {% if not mistake %}
-            <p>Please enter a term that you think may be hyphenated. Your search term
-            should include only one hyphen with no spaces around it (e.g., "well-being").</p>
-            
-            <ul>Guidelines:
-                <p>
-                <li>If there are numbers in your compound, please use numerals instead of the 
-                spelled-out versions and omit any commas (e.g., "2nd-best," "1000-dollar," etc.);
-                for fractions, please use two cardinal numbers ("10," not "10th") separated by a hyphen (e.g., "1-2").</li>
-                <p>
-                <li>The compound should have two unique elements; currently, Should It Be Hyphenated? cannot handle compounds in which the first and second elements 
-                are identical (e.g., "go-go").</li>
-            </ul>
-        
-            <p>Once you've entered a compound, you may receive an explanation of whether the term 
-            should be hyphenated, or you may be asked to provide a bit more information on the elements
-            of the compound. In that case, you'll receive the definitions of each element, along with the 
-            associated parts of speech, and will need to select the appropriate part of speech from a 
-            drop-down menu.</p>
-
-        {% else %}
-            <h2>Oh no!</h2> 
-            <p style="font-size: 1.25em; color: rgb(11, 64, 85); font-weight: bolder; margin-left: .80em">Something about '{{input}}' is not quite right.</p>  
-            <p>{{mistake}}</p>
-        
-        {% endif %}
-        </div>
-    </div>
     
-    <form action="/_compounds.html" method="post">
-        <label for="name" style="color: rgb(36, 101, 49)"></label> <input type="text" id="name" name="user_compound"/>
-        <input type="submit" class="standard_submit" name="form_1"/>
-    </form>
-    
-    {% else %}
-
-   
-    {% if typo_or_empty %}
-        <h2>Oh no!</h2>
-        <p style="font-size: 1.25em; color: rgb(11, 64, 85); font-weight: bolder; margin-left: .80em">{{header}}</p>
-        <p style="white-space: pre-wrap">{{typo_or_empty}}</p>
-        <p>To try again, click <a href="/_compounds.html">here.</a></p>
-    
-    {% else %}
-
-    <div class="column_container">
-        <div class="column_box" style="margin: .25em 1em">
-        <a href="/_compounds.html">Enter another compound</a>
-        </div>
-        <div class="column_box" style="margin: .25em 1em">
-            <a href="/">Back to the main page</a>
-        </div>
-        </div>
-        {% if standard %}
-            {% if header %}
-                <h2>{{header}}</h2>
-            {% endif %}
-            <p style="white-space: pre-wrap; font-size: 1.5em; margin-left: .75em">{{standard}}</p>
-           
-        {% endif %}
-
-    {% if initial_results %}
-   <p>{{pick_a_part(i_r=initial_results)}}</p>
-    {% endif %}
-
-    {% if found_in_MW %}
-        <p style="font-weight: bolder; color: rgb(36, 101, 49);
-        font-size: 1.75em; margin: .66em">{{header}}</p>      
-            {% for o in found_in_MW %}
-                <p style="font-weight: bold; font-size: 1.5em">{{o.to_display}}</p>
-                <p style="white-space: pre-wrap; font-size: 1.25em; margin-left: 1.25em">{{o.outcome}}</p>
-                <ul>
-                    {% for k, v in o.definition.items() %}
-                <li style="font-size: 1.25em">{{k|capitalize}}: {{v}}</p>
-                    {% endfor %}
+        {% if first_page %}
+        <div id="new_con">
+            <div class="column_box" style="margin-left: 1em">
+                <a href="/">Back to the main page</a>
+            </div>
+            <div class="column_box">
+            <h2>Enter a Compound Term</h2>
+            {% if not mistake %}
+                <p>Please enter a term that you think may be hyphenated. Your search term
+                should include only one hyphen with no spaces around it (e.g., "well-documented").</p>
+                
+                <ul>Guidelines:
+                    <p>
+                    <li>If there are numbers in your compound, please use numerals instead of the 
+                    spelled-out versions and omit any commas (e.g., "2nd-best," "1000-dollar," etc.);
+                    for fractions, please use two cardinal numbers ("10," not "10th") separated by a hyphen (e.g., "1-2").</li>
+                    <p>
+                    <li>The compound should have two unique elements; currently, Should It Be Hyphenated? cannot handle compounds in which the first and second elements 
+                    are identical (e.g., "go-go").</li>
                 </ul>
-                <br>
-            {% endfor %} 
+            
+                <p>Once you've entered a compound, you may receive an explanation of whether the term 
+                should be hyphenated, or you may be asked to provide a bit more information on the elements
+                of the compound. In the latter case, you'll receive the definitions of each element, along with the 
+                associated parts of speech, and will need to select the appropriate part of speech from a 
+                drop-down menu.</p>
+
+            {% else %}
+                <h2>Oh no!</h2> 
+                <p style="font-size: 1.25em; color: rgb(11, 64, 85); font-weight: bolder; margin-left: .80em">Something about '{{input}}' is not quite right.</p>  
+                <p>{{mistake}}</p>
+            
+            {% endif %}
+            </div>
+        </div>
+        
+        <form action="/_compounds.html" method="post">
+            <label for="name" style="color: rgb(36, 101, 49)"></label> <input type="text" id="name" name="user_compound"/>
+            <input type="submit" class="standard_submit" name="form_1"/>
+        </form>
+        
+        {% else %}
+
+    
+        {% if typo_or_empty %}
+            <h2>Oh no!</h2>
+            <p style="font-size: 1.25em; color: rgb(11, 64, 85); font-weight: bolder; margin-left: .80em">{{header}}</p>
+            <p style="white-space: pre-wrap">{{typo_or_empty}}</p>
+            <p>To try again, click <a href="/_compounds.html">here.</a></p>
+        
+        {% else %}
+
+        <div class="column_container">
+            <div class="column_box" style="margin: .25em 1em">
+            <a href="/_compounds.html">Enter another compound</a>
+            </div>
+            <div class="column_box" style="margin: .25em 1em">
+                <a href="/">Back to the main page</a>
+            </div>
+            </div>
+            {% if standard %}
+                {% if header %}
+                    <h2>{{header}}</h2>
+                {% endif %}
+                <p style="white-space: pre-wrap; font-size: 1.5em; margin-left: .75em">{{standard}}</p>
+            
+            {% endif %}
+
+        {% if initial_results %}
+    <p>{{pick_a_part(i_r=initial_results)}}</p>
+        {% endif %}
+
+        {% if found_in_MW %}
+            <p style="font-weight: bolder; color: rgb(36, 101, 49);
+            font-size: 1.75em; margin: .66em">{{header}}</p>      
+                {% for o in found_in_MW %}
+                    <p style="font-weight: bold; font-size: 1.5em">{{o.to_display}}</p>
+                    <p style="white-space: pre-wrap; font-size: 1.25em; margin-left: 1.25em">{{o.outcome}}</p>
+                    <ul>
+                        {% for k, v in o.definition.items() %}
+                    <li style="font-size: 1.25em">{{k|capitalize}}: {{v}}</p>
+                        {% endfor %}
+                    </ul>
+                    <br>
+                {% endfor %} 
+
+        {% endif %}
+
+        {% endif %}
 
     {% endif %}
 
-    {% endif %}
-
-{% endif %}
-
-</body>    
+    </body>    
 </html>

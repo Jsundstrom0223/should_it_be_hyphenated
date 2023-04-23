@@ -7,13 +7,12 @@
     </head>
 
     <body>
-           
         <div class="column_container">
             <div class="column_box">
-            <h1>How It Works</h1>
+                <h1>How It Works</h1>
             </div>
         </div>
-       
+        
         <div class="column_container">
             <div class="column_box" style="margin-left: 1em">
                 <a href="/">Back to the main page</a>
@@ -21,50 +20,50 @@
         </div>
 
         <div class="column_container">
-     
             <div class="column_box">
                 <h2>The Basics</h2>
             </div>
+            
             <div class="column_box">
-                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">How does it work?</p>
+                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; margin-bottom: 0; color: rgb(36, 101, 49)">How does it work?</p>
             </div>
 
             <div class="column_box">
-                    <p>Once you've entered a compound that you think may be hyphenated, one of two things will happen: 
-                    You'll either receive an answer to your hyphenation question, or you'll be asked a quick question about your use of the compound.</p>
+                <p>Once you've entered a compound that you think may be hyphenated, one of two things will happen: 
+                You'll either receive an answer to your hyphenation question, or you'll be asked a quick question about your use of the compound.</p>
+        
+                <p>You'll receive an answer right away in the following cases:</p>   
+                <ul>
+                    <li style="margin-bottom: 1em">The Chicago Manual of Style includes a hyphenation rule that's directly applicable to the compound you entered</li>
+                    <li style="margin-bottom: 1em">The compound is in Merriam-Webster's Collegiate® Dictionary as a hyphenated compound (e.g., "well-being"), a closed compound (e.g., "hardworking"), or an open compound (e.g., "close call")</li>
+                </ul>
+                        
+                <p>Otherwise, the app will look up each element of your compound in Merriam-Webster's Collegiate Dictionary and ask you to pick the definition that best matches your use of the term. In that case, you’ll receive an answer after you’ve made your selections.</p>           
             </div>
-            <div class="column_box">           
-                        <p>You'll receive an answer right away in the following cases:   
-                        </ul>
-                   
-                        <li>The Chicago Manual of Style includes a hyphenation rule that's directly applicable to your search term</li>
-                        <li>The compound is in Merriam-Webster's Collegiate® Dictionary as a hyphenated compound (e.g., "well-being"), a closed compound (e.g., "hardworking"), or an open compound (e.g., "close call")</li>
-                       
-                 
-                        <p>Otherwise, the app will look up each part of your compound in Merriam-Webster's Collegiate Dictionary and ask you to pick the definition that most closely matches your use of the term. In that case, you’ll receive an answer after you’ve made your selections.</p>
-                    
-                    </div>
-                    <div class="column_box">
-                        <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">What is it?</p>
-                    </div>
-                    <div class="column_box">
+
+            <div class="column_box">
+                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; margin-bottom: 0; color: rgb(36, 101, 49)">What is it?</p>
+            </div>
+
+            <div class="column_box">
                 <p>Should It Be Hyphenated? is a Flask app with a Python back end. The app relies on Merriam-Webster's Collegiate® Dictionary with Audio API and is hosted on Render.
 
                 For details on the JSON responses returned by the API and the app's handling of those responses, see <a href="https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md">"The App and the API: A Note on Merriam-Webster's Collegiate® Dictionary with Audio API."</a> For more extensive information on the API, see the Merriam-Webster Developer Center's <a href="https://dictionaryapi.com/info/frequently-asked-questions">FAQ page</a> or <a href="https://dictionaryapi.com/products/json">JSON documentation</a>.</p> 
             </div>
+
             <div class="column_box">
-                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; color: rgb(36, 101, 49)">What else should I know?</p>
+                <p style="font-weight: 500; font-size: 1.25em; margin-left: .75em; margin-bottom: 0em; color: rgb(36, 101, 49)">What else should I know?</p>
             </div>
+            
             <div class="column_box">
-                    <p>Should It Be Hyphenated? is a work in progress with a few minor limitations.</p>
-                    <li>The app adheres to Chicago Manual of Style hyphenation standards and retrieves all definitions / spellings from Merriam-Webster's Collegiate Dictionary, one of the dictionaries recommended by the manual. When the Chicago Manual and the dictionary disagree on the hyphenation of a term,
-                    the app gives precedence to the manual.
-                    </li>
-                    <li>Currently, it does not support search terms with more than one hyphen; nor does it differentiate between compounds that use a hyphen and compounds that use an en dash.</li>
-                    <li>It does not return information on <a href="https://dictionaryapi.com/products/json#term-ure:~:text=a%20sense.-,undefined%20entry%20word,-An%20undefined%20entry">undefined entry words</a> (i.e., words that are included in the dictionary without a definition or a link to another
-                    term with a definition).</li>
-                    <li>Should It Be Hyphenated? ignores the parts of speech listed below. If a dictionary entry's functional label (part of speech) field includes one of those parts of speech, the app will omit that entry from
-                    the entry information it returns; however, it will still return the other entries for the search term.
+                <p>Should It Be Hyphenated? is a work in progress with a few minor limitations.</p>
+                <ul>
+                    <li style="margin-bottom: 1em">The app adheres to Chicago Manual of Style hyphenation standards and retrieves all definitions and spellings from Merriam-Webster's Collegiate Dictionary, one of the dictionaries recommended by the manual. When the Chicago Manual and the dictionary disagree on the hyphenation of a term,
+                    the app gives precedence to the manual.</li>
+                    <li style="margin-bottom: 1em">Currently, it does not support search terms with more than one hyphen; nor does it differentiate between compounds that should use a hyphen and compounds that should use an en dash.</li>
+                    <li style="margin-bottom: 1em">It does not return information on entries for <a href="https://dictionaryapi.com/products/json#term-ure:~:text=a%20sense.-,undefined%20entry%20word,-An%20undefined%20entry">undefined entry words</a> (i.e., entries that do not include a definition or a link to another
+                    entry with a definition).</li>
+                    <li style="margin-bottom: 1em">Should It Be Hyphenated? ignores the parts of speech listed below. If a dictionary entry's functional label (part of speech) field is set to one of those parts of speech, the app will not return information on that entry; however, it will still return the other entries for the search term.
                     <p>
                     <ul>
                         <li>Abbreviations</li>
@@ -74,18 +73,18 @@
                         <li>Symbols</li>
                         <li>Trademarks</li>
                     </ul>
-                    </li>
-                    
+                    </li> 
                 </ul>
-            <br>
-            <br>
-        </div>
-    <div class="column_container">
-    <div class="column_box" style="text-align: center">
-        <svg width="50" height="50">
-            <img src="./static/mw_logo.png" height="50" width="50"/>
-            </svg>
-        </div>
+                <br>
+                <br>
+            </div>
+
+        <div class="column_container">
+            <div class="column_box" style="text-align: center">
+                <svg width="50" height="50">
+                    <img src="./static/mw_logo.png" height="50" width="50"/>
+                </svg>
+            </div>
         </div>        
 
     </body>

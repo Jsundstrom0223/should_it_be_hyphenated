@@ -60,7 +60,7 @@ def is_def_duplicate(mw_entries, definition):
     """
     dupe_def = False
     for i in mw_entries:
-        for k, v in i.definition.items():
+        for _, v in i.definition.items():
             if v == definition:
                 dupe_def = True
     return dupe_def
@@ -165,7 +165,7 @@ def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxs):
                 dupe_def = is_def_duplicate(mw_entries, cxs_target_def)
                 if not dupe_def:
                     cxs_defs[part_of_speech] = cxs_target_def
-                
+
     for k, v in cxs_defs.items():
         mw_entries.append(Nonstandard(the_id, entry_type, k, {k:v}, cxt_only, cxl))
 
@@ -203,7 +203,7 @@ def main_entry_with_cxs(the_id, entry, mw_entries, part_of_speech, cxs):
     """
     cxl = cxs[0].get('cxl')
     cxt = cxs[0].get('cxtis')[0]['cxt']
- 
+
     def_of_term = get_entry_definition(entry)
     if def_of_term:
         dupe_def = is_def_duplicate(mw_entries, def_of_term)
@@ -217,7 +217,8 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
     """Handle entries that list the search term as an inflection, variant, or stem.
 
     If the search term (X) is a less common spelling or a conjugated form of another word (Y),
-    M-W may return the entry for Y (with Y's ID), with X listed as a variant, inflection, or stem of Y. 
+    M-W may return the entry for Y (with Y's ID), with X listed as a variant, inflection, or
+    stem of Y.
     For more information, see the following documentation:
     https://github.com/Jsundstrom0223/should_it_be_hyphenated/blob/main/api_explanation.md.
 
@@ -243,17 +244,17 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
         if term_is_variant:
             add, stem_defs, relation = variant_entry(entry, vrs, mw_entries, part_of_speech)
     elif inflections is not None:
-        term_is_inflection, inflection_label = is_inflection(inflections, search_term)
+        term_is_inflection, inf_label = is_inflection(inflections, search_term)
         if term_is_inflection:
-            add, stem_defs, relation = inflection_entry(entry, inflection_label, mw_entries, part_of_speech)
+            add, stem_defs, relation = inflection_entry(entry, inf_label, mw_entries, part_of_speech)
     else:
         term_is_stem = is_stem(stems, search_term)
         if term_is_stem:
-            add, stem_defs, relation = stem_entry(entry, mw_entries, part_of_speech) 
-   
+            add, stem_defs, relation = stem_entry(entry, mw_entries, part_of_speech)
+
     if not add:
         return
-    
+
     entry_type = "variant_or_cxs"
     if relation in Nonstandard.grouped.keys():
         for k in stem_defs.keys():
@@ -263,24 +264,25 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
                     new_cxt = here.cxt + " and " + the_id
                     here.cxt = new_cxt
                     here.entry_type = "one_diff_cxts"
-                    mw_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs, new_cxt, relation))
+                    mw_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs,
+                                                   new_cxt, relation))
                 break
-            else:
-                mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
-            
+            mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
+
     else:
         for k in stem_defs.keys():
             mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
 
 def check_alt_forms(search_term_chars, field_value):
-    """Check whether a dictionary entry's va, inf, or stems field contains a form of the search term.
+    """Check whether an entry's va, inf, or stems field contains a form of the search term.
     
     Arguments:
     search_term: The search term used in the API call (an element of the compound).
     field_value: The va, inf, or stems field of an entry.
 
     Returns:
-    match: A boolean value. True means that the search term is a variant, inflection, or stem of an open or hyphenated compound.
+    match: A boolean value. True means that the search term is a variant, inflection, or
+    stem of an open or hyphenated compound.
     """
     match = False
     splitters = [" ", "-"]
@@ -363,11 +365,11 @@ def is_inflection(inflections, search_term):
     
     Returns:
     term_is_inflection: A boolean. True means that the field contains the search term.
-    inflection_label: The il field (the search term's relationship to the headword).
+    inf_label: The il field (the search term's relationship to the headword).
     """
     term_is_inflection = False
-    inflection_label = None
-    
+    inf_label = None
+
     for i in inflections:
         inf = i.get('if')
         if inf is None:
@@ -375,21 +377,21 @@ def is_inflection(inflections, search_term):
         if "*" in inf:
             inf = inf.replace("*", "")
         if inf == search_term:
-            inflection_label = i.get('il')
+            inf_label = i.get('il')
             term_is_inflection = True
             break
 
         to_check = list(search_term)
         term_is_inflection = check_alt_forms(to_check, inf)
 
-    return term_is_inflection, inflection_label
+    return term_is_inflection, inf_label
 
-def inflection_entry(entry, inflection_label, mw_entries, part_of_speech):
+def inflection_entry(entry, inf_label, mw_entries, part_of_speech):
     """Get the information that is displayed to the user when the search term is an inflection.
     
     Arguments:
     entry: A dictionary entry returned by the API.
-    inflection_label: The search term's relationship to the headword (e.g.,
+    inf_label: The search term's relationship to the headword (e.g.,
     'present tense plural of').
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
@@ -402,12 +404,12 @@ def inflection_entry(entry, inflection_label, mw_entries, part_of_speech):
     relation: The search term's relationship to the headword (or a modified version of it).
     """
     relation = None
-  
+
     if part_of_speech == "verb":
-        if inflection_label is None or inflection_label == "or":
+        if inf_label is None or inf_label == "or":
             relation = "inflection (conjugated form) of"
         else:
-            relation = inflection_label
+            relation = inf_label
     else:
         relation = "variant of"
 
@@ -430,11 +432,11 @@ def is_stem(stems, search_term):
         term_is_stem = True
     else:
         to_check = list(search_term)
-        
+
         for stem in stems:
             if not term_is_stem:
                 term_is_stem = check_alt_forms(to_check, stem)
-            
+
     return term_is_stem
 
 def stem_entry(entry, mw_entries, part_of_speech):
@@ -455,10 +457,10 @@ def stem_entry(entry, mw_entries, part_of_speech):
     relation = None
     cxs = entry.get('cxs')
     if cxs is not None:
-        relation = cxs[0].get('cxl')   
+        relation = cxs[0].get('cxl')
     if relation is None:
         relation = "variant of"
-   
+
     add, stem_defs = get_stem_defs(entry, mw_entries, part_of_speech)
     return add, stem_defs, relation
 
