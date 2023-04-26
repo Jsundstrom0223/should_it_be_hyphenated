@@ -7,12 +7,13 @@
 ORDINALS = ['nd', 'rd', 'st', 'th']
 PERCENTS = ["percent", "percentage"]
 CURRENCY_UNITS = ["dollar", "dollars", "cent", "cents"]
+#All units are lowercased because user_input is lowercased in hyphenation_answer
 UNITS_OF_MEASUREMENT = [
-    "bps", "Bps", "cal", "Cal", "cc", "cm", "cps", "d", "dpi", "fps", "ft", "ft.", "g", "gal",
-    "Gb", "GB", "Gbps", "Gy", "hp", "Hz", "IU", "J", "kb", "kbit", "KB", "K", "Kbps", "kcal", "kg",
-    "kHz", "kJ", "kl", "km", "kmh", "kmph", "kn", "kW", "kWh", "L", "lb", "m", "Mb", "MB", "Mbps",
-    "mg", "mL", "mpg", "mph", "ms", "nm", "oz", "pH", "ppb", "ppm", "ppt", "pt", "qt", "rpm", 
-    "s", "sq", "st", "t", "Tb", "TB", "Tbps", "tbsp", "tsp", "V", "W", "wt" 
+    "bps", "cal", "cc", "cm", "cps", "d", "dpi", "fps", "ft", "ft.", "g", "gal",
+    "gb", "gbps", "gy", "hp", "hz", "iu", "j", "kb", "kbit", "kb", "k", "kbps", "kcal", "kg",
+    "khz", "kj", "kl", "km", "kmh", "kmph", "kn", "kw", "kwh", "l", "lb", "m", "mb", "mbps",
+    "mg", "ml", "mpg", "mph", "ms", "nm", "oz", "ph", "ppb", "ppm", "ppt", "pt", "qt", "rpm", 
+    "s", "sq", "st", "t", "tb", "tbps", "tbsp", "tsp", "v", "w", "wt" 
     ]
 
 CMOS_NUM_DICT = {"PCT": PERCENTS, "CURRENCY": CURRENCY_UNITS, "UNITS": UNITS_OF_MEASUREMENT}
@@ -31,9 +32,9 @@ CURRENCY_OUTCOME = ("Spelled-out amounts of money (e.g., 'million dollar' rather
 " '$1 million') should be hyphenated before a noun ('a million-dollar home') and left open"
 " after a noun ('a home worth a million dollars'). Note too that the Chicago Manual of"
 " Style recommends spelling out numbers under 100 in most cases; in technical"
-" contexts though, spelling out only single-digit numbers may be more appropriate.")
+" contexts, though, spelling out only single-digit numbers may be more appropriate.")
 
-UNIT_OUTCOME = ("Compounds consisting of a number and an abbreviated unit of measurement" 
+UNIT_OUTCOME = ("Compounds consisting of a number and an abbreviation"
 " (e.g., 'GB,' 'bps,' 'oz,' 'ft.,' etc.) should never be hyphenated. Note too that the"
 " number should be written as a numeral (i.e., '10' instead of 'ten').") 
         
@@ -44,7 +45,7 @@ FRACTION_GUIDANCE = ("The Chicago Manual of Style recommends spelling out simple
                      " hyphenated (e.g., 'one twenty-fifth'). If you choose to use numerals for"
                      " the numbers in a fraction (which may be appropriate in technical contexts),"
                      " the numerator and denominator should be separated by a horizontal bar or a"
-                     " slash, and both should be cardinal numbers (e.g., 1/5).")
+                     " slash, and both should be cardinal numbers (e.g., '1/5').")
 
 COMPARATIVE_ADVERBS = ["more", "most", "less", "least", "very"]
 ALWAYS_PREFIXES = ["self", "ex", "great"]
@@ -84,8 +85,8 @@ FIRST_ELEMENT_DICT = {"ADVS": COMPARATIVE_ADVERBS, "ALWAYS_PREFIXES": ALWAYS_PRE
 # SECOND_ELEMENT_LISTS = [SECOND_ALWAYS]
 
 CMOS_ADVS = ("Compounds consisting of 'more,' 'most,' 'less,' 'least,' or 'very'"
-" and an adjective or participle (e.g., 'a more perfect nation,' 'the least traveled"
-" path' do not need to be hyphenated unless there is a risk of misinterpretation.")
+" and an adjective or a participle (e.g., 'a more perfect nation,' 'the least traveled"
+" path') do not need to be hyphenated unless there is a risk of misinterpretation.")
 
 CMOS_ALWAYS_PREFIXES = ("With very few exceptions, compounds beginning with the prefixes"
 " 'self', 'ex', and 'great' should be hyphenated. The few exceptions apply to 'self,'"
@@ -118,8 +119,8 @@ FIRST_ELEMENT_OUTCOMES = {
 #compounds ("cash-poor").
 
 NUM_SUPERLATIVE = ("A compound formed from an ordinal number and a superlative should be"
-                   " hyphenated before but not after a noun (e.g., 'the second-best player'"
-                   " but 'ranked the second best).")
+                   " hyphenated before a noun (e.g., 'the second-largest database') but"
+                   " otherwise left open ('ranked the second largest).")
 
 NUM_NOUN = ("A number-noun compound should be hyphenated before a noun (e.g., 'two-factor"
             " authentication'); otherwise, it should be left open ('authenticate using two"
@@ -129,24 +130,25 @@ BY_PART_NUM = {"SUPERLATIVE": NUM_SUPERLATIVE, "NOUN": NUM_NOUN}
 
 NOUN_NOUN = ("If the elements of a two-noun compound are equal (as in 'city-state' and"
              " 'philosopher-king'), the compound should be hyphenated. If the first element"
-             " modifies the second (e.g., 'insider threat') and the compound is being used as"
-             " a noun, it should be left open. If the compound precedes a noun and is being used"
-             " as an adjective, it should be hyphenated (e.g., 'a career-transition workshop,' in"
-             " which 'career' modifies 'transition').")
+             " describes the second and the compound is being used as a noun, it should be"
+             " written as two words (e.g., 'insider threat'); however, if the compound precedes"
+             " a noun and is being used as an adjective, it should be hyphenated (e.g.,"
+             " 'a career-transition workshop,' in which 'career' describes 'transition').")
 
 NOUN_PARTICIP_INFL = ("A compound formed from a noun and a present or past participle should be"
-                      " hyphenated before but not after a noun (e.g., 'security-focused"
-                      " configuration management' or 'an error-handling issue' but 'sound error"
-                      " handling'). If the second element of the compound is another form of a"
-                      " verb, like the present tense of a verb ('focuses'), the compound should"
-                      " likely be left open.")
+                      " hyphenated before a noun but otherwise left open (e.g.,"
+                      " 'security-focused configuration management' and 'an error-handling"
+                      " issue' but 'sound error handling'). If a noun is followed by another"
+                      " form of a verb, like the present tense of a verb ('focuses'), the pair"
+                      " should be written as two words.")
 
-NOUN_ADJ = ("A noun-adjective compound should be hyphenated if it precedes a noun, as in"
-            " 'a cash-poor homeowner.'")
+NOUN_ADJ = ("A noun-adjective compound should be hyphenated before a noun but otherwise"
+            " left open (e.g., 'a beginner-friendly interface' but 'designed to be"
+            " beginner friendly').")
 
-NOUN_ADV = ("Some noun-adverb compounds, like 'hanger-on', are hyphenated; however, because"
+NOUN_ADV = ("Some noun-adverb compounds, like 'hanger-on,' are hyphenated; however, because"
             " the compound you entered is not in Merriam-Webster's Collegiate® Dictionary, it"
-            " should likely be left open.")
+            " should likely be written as two words.")
 
 BY_PART_NOUN = {
     "NOUN": NOUN_NOUN,
@@ -158,24 +160,23 @@ BY_PART_NOUN = {
 VERB_NOUN = ("When a verb-noun pair forms a compound, it is generally closed up (e.g., 'pick'"
              " + 'pocket' = 'pickpocket') and listed in Merriam-Webster's Collegiate® Dictionary"
              " as such; because the verb-noun pair you entered is not in that dictionary, it"
-             " should likely be left open.")
+             " should likely be written as two words.")
 
 VERB_ADVERB_OR_PREP = ("Since Merriam-Webster's Collegiate® Dictionary does not list the term you"
-                       " entered as a compound, it should likely be left open. There may be edge"
-                       " cases not included in the dictionary, though, so read on for a quick word"
-                       " on the treatment of verb-adverb and verb-preposition pairs.\n\n"
-                       " A verb followed by a preposition or adverb can be hyphenated, left open,"
+                       " entered as an established compound, it should likely be written as two"
+                       " words (i.e., left open). There may be edge cases not included in the"
+                       " dictionary, though, so read on for a quick word on the treatment of"
+                       " verb-adverb and verb-preposition pairs.\n\n"
+                       "A verb followed by a preposition or an adverb can be hyphenated, left open,"
                        " or closed up; it all depends on how the pair of words is functioning. Pairs"
                        " that are being used as verbs (i.e., phrasal verbs) are not hyphenated,"
                        " although their noun or adjectival equivalents may be hyphenated or closed"
-                       " up. For example, take 'back up.' As a phrasal verb--'Back up your files'--"
-                       "there's no hyphen. As a noun, the term is closed up ('data backup'). Note"
-                       " too that if the second word in the pair is a two-letter particle like 'by,'"
-                       " 'in,' or 'up', a hyphen is likely appropriate.")
+                       " up. For example, take 'back up.' As a phrasal verb ('back up your files'),"
+                       " there's no hyphen. As a noun, the term is written as one word ('data"
+                       " backup').")
 
 VERB_OTHER = ("Because the second element of the compound you entered is not an adverb, a"
-              " a preposition, or a noun, the compound should likely be left open. (i.e.,"
-              " written as two words).")
+              " preposition, or a noun, the compound should likely be written as two words.")
 
 BY_PART_VERB = {
     "NOUN": VERB_NOUN,
@@ -186,8 +187,8 @@ BY_PART_VERB = {
 
 ADJ_NOUN_OR_PARTICIP = ("If an adjective-noun or adjective-participle compound appears before"
                         " a noun, it should be hyphenated (e.g., 'a primary-key error,' 'a "
-                        " hard-coded value'). Otherwise, it should probably be left open"
-                        " (i.e., written as two words).")
+                        " hard-coded value'). Otherwise, it should probably be written as two"
+                        " words.")
 
 ADJ_VERB = ("If the verb in an adjective-verb compound is an irregular verb like 'run,' the"
             " past participle of which is also 'run,' the compound may be hyphenated before a"
@@ -196,12 +197,13 @@ ADJ_VERB = ("If the verb in an adjective-verb compound is an irregular verb like
 BY_PART_ADJ = {"ADJECTIVE": ADJ_NOUN_OR_PARTICIP, "PARTICIPLE": ADJ_NOUN_OR_PARTICIP, "VERB": ADJ_VERB}
 
 BY_PART_PARTICIPLE_NOUN = ("A participle-noun compound should be hyphenated before but not after a"
-                           " noun (e.g., 'a cutting-edge solution' but 'on the cutting edge').")
+                           " noun (e.g., 'a cutting-edge solution' but 'a solution on the cutting"
+                           " edge').")
 
-BY_PART_ADVERB_ADJ_OR_PARTICIP = ("A compound formed from an adverb and an adjective or an adverb"
-                                  " and a participle should be hyphenated if it appears before a"
-                                  " noun (e.g., 'a well-documented codebase'). Otherwise, it should"
-                                  " be left open ('The codebase is well documented').")
+BY_PART_ADVERB_ADJ_OR_PARTICIP = ("A compound formed from an adverb and an adjective or a participle"
+                                  " should be hyphenated if it appears before a noun (e.g.,"
+                                  " 'a well-documented codebase'). Otherwise, it should be written"
+                                  " as two words (e.g., 'not well documented').")
 
 #__________________________________________________________________________________________
 #The following constants define the grammar terms listed on the "Brush Up
@@ -214,35 +216,35 @@ ADJ_DEF = ("An adjective is a word that modifies (describes) a noun or pronoun, 
            " modifying the noun 'concerns' and is therefore functioning as an adjective.")
 
 ADV_DEF = ("An adverb is a word that modifies (describes) a verb, an adjective, or another"
-           " adverb. Adverbs answer questions like 'how?' (e.g., 'thoroughly,' 'sufficiently,'"
-           " 'securely,' etc.) and 'when?' (e.g., 'late,' 'early,' etc.).")
+           " adverb. Adverbs answer questions like 'How?' (thoroughly, sufficiently,"
+           " securely, etc.) and 'When?' (late, early, etc.).")
 
 COMP_DEF = ("A compound consists of multiple words working together to express a single idea."
-            " There are three types of compounds: closed (e.g., 'upstream'), open (e.g., 'web"
-            " page'), and hyphenated (e.g., 'zero-day'). While some compounds are always written"
-            " the same way, many compounds change on the basis of context and use. For example," 
-            " as a noun, 'denial of service' should be left open ('suffered a denial of service'),"
-            " but as an adjective, it should be hyphenated (a 'denial-of-service attack').")
+            " There are three types of compounds: closed (that is, one word, like 'upstream'), open"  " (two words, like 'web page'), and hyphenated (e.g., 'zero-day'). Some compounds are"
+            " always written the same way, but many take different forms depending on their use."
+            " For example, as a noun, 'denial of service' should be left open ('experienced a denial"
+            " of service'), but as an adjective, it should be hyphenated (a 'denial-of-service"
+            " attack').")
 
 NOUN_DEF = ("A noun is a word that names a person, place, or thing. There are two kinds of nouns,"
             " common and proper. Common nouns name generic people, places, or things (e.g.,"
             " 'programming language'), and proper nouns name specific people, places, or things"
             " and are usually capitalized (e.g., 'Python').")
 
-PART_DEF = ("A participle is a word that is derived from a verb and is used as a modifier."
-            " There are two kinds of participles, present and past participles. In general,"
-            " the present participle of a verb is the '-ing' form of the verb (e.g., 'running')."
-            " The past participle of a regular verb is the simple past tense of the verb, but"
-            " irregular verbs do not follow that rule. Some irregular verbs (like 'write') have"
-            " separate past participles ('written,' not 'wrote'); for others, like ‘run,’ the"
-            " past participle is the same as the verb’s past tense and base form.\n\n"
-            " Participles are used as adjectives or as part of other tenses. For example, in the"
+PART_DEF = ("A participle is a word derived from a verb. There are two kinds of participles,"
+            " present and past participles. In general, the present participle of a verb is the"
+            " '-ing' form of the verb (e.g., 'running'). The past participle of a regular verb"
+            " is the simple past tense of the verb, but irregular verbs don't follow that rule."
+            " Some irregular verbs (like 'write') have separate past participles ('written,'"
+            " not 'wrote'); for others, like ‘run,’ the past participle is the verb’s past tense"
+            " and base form.\n\n"
+            "Participles are used as adjectives or as part of other tenses. For example, in the"
             " phrase 'a running container,' the participle 'running' is functioning as an"
             " adjective modifying 'container.' In 'We are testing the new functionality,'"
             " 'testing' and 'are' together form the present continuous tense.")
 
-VERB_DEF = ("A verb is a word that describes an action (e.g., 'to deploy') "
-"or a condition or state of being (e.g., 'to need' or 'to involve').")
+VERB_DEF = ("A verb describes an action (e.g., 'deploy') or a condition or state of being"
+            " (e.g., 'need' or 'involve').")
 
 PART_OF_SPEECH_DEFS = {
     "adjective": ADJ_DEF,

@@ -113,10 +113,11 @@ class ExistingCompound(StandardEntry):
             self.to_display = "Open compound (two words)"
         else:
             if self.entry_type == "closed compound":
+                self.with_article = "a closed compound"
                 self.to_display = "Closed compound (one word)"
             else:
+                self.with_article = f"a hyphenated compound"
                 self.to_display = "Hyphenated compound"
-            self.with_article = f"a hyphenated compound"
 
 class NoEntries():
     def __init__(self, search_term):

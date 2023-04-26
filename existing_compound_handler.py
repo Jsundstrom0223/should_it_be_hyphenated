@@ -129,7 +129,7 @@ def in_mw_as_variant(compound_type, entry, compound):
 
     if compound_type == "closed compound":
         outcome = ("Merriam-Webster's Collegiate® Dictionary lists the search term you entered,"
-                   f" '{compound.full},' as {article_before_relation} {entry.relation} "
+                   f" '{compound.full},' as {article_before_relation} {entry.relation}"
                    f" '{entry.cxt},' which is a {compound_type}. As such, it should be written as"
                    f" one word.\n\nThe definition of '{entry.cxt}' is as follows:")
 
@@ -140,11 +140,11 @@ def in_mw_as_variant(compound_type, entry, compound):
                          " compound.\n\n")
 
         if entry.part in before_a_noun:
-            outcome = (f"{comp_is_open}However, because the compound is a {article_before_part} {entry.part}, it"
-                       " should likely be hyphenated when used before a noun. As the Chicago"
-                       " Manual of Style (section 7.85) says, 'it is never incorrect to hyphenate"
-                       f" adjectival compounds before a noun.'\n\nThe definition of '{entry.cxt}'"
-                       " is as follows:")
+            outcome = (f"{comp_is_open}However, because the compound is {article_before_part}"
+                       f" {entry.part}, it should likely be hyphenated if it precedes a noun."
+                       " As the Chicago Manual of Style (section 7.85) says, 'it is never"
+                       " incorrect to hyphenate adjectival compounds before a noun.'\n\n"
+                       f" The definition of '{entry.cxt}' is as follows:")
         else:
             outcome = (f"{comp_is_open}Because '{entry.cxt}' is {article_before_part}"
                        f" {entry.part}, it should likely be left open in all cases.\n\nThe"
@@ -171,7 +171,7 @@ def existing_hyphenated_compound(entry, compound):
     outcome: A string summarizing the dictionary entry and explaining whether the
     compound should be hyphenated.
     """
-    adj_caveat = ("Although the dictionary lists the term as a hyphenated compound, it should"
+    adj_caveat = ("\n\nAlthough the dictionary lists the term as a hyphenated compound, it should"
                   " likely be hyphenated before but not after a noun. As the Chicago Manual of"
                   " Style (section 7.85) says, 'It is never incorrect to hyphenate adjectival"
                   " compounds before a noun. When such compounds follow the noun they modify,"
@@ -182,7 +182,7 @@ def existing_hyphenated_compound(entry, compound):
         article_before_relation = get_article(entry.relation)
         comp_is_variant = ("According to Merriam-Webster's Collegiate® Dictionary, the search term"
                        f" you entered, '{compound.full},' is {article_before_relation}"
-                       f" {entry.relation} of '{entry.cxt}' and is {article_before_part}"
+                       f" {entry.relation} '{entry.cxt}' and is {article_before_part}"
                        f" {entry.part}. You should likely use '{entry.cxt}' instead of"
                        f" '{compound.full}.'\n\n")
 
@@ -233,6 +233,6 @@ def format_outcome_header(compound_types, compound):
             final_types = "".join(compound_types)
 
         header = f'''Merriam-Webster's Collegiate® Dictionary lists '{compound.full}' as 
-        {final_types}. This means that the hyphenation of the compound depends on its use. Details on the compound are provided below.'''
-    print(header)
+        {final_types}. This means that the treatment of the term depends on its use. Details are provided below.'''
+    
     return header

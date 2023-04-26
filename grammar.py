@@ -85,23 +85,23 @@ def check_cmos_num_rules(compound, idx_and_type):
 
     if len(idx_and_type) == 2:
         if idx_and_type[0] == "cardinal":
-            correct_fraction = (f"The input you entered, {compound.full}, appears to be"
+            correct_fraction = (f"The search term you entered, {compound.full}, appears to be"
             " a simple fraction.")
-            outcome = correct_fraction + FRACTION_GUIDANCE
+            outcome = correct_fraction + "\n\n" + FRACTION_GUIDANCE
 
         elif all(num_type in ORDINALS for num_type in idx_and_type.values()):
-            two_ordinals =  (f"The input you entered, {compound.full}, appears to be"
+            two_ordinals =  (f"The search term you entered, {compound.full}, appears to be"
             " a fraction, but it consists of two ordinal numbers (e.g., '10th' instead"
             " of '10'). Although the denominator in a spelled-out fraction can be an"
             " ordinal ('one-fifth'), the numerator should not be.")
             outcome = two_ordinals + "\n\n" + FRACTION_GUIDANCE
 
         else:
-            numerator_ord = (f"The input you entered, {compound.full}, appears to be"
+            numerator_ord = (f"The search term you entered, {compound.full}, appears to be"
             " a fraction, but the numerator is an ordinal number (e.g., '10th' instead"
             " of '10'). Although the denominator in a spelled-out fraction can be an"
-            " ordinal ('one-fifth'), the numerator should not be. If the input is not" 
-            " intended to be a fraction--i.e., the first element is meant to describe"
+            " ordinal ('one-fifth'), the numerator should not be. If the term is not" 
+            " intended to be a fraction--i.e., the first number is meant to describe"
             " the second, as in 'the first two years of life'--the compound should not"
             " be hyphenated.")
             outcome = numerator_ord + "\n\n" + FRACTION_GUIDANCE
@@ -174,9 +174,9 @@ def cmos_rules(selected):
 
     if final_outcome is None:
         final_outcome = ("There are no Chicago Manual of Style standards regarding"
-        " the compound you entered, and the compound is not in the dictionary. The"
-        " compound should likely be left open (i.e., written as two words) regardless"
-        " of its position in a sentence.")
+        " the compound you entered, and the compound is not in the dictionary. It"
+        " should likely be left open (i.e., written as two words) regardless of its"
+        " position in a sentence.")
         final_header = ""
 
     return final_outcome, final_header
