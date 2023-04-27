@@ -1,4 +1,4 @@
-"""Parse the individual dictionary entries in the API response.
+"""Parse the individual dictionary entries in an API response.
 
 Functions:
 -get_entry_id
@@ -34,10 +34,13 @@ def get_entry_id(entry):
     return the_id
 
 def get_entry_definition(entry):
-    """Get the definition of an M-W entry returned by the API."""
-    if entry.get('shortdef') is not None:
-        raw_def = entry['shortdef']
-    else:
+    """Get the definition of an M-W entry returned by the API.
+    
+    If a shortdef field (i.e., a field listing only the definitions for the first three senses)
+    is available, get the shortdef value instead of the full definition.
+    """
+    raw_def = entry.get('shortdef')
+    if raw_def is None:
         raw_def = entry.get('def')
 
     def_of_term = "; ".join(raw_def)
@@ -63,13 +66,15 @@ def is_def_duplicate(mw_entries, definition):
         for _, v in i.definition.items():
             if v == definition:
                 dupe_def = True
+               
     return dupe_def
 
 def is_part_duplicate(mw_entries, part_of_speech, definition):
     """Check whether the part of speech of the entry to be added to mw_entries is unique.
     
-    If the entry has the same part of speech as an existing entry in mw_entries, combine
-    the two entries.
+    If the entry has the same part of speech as an existing standard entry in mw_entries, 
+    combine the two entries. Ignore nonstandard entries because they include additional
+    information that should not be combined.
     
     Arguments:
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
@@ -81,31 +86,29 @@ def is_part_duplicate(mw_entries, part_of_speech, definition):
     dupe_part: A boolean value. True means that the definition is a duplicate.
     """
     dupe_part = False
-    standards = [r for r in mw_entries if r.entry_type == "main_entry" and
-    r.part == part_of_speech]
+    standards = [entry for entry in mw_entries if entry.entry_type == "main_entry" and 
+                 entry.part == part_of_speech]
 
-    ##test with multiples (multiple defs for same part)
+    ##Shouldn't be more than two duplicates in a single API response
     for i in standards:
         if i.part == part_of_speech:
             combined_defs = "; ".join([i.definition[part_of_speech], definition[part_of_speech]])
             i.definition[part_of_speech] = combined_defs
             dupe_part = True
-
+   
     return dupe_part
 
 def get_cxt_search_term(cxt):
     """Get the search term that will be used in an additional API call.
     
-    Check whether the search term to be used in an additional API call (the value of an
-    entry's cxt field) includes a colon and split it if so. Also check whether it is two
-    words; if it is, URL encode the space character. (See cognate_cross_reference's
-    docstring for additional info.)
+    Check whether that search term (the value of an entry's cxt field) includes a colon
+    and split it if so. Also check whether it is two words; if it is, URL encode the space character. (See cognate_cross_reference's docstring for additional info.)
     
     Argument: 
     cxt: The entry's cxt field, which indicates the term being referenced in the entry.
     
     Returns:
-    cxt_search_term: The search_term to be used in the new API query.
+    cxt_search_term: The search term to be used in the new API query.
     cxt_only: The value of the cxt field, without any colons or numerals.
     """
     if ":" in cxt:
@@ -122,18 +125,18 @@ def get_cxt_search_term(cxt):
     return cxt_search_term, cxt_only
 
 def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxs):
-    """Handle incomplete entries that have a cognate cross-reference (cxs) field.
+    """Parse information on a dictionary entry's cross-reference target (CXT).
     
-    Get the definition and part of speech of an entry's cross-reference target (cxt) and 
-    create an instance of the Nonstandard class for the entry.
+    Get the definition and part of speech of an entry's CXT and create an instance of the 
+    Nonstandard class for the entry.
 
     (If an entry for a word (X) has a cxs field, the word is a less common spelling or
     a form of another word, its cxt. The entry for X may not have its own definition or part
-    of speech field.)
+    of speech field. In that case, the API will be called to retrieve entries for the CXT.)
 
     Arguments:
-    the_id: The headword of the entry (the term being defined).
-    cxs_mw_response: The API's response to the new query, in which the entry's cxt is 
+    the_id: The headword of an entry (the term being defined).
+    cxs_mw_response: The API's response to a new query in which the entry's CXT is 
     the search term.
     mw_entries: A list of StandardEntry and Nonstandard class instances--i.e., 
     entry information that will be returned to the user.
@@ -145,12 +148,13 @@ def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxs):
     part_of_speech = None
     entry_type = "variant_or_cxs"
 
-    for i in cxs_mw_response:
-        part_of_speech = i.get('fl')
-        #If the original search term is a verbal inflection, retrieve only verb definitions.
+    for entry in cxs_mw_response:
+        part_of_speech = entry.get('fl')
+        #If the original search term is a verbal inflection (e.g., "lit"), retrieve only verb 
+        # definitions.
         if "tense" in cxl or "participle" in cxl:
             if part_of_speech == "verb":
-                cxs_target_def = get_entry_definition(i)
+                cxs_target_def = get_entry_definition(entry)
                 dupe_def = is_def_duplicate(mw_entries, cxs_target_def)
                 if not dupe_def:
                     cxs_defs[part_of_speech] = cxs_target_def
@@ -159,7 +163,7 @@ def cognate_cross_reference(the_id, cxs_mw_response, mw_entries, cxt_only, cxs):
             if part_of_speech in IGNORED_PARTS_OF_SPEECH:
                 continue
 
-            cxs_target_def = get_entry_definition(i)
+            cxs_target_def = get_entry_definition(entry)
             if cxs_target_def:
                 cxs_defs[part_of_speech] = cxs_target_def
                 dupe_def = is_def_duplicate(mw_entries, cxs_target_def)
@@ -207,7 +211,6 @@ def main_entry_with_cxs(the_id, entry, mw_entries, part_of_speech, cxs):
     def_of_term = get_entry_definition(entry)
     if def_of_term:
         dupe_def = is_def_duplicate(mw_entries, def_of_term)
-
         if not dupe_def:
             definition = {part_of_speech: def_of_term}
             entry_type = "variant_or_cxs"
@@ -231,11 +234,10 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
     part_of_speech: The part of speech of the headword.
     """
     add = False
-
     vrs = entry.get('vrs')
     inflections = entry.get('ins')
     stems = entry['meta'].get('stems')
-
+   
     if vrs is None and inflections is None and stems is None:
         return
 
@@ -255,23 +257,24 @@ def var_inf_or_stem(the_id, search_term, entry, mw_entries, part_of_speech):
     if not add:
         return
 
+    #A single term can be a variant, inflection, stem, or cognate cross-reference of multiple terms; if it has the same relation to multiple terms (i.e., is a less common spelling of them), some entry information may be combined.
     entry_type = "variant_or_cxs"
-    if relation in Nonstandard.grouped.keys():
-        for k in stem_defs.keys():
-            here = Nonstandard.grouped[relation]
-            if here.part == k:
-                if the_id != here.cxt:
-                    new_cxt = here.cxt + " and " + the_id
-                    here.cxt = new_cxt
-                    here.entry_type = "one_diff_cxts"
-                    mw_entries.append(Nonstandard(the_id, "one_diff_cxts", k, stem_defs,
+    if relation in Nonstandard.relations.keys():
+        for part in stem_defs.keys():
+            existing_entry = Nonstandard.relations[relation]
+            if existing_entry.part == part:
+                if the_id != existing_entry.cxt:
+                    new_cxt = existing_entry.cxt + " and " + the_id
+                    existing_entry.cxt = new_cxt
+                    existing_entry.entry_type = "one_diff_cxts"
+                    mw_entries.append(Nonstandard(the_id, "one_diff_cxts", part, stem_defs,
                                                    new_cxt, relation))
                 break
-            mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
+            mw_entries.append(Nonstandard(the_id, entry_type, part, stem_defs, the_id, relation))
 
     else:
-        for k in stem_defs.keys():
-            mw_entries.append(Nonstandard(the_id, entry_type, k, stem_defs, the_id, relation))
+        for part in stem_defs.keys():
+            mw_entries.append(Nonstandard(the_id, entry_type, part, stem_defs, the_id, relation))
 
 def check_alt_forms(search_term_chars, field_value):
     """Check whether an entry's va, inf, or stems field contains a form of the search term.

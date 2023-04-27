@@ -2,6 +2,18 @@
 from classes import ExistingCompound
 
 def parse_existing_comps(existing_comps, compound):
+    """Begin the process of parsing dictionary entries for existing compounds.
+    
+    Arguments:
+    existing_comps: A list of StandardEntry and Nonstandard class instances--i.e., information
+    about dictionary entries.
+    compound: A named tuple with four named fields. Holds information about the
+    user-provided compound and open and closed versions of it.
+    
+    Returns:
+    outcome: A list of strings summarizing the entries for existing compounds and explaining 
+    whether the compounds should be hyphenated.
+    """
     outcome = []
     if len(existing_comps) > 1:
         unique_entries = get_unique_entries(existing_comps)
@@ -14,6 +26,7 @@ def parse_existing_comps(existing_comps, compound):
     return outcome
 
 def get_unique_entries(existing_comps):
+    """Check existing_comps for duplicate entries and return all unique entries."""
     defs_only = [i.definition for i in existing_comps if i.entry_type == "main_entry"]
     entry_and_def = {i: i.definition for i in existing_comps if i.entry_type == "main_entry"}
 
