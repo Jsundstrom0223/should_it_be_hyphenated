@@ -25,7 +25,7 @@ class StandardEntry():
                 self.definition[k] = v.capitalize()
 
 class Nonstandard(StandardEntry):
-    grouped = {}
+    relations = {}
     def __init__(self, the_id, entry_type, part, definition, cxt, relation):
         super().__init__(the_id, entry_type, part, definition)
         self.cxt = cxt
@@ -38,7 +38,7 @@ class Nonstandard(StandardEntry):
             else:
                 self.menu_option = self.part
 
-        Nonstandard.grouped[relation] = self
+        Nonstandard.relations[relation] = self
         self.to_display = None
 
     def shorten_verb_labels(self):

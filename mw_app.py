@@ -354,7 +354,7 @@ def check_compound(mw_response, compound):
         answer_ready, outcome, outcome_type, header = handle_separately(compound)
 
     results = Results(answer_ready, outcome, outcome_type, header)
-    Nonstandard.grouped = {}
+    Nonstandard.relations = {}
     
     return results
 
