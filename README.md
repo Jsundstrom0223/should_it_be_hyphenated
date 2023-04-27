@@ -35,9 +35,10 @@ compound you entered
 (e.g., "well-being"), a closed compound (e.g., "hardworking"), or an open compound
 (e.g., "close call")
 
-Otherwise, Should It Be Hyphenated? will need to use the part of speech of each element to make 
-its determination--and you'll need to tell it which part of speech to use. (Don't worry--it's a quick and easy process. And if you're a bit rusty on the parts of speech, you can  
-[brush up on your grammar](https://should-it-be-hyphenated-kmfc.onrender.com/_terms) before getting started.)
+Otherwise, Should It Be Hyphenated? will use the part of speech of each element of the compound
+to make its determination--and you'll need to tell it which part of speech to use. (Don't worry; it's 
+a quick and easy process. And if you're a bit rusty on the parts of speech, you 
+can [brush up on your grammar](https://should-it-be-hyphenated-kmfc.onrender.com/_terms) before getting started.)
 
 **Example 1: An immediate answer**
 
