@@ -104,10 +104,10 @@ user.
     speech) fields.
 
     The user receives the following information about a "CXS entry":  
-    -The CXT itself and the headword's relationship to the CXT (or an abbreviated  
+    - The CXT itself and the headword's relationship to the CXT (or an abbreviated  
     version of that relationship)  
-    -The CXT's part of speech  
-    -The CXT's definition  
+    - The CXT's part of speech  
+    - The CXT's definition  
 
     **Example (search term: "lit")**  
     Verb: Participle of light  
@@ -131,9 +131,9 @@ user.
     functional label and definition in addition to a `cxs` field. 
 
     The user receives the following information about a "main entry with CXS":  
-    -The CXT itself and the headword's relationship to the CXT (or an abbreviated  
+    - The CXT itself and the headword's relationship to the CXT (or an abbreviated  
     version of that relationship)  
-    -The headword's part of speech and definition  
+    - The headword's part of speech and definition  
 
     **Example (search term: "baloney")**  
     Noun: Less common spelling of bologna  
@@ -160,9 +160,9 @@ user.
 
     Otherwise, the user will receive the following information about a "variant, inflection,  
     or stem" entry:  
-    -The headword itself and the search term's relationship to the headword (or an  
+    - The headword itself and the search term's relationship to the headword (or an  
     abbreviated version of that relationship)  
-    -The headword's part of speech and definition  
+    - The headword's part of speech and definition  
 
     **Example (search term: "adaptor")**  
     Noun: Less common spelling of adapter  
