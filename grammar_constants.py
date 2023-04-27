@@ -129,11 +129,13 @@ NUM_NOUN = ("A number-noun compound should be hyphenated before a noun (e.g., 't
 BY_PART_NUM = {"SUPERLATIVE": NUM_SUPERLATIVE, "NOUN": NUM_NOUN}
 
 NOUN_NOUN = ("If the elements of a two-noun compound are equal (as in 'city-state' and"
-             " 'philosopher-king'), the compound should be hyphenated. If the first element"
+             " 'philosopher-king'), the compound should be hyphenated.\n\nIf the first element"
              " describes the second and the compound is being used as a noun, it should be"
-             " written as two words (e.g., 'insider threat'); however, if the compound precedes"
-             " a noun and is being used as an adjective, it should be hyphenated (e.g.,"
-             " 'a career-transition workshop,' in which 'career' describes 'transition').")
+             " written as two words (e.g., 'insider threat'). \n\nHowever, if the compound"
+             " precedes a noun and is being used as an adjective, it should be hyphenated."
+             " For example, take 'career-transition workshop.' The compound is hyphenated"
+             " because 'career' describes 'transition' and 'career transition' describes"
+             " 'workshop.'")
 
 NOUN_PARTICIP_INFL = ("A compound formed from a noun and a present or past participle should be"
                       " hyphenated before a noun but otherwise left open (e.g.,"
@@ -185,16 +187,21 @@ BY_PART_VERB = {
     "VERB_OTHER": VERB_OTHER
     }
 
-ADJ_NOUN_OR_PARTICIP = ("If an adjective-noun or adjective-participle compound appears before"
-                        " a noun, it should be hyphenated (e.g., 'a primary-key error,' 'a "
-                        " hard-coded value'). Otherwise, it should probably be written as two"
-                        " words.")
+ADJ_PARTICIP = ("An adjective-participle compound should be hyphenated if it appears"
+                " before a noun (e.g., 'a hard-coded value'). Otherwise, it should likely"
+                " be written as two words.")
 
-ADJ_VERB = ("If the verb in an adjective-verb compound is an irregular verb like 'run,' the"
-            " past participle of which is also 'run,' the compound may be hyphenated before a"
-            " noun. Otherwise, it should likely be left open (i.e., written as two words).")
+ADJ_NOUN = ("An adjective-noun compound should be hyphenated if it appears before a noun"
+            " (e.g., 'primary-key error'). Otherwise, it should likely be written as two words.")
+            
+ADJ_VERB = ("A compound formed from an adjective and a verb should likely be written as"
+            " two words. However, if the second element is a participle, the compound"
+            " should likely be hyphenated before a noun. (Recall that a participle is a word that's derived from"
+            " a verb and functions as an adjective. Many participles end in '-ing' or '-ed.'"
+            " Examples include 'running' in the phrase 'running container' and 'documented' in"
+            " 'well-documented codebase.')")
 
-BY_PART_ADJ = {"ADJECTIVE": ADJ_NOUN_OR_PARTICIP, "PARTICIPLE": ADJ_NOUN_OR_PARTICIP, "VERB": ADJ_VERB}
+BY_PART_ADJ = {"PARTICIPLE": ADJ_PARTICIP, "NOUN": ADJ_NOUN, "VERB": ADJ_VERB}
 
 BY_PART_PARTICIPLE_NOUN = ("A participle-noun compound should be hyphenated before but not after a"
                            " noun (e.g., 'a cutting-edge solution' but 'a solution on the cutting"

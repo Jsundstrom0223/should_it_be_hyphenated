@@ -1,7 +1,7 @@
 """Handle grammar-related checks and prepare the grammar explanations returned to the user."""
 
 from collections import namedtuple
-from grammar_constants import (ADJ_NOUN_OR_PARTICIP, ADJ_VERB,
+from grammar_constants import (BY_PART_ADJ, ADJ_VERB,
 BY_PART_ADVERB_ADJ_OR_PARTICIP, BY_PART_NOUN, BY_PART_PARTICIPLE_NOUN, BY_PART_VERB,
 CMOS_NUM_DICT, CMOS_NUM_OUTCOMES, FIRST_ELEMENT_DICT, FIRST_ELEMENT_OUTCOMES,
 FRACTION_GUIDANCE, NUM_SUPERLATIVE, NUM_NOUN, ORDINALS)
@@ -160,8 +160,10 @@ def cmos_rules(selected):
             final_outcome = BY_PART_VERB["VERB_OTHER"]
 
     if selected[0] == "adjective":
-        if selected[1] == "noun" or "participle" in selected[1]:
-            final_outcome = ADJ_NOUN_OR_PARTICIP
+        if selected[1] == "noun":
+            final_outcome = BY_PART_ADJ[selected[1].upper()]
+        if selected[1] == "participle":
+                final_outcome = BY_PART_ADJ[selected[1].upper()]
         if selected[1] == "verb" or selected[1] == "inflection (conjugated form)":
             final_outcome = ADJ_VERB
 
