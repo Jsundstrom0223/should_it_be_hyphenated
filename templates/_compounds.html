@@ -9,7 +9,7 @@
 {% macro pick_a_part(name, i_r='') -%}
     <div class="column_container">
         <div class="column_box">
-            <p style="font-size: 1.25em"> Merriam-Webster's Collegiate® Dictionary lists the following definitions and senses for the words in your search term. For each part of your search term, review the definitions and associated senses; then select the part of speech that most closely matches your use from the drop-down menu.</p>
+            <p style="font-size: 1.25em"> Merriam-Webster's Collegiate® Dictionary lists the following definitions of the elements of your compound. Please review the definitions of each element and pick the one that best matches your use of the element; then select the corresponding part of speech from the drop-down menu.</p>
         </div>
     
 
@@ -92,7 +92,7 @@
             <div class="column_box">
             <h2>Enter a Compound Term</h2>
             {% if not mistake %}
-                <p>Please enter a term that you think may be hyphenated. Your search term
+                <p>Please enter a term that you think may be hyphenated. The term
                 should include only one hyphen with no spaces around it (e.g., "well-documented").</p>
                 
                 <ul>Guidelines:
@@ -108,8 +108,7 @@
                 <p>Once you've entered a compound, you may receive an explanation of whether the term 
                 should be hyphenated, or you may be asked to provide a bit more information on the elements
                 of the compound. In the latter case, you'll receive the definitions of each element, along with the 
-                associated parts of speech, and will need to select the appropriate part of speech from a 
-                drop-down menu.</p>
+                associated parts of speech, and will need to select the definition that best matches your use of the element.</p>
 
             {% else %}
                 <h2>Oh no!</h2> 
