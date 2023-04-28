@@ -149,36 +149,31 @@ def cmos_rules(selected):
             second_selection = "PARTICIP_INFL"
         else:
             second_selection = selected[1].upper()
-
         final_outcome = BY_PART_NOUN.get(second_selection)
 
     if selected[0] == "verb" or selected[0] == "inflection (conjugated form)":
-        second_selection = selected[1].upper()
-        if second_selection in BY_PART_VERB.keys():
-            final_outcome = BY_PART_VERB[second_selection]
-        else:
+        final_outcome = BY_PART_VERB.get(selected[1].upper())
+        if final_outcome is None:
             final_outcome = BY_PART_VERB["VERB_OTHER"]
-
+        
     if selected[0] == "adjective":
-        if selected[1] == "noun":
-            final_outcome = BY_PART_ADJ[selected[1].upper()]
-        if selected[1] == "participle":
-                final_outcome = BY_PART_ADJ[selected[1].upper()]
         if selected[1] == "verb" or selected[1] == "inflection (conjugated form)":
             final_outcome = ADJ_VERB
-
+        else:
+            final_outcome = BY_PART_ADJ.get(selected[1].upper())
+       
     if "participle" in selected[0] and selected[1] == "noun":
         final_outcome = BY_PART_PARTICIPLE_NOUN
 
     if selected[0] == "adverb":
         if selected[1] == "adjective" or "participle" in selected[1]:
             final_outcome = BY_PART_ADVERB_ADJ_OR_PARTICIP
-
+   
     if final_outcome is None:
         final_outcome = ("There are no Chicago Manual of Style standards regarding"
         " the compound you entered, and the compound is not in the dictionary. It"
         " should likely be left open (i.e., written as two words) regardless of its"
         " position in a sentence.")
         final_header = ""
-
+    
     return final_outcome, final_header
