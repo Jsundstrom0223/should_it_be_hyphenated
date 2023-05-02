@@ -8,7 +8,7 @@ The question of whether a compound should be hyphenated can be surprisingly tric
 
 Should It Be Hyphenated?, created by a technical editor, aims to help answer those questions.
 
-Should It Be Hyphenated? is a work-in-progress web application with a Python/Flask back end. The app relies on Merriam-Webster's Collegiate® Dictionary with Audio API and is [hosted on Render] (https://should-it-be-hyphenated-kmfc.onrender.com/).
+Should It Be Hyphenated? is a work-in-progress web application with a Python/Flask back end. The app relies on Merriam-Webster's Collegiate® Dictionary with Audio API and is [hosted on Render](https://should-it-be-hyphenated-kmfc.onrender.com/).
 
 ## Usage 
 
